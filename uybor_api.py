@@ -44,7 +44,9 @@ def fill_sheet_uybor(sheets):
         "ремонт",
         "новостройка",
         "ссылка",
-        "дата обновления"]
+        "дата обновления",
+        'кол-во комнаты',
+    ]
     for i in range(len(header)):
         for sheet in sheets:
             sheet.write(0, i, header[i])
@@ -82,6 +84,7 @@ def fill_sheet_uybor(sheets):
                     sheet.write(i + delta, 12, 'нет')
                 sheet.write(i + delta, 13, f'https://uybor.uz/listings/{results[i]["id"]}')
                 sheet.write(i + delta, 14, results[i]['updatedAt'])
+                sheet.write(i + delta, 15, results[i]['room'])
         delta += len(results)
         page += 1
         results.clear()
