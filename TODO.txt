@@ -1,0 +1,29 @@
+request get html from main urls
+
+https://www.olx.uz/nedvizhimost/kvartiry/prodazha/
+https://uybor.uz/listings?operationType__eq=sale&category__eq=7
+
+create excel file,
+create lists for сумм и уе
+параметры для вывода:
+
+цена
+цена за метр
+мерты
+этаж
+адрес
+название
+этаж
+урл
+дата обновления
+
+
+parse in to json
+write json to excel
+
+получить с gui параметры для поиска:
+далее работа с гуи и создание новых файлов по запросу пользователя без get
+
+
+
+
