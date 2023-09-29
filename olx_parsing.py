@@ -132,8 +132,6 @@ def fill_sheet_olx(sheets):
     # max_page = 1
     while page <= max_page:
         for sheet in sheets:
-            time.sleep(10)
-            print(f'page:{(sheets.index(sheet)+1) * page}  time: {time.time()-start}')
             results = get_all_flats_from_html(url, cur[sheets.index(sheet)], page)
             for i in range(0, len(results)):
                 sheet.write(i + delta, 0, results[i].price)
@@ -146,6 +144,8 @@ def fill_sheet_olx(sheets):
                 sheet.write(i + delta, 7, results[i].is_new_building)
                 sheet.write(i + delta, 8, results[i].url)
                 sheet.write(i + delta, 9, results[i].modified)
+            print(f'page:{page} sheet:{(sheets.index(sheet) + 1)}  time: {time.time() - start}')
+            time.sleep(10)
         delta += len(results)
         page += 1
 
