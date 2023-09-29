@@ -34,18 +34,19 @@ def fill_sheet_uybor(sheets):
         "цена за метр",
         "мерты",
         "этаж",
-        "zone",
+        # "zone",
         "address",
-        "region",
-        "city",
-        "district",
-        "metro",
-        'residentialComplex',
+        # "region",
+        # "city",
+        # "district",
+        # "metro",
+        # 'residentialComplex',
+        'кол - во комнаты',
         "ремонт",
-        "новостройка",
+        "тип жилья",
         "ссылка",
         "дата обновления",
-        'кол-во комнаты',
+
     ]
     for i in range(len(header)):
         for sheet in sheets:
@@ -62,29 +63,31 @@ def fill_sheet_uybor(sheets):
                 sheet.write(i + delta, 1, results[i]['prices'][cur[sheets.index(sheet)]] / results[i]['square'])
                 sheet.write(i + delta, 2, f"{results[i]['square']}")
                 sheet.write(i + delta, 3, f'{results[i]["floor"]}/{results[i]["floorTotal"]}')
-                if results[i]['zone'] is not None:
-                    sheet.write(i + delta, 4, results[i]['zone']['name']['ru'])
-                if 'address' in results[i]:
-                    sheet.write(i + delta, 5, results[i]['address'])
-                if results[i]['region'] is not None:
-                    sheet.write(i + delta, 6, results[i]['region']['name']['ru'])
-                if results[i]['cityId'] is not None:
-                    sheet.write(i + delta, 7, results[i]['city']['name']['ru'])
-                if results[i]['district'] is not None:
-                    sheet.write(i + delta, 8, results[i]['district']['name']['ru'])
-                if results[i]['metro'] is not None:
-                    sheet.write(i + delta, 9, results[i]['metro']['name']['ru'])
-                if results[i]['residentialComplex'] is not None:
-                    sheet.write(i + delta, 10, results[i]['residentialComplex']['name']['ru'])
+                if results[i]['address'] is not None:
+                    address = ''
+                    if results[i]['zone'] is not None:
+                        address = address + results[i]['zone']['name']['ru'] + ', '
+                    if results[i]['region'] is not None:
+                        address = address + results[i]['region']['name']['ru'] + ', '
+                    if results[i]['cityId'] is not None:
+                        address = address + results[i]['city']['name']['ru'] + ', '
+                    if results[i]['district'] is not None:
+                        address = address + results[i]['district']['name']['ru'] + ', '
+                    if results[i]['metro'] is not None:
+                        address = address + results[i]['metro']['name']['ru'] + ', '
+                    if results[i]['residentialComplex'] is not None:
+                        address = address + results[i]['residentialComplex']['name']['ru'] + ', '
+                    address = address + results[i]['address']
+                    sheet.write(i + delta, 4, address)
+                sheet.write(i + delta, 5, results[i]['room'])
                 if results[i]['repair'] is not None:
                     sheet.write(i + delta, 11, REPAIR_CHOICES_UYBOR[results[i]['repair']])
                 if results[i]['isNewBuilding']:
-                    sheet.write(i + delta, 12, 'да')
+                    sheet.write(i + delta, 12, 'Новостройка')
                 else:
-                    sheet.write(i + delta, 12, 'нет')
+                    sheet.write(i + delta, 12, 'Вторичка')
                 sheet.write(i + delta, 13, f'https://uybor.uz/listings/{results[i]["id"]}')
                 sheet.write(i + delta, 14, results[i]['updatedAt'])
-                sheet.write(i + delta, 15, results[i]['room'])
         delta += len(results)
         page += 1
         results.clear()

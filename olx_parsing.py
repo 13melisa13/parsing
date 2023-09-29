@@ -129,7 +129,7 @@ def fill_sheet_olx(sheets):
     delta = 1
     page = 1
     start = time.time()
-    # max_page = 1
+    max_page = 1  #TODO убрать
     while page <= max_page:
         for sheet in sheets:
             results = get_all_flats_from_html(url, cur[sheets.index(sheet)], page)
