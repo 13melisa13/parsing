@@ -79,9 +79,6 @@ def get_all_flats_from_html(url, currency, page):  # UZS -сумм., UYE - y.e.
     return list_of_flats
 
 
-# TODO pagination
-
-
 def get_details_of_flat(url):
     req = Request(url)
     req.add_header('Accept-Encoding', 'identity')
@@ -132,7 +129,7 @@ def fill_sheet_olx(sheets):
     delta = 1
     page = 1
     start = time.time()
-    max_page = 1
+    # max_page = 1
     while page <= max_page:
         for sheet in sheets:
             time.sleep(10)
