@@ -4,14 +4,14 @@ import time
 from urllib.request import urlopen, Request
 from bs4 import BeautifulSoup
 import datetime
-import locale
 
-locale.setlocale(locale.LC_TIME, 'ru_RU')
+from uybor_api import header_sheet
 
 
 class Flat:
     def __init__(self,
-                 price=1,
+                 price_uye=1,
+                 price_uzs=1,
                  square=1,
                  address="default",
                  modified=datetime.datetime.now(),
@@ -21,11 +21,14 @@ class Flat:
                  total_floor=1,
                  repair="repair",
                  is_new_building=False):
-        self.price = price
+        self.price_uye = price_uye
+        self.price_uzs = price_uzs
         try:
-            self.price_per_meter = float(price) / float(square)
+            self.price_per_meter_uzs = float(price_uzs) / float(square)
+            self.price_per_meter_uye = float(price_uye) / float(square)
         except Exception:
-            self.price_per_meter = 'default'
+            self.price_per_meter_uye = 'default'
+            self.price_per_meter_uzs = 'default'
         self.square = square
         self.floor = floor
         self.room = room
@@ -37,33 +40,45 @@ class Flat:
         self.url = url
 
     def __str__(self):
-        return (f'{self.price}; {self.modified}; {self.url}; {self.address}; '
-                f'{self.square}; {self.price_per_meter}; {self.repair};'
-                f' {self.floor}/{self.total_floor}; {self.room}')
+        return f'{self.price_uzs}; {self.price_uye}; {self.url}'
+                # f' {self.modified}; {self.url}; {self.address}; '
+                # f'{self.square}; {self.price_per_meter_uzs}; {self.price_per_meter_uye}; {self.repair};'
+                # f' {self.floor}/{self.total_floor}; {self.room}')
 
 
-def get_all_flats_from_html(url, currency, page):  # UZS -сумм., UYE - y.e.
+def get_all_flats_from_html(url, page):  # UZS -сумм., UYE - y.e.
     list_of_flats = []
-    url += f'?currency={currency}&page={page}'
+    url1 = url + f'?currency=UYE&page={page}'
+    url += f'?currency=UZS&page={page}'
     req = Request(url)
     req.add_header('Accept-Encoding', 'identity')
     page = urlopen(url)
+    page1 = urlopen(url1)
     html = page.read().decode('utf-8')
+    html1 = page1.read().decode('utf-8')
     soup = BeautifulSoup(html, "html.parser")
+    soup1 = BeautifulSoup(html1, "html.parser")
     ads = soup.find_all(name="div", attrs={"data-cy": "l-card"})
+    ads1 = soup1.find_all(name="div", attrs={"data-cy": "l-card"})
     for ad in ads:
+        ad1 = ads1[ads.index(ad)]
         address_with_modified = ad.find(name='p', attrs={"data-testid": "location-date"}).get_text().split(" - ")
-        price = ad.find(name='p', attrs={"data-testid": "ad-price"}).get_text().split(" ")
+        price1 = ad.find(name='p', attrs={"data-testid": "ad-price"}).get_text().split(" ")
+        price2 = ad1.find(name='p', attrs={"data-testid": "ad-price"}).get_text().split(" ")
         square = ad.find(name='div', attrs={"color": "text-global-secondary"}).get_text()
-        final_price = 0
-        for i in range(0, len(price) - 1):
-            final_price += (int(price[len(price) - 2 - i]) * math.pow(1000, i))
+        final_price1 = 0
+        for i in range(0, len(price1) - 1):
+            final_price1 += (int(price1[len(price1) - 2 - i]) * math.pow(1000, i))
+        final_price2 = 0
+        for i in range(0, len(price2) - 1):
+            final_price2 += (int(price2[len(price2) - 2 - i]) * math.pow(1000, i))
         if "Сегодня" in address_with_modified[1]:
             now = datetime.datetime.now()
             address_with_modified[1] = f'{now.day} {now.strftime("%B").lower()} {now.year}г.'
         details = get_details_of_flat("https://www.olx.uz" + ad.a.get("href"))
         flat = Flat(
-            price=final_price,
+            price_uye=final_price2,
+            price_uzs=final_price1,
             square=square,
             address=address_with_modified[0],
             modified=address_with_modified[1],
@@ -101,24 +116,8 @@ def get_details_of_flat(url):
     return details
 
 
-def fill_sheet_olx(sheets):
-    cur = ['UYE', 'UZS']
-    header = [
-        "цена",
-        "цена за метр",
-        "мерты",
-        "этаж",
-        "address",
-        'кол-во комнаты',
-        "ремонт",
-        "тип жилья",
-        "ссылка",
-        "дата обновления",
-    ]
-    for i in range(len(header)):
-        for sheet in sheets:
-            sheet.write(0, i, header[i])
-
+def fill_sheet_olx(sheet):
+    header_sheet(sheet)
     url = "https://www.olx.uz/nedvizhimost/kvartiry/prodazha/"
     req = Request(url)
     req.add_header('Accept-Encoding', 'identity')
@@ -129,23 +128,24 @@ def fill_sheet_olx(sheets):
     delta = 1
     page = 1
     start = time.time()
-    max_page = 1  #TODO убрать
+    max_page = 1  # TODO max-page
     while page <= max_page:
-        for sheet in sheets:
-            results = get_all_flats_from_html(url, cur[sheets.index(sheet)], page)
-            for i in range(0, len(results)):
-                sheet.write(i + delta, 0, results[i].price)
-                sheet.write(i + delta, 1, results[i].price_per_meter)
-                sheet.write(i + delta, 2, results[i].square)
-                sheet.write(i + delta, 3, f'{results[i].floor}/{results[i].total_floor}')
-                sheet.write(i + delta, 4, results[i].address)
-                sheet.write(i + delta, 5, results[i].room)
-                sheet.write(i + delta, 6, results[i].repair)
-                sheet.write(i + delta, 7, results[i].is_new_building)
-                sheet.write(i + delta, 8, results[i].url)
-                sheet.write(i + delta, 9, results[i].modified)
-            print(f'page:{page} sheet:{(sheets.index(sheet) + 1)}  time: {time.time() - start}')
-            time.sleep(10)
+        results = get_all_flats_from_html(url, page)
+        for i in range(0, len(results)):
+            sheet.write(i + delta, 0, results[i].price_uye)
+            sheet.write(i + delta, 1, results[i].price_per_meter_uye)
+            sheet.write(i + delta, 2, results[i].price_uzs)
+            sheet.write(i + delta, 3, results[i].price_per_meter_uzs)
+            sheet.write(i + delta, 4, results[i].square)
+            sheet.write(i + delta, 5, f'{results[i].floor}/{results[i].total_floor}')
+            sheet.write(i + delta, 6, results[i].address)
+            sheet.write(i + delta, 7, results[i].repair)
+            sheet.write(i + delta, 8, results[i].is_new_building)
+            sheet.write(i + delta, 9, results[i].room)
+            sheet.write(i + delta, 10, results[i].url)
+            sheet.write(i + delta, 11, results[i].modified)
+        print(f'page:{page}  time: {time.time() - start}')
+        time.sleep(10)
         delta += len(results)
         page += 1
 
