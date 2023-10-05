@@ -22,7 +22,7 @@ def read_excel_template(template_path="input/template.xlsm"):
     return book
 
 
-def create_file(name_of_file, fill_sheet, args=[]):
+def create_internal_excel_file(name_of_file, fill_sheet, args=[]):
     book = read_excel_template()
     sheet = book[book.sheetnames[0]]
 
@@ -35,7 +35,7 @@ def create_file(name_of_file, fill_sheet, args=[]):
 
 def create_filtered_excel_file(fill_sheet, name, filters):
     name += f"_{datetime.datetime.now().strftime('%d%m%y_%H%M')}"
-    create_file(
+    create_internal_excel_file(
         name,
         fill_sheet=fill_sheet,
         args=filters   # TODO хочу чтобы пришли как дикт
@@ -46,10 +46,10 @@ if __name__ == "__main__":
     if not os.path.exists("output/"):
         os.mkdir("output")
     start = time.time()
-    # excel_file("uybor", fill_sheet_uybor)
+    create_internal_excel_file("uybor", fill_sheet_uybor)
     print(time.time() - start)
     start = time.time()
-    # excel_file("olx", fill_sheet_olx)
+    create_internal_excel_file("olx", fill_sheet_olx)
     print(time.time() - start)
     create_filtered_excel_file(fill_filtered_data,
                                "uybor",

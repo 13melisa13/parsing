@@ -105,7 +105,7 @@ def get_details_of_flat(url):
         "room": re.search(r"комнат: (\d+)", ad),
         "floor": re.search(r"Этаж: (\d+)", ad),
         "total_floor": re.search(r"Этажность дома: (\d+)", ad),
-        "repair": re.search(r"Ремонт: ([А-Я][а-я]+)", ad),
+        "repair": re.search(r"Ремонт: ([А-Я][а-я]+)", ad), # TODO repair check
         "is_new_building": re.search(r"жилья: ([А-Я][а-я]+)", ad),
     }
     for detail in details:
@@ -115,7 +115,7 @@ def get_details_of_flat(url):
             details[detail] = ''
     return details
 
-
+# TODO fix price
 def fill_sheet_olx(sheet, agrs=[]):
     # header_sheet(sheet)
     url = "https://www.olx.uz/nedvizhimost/kvartiry/prodazha/"
