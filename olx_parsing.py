@@ -41,9 +41,9 @@ class Flat:
 
     def __str__(self):
         return f'{self.price_uzs}; {self.price_uye}; {self.url}'
-                # f' {self.modified}; {self.url}; {self.address}; '
-                # f'{self.square}; {self.price_per_meter_uzs}; {self.price_per_meter_uye}; {self.repair};'
-                # f' {self.floor}/{self.total_floor}; {self.room}')
+        # f' {self.modified}; {self.url}; {self.address}; '
+        # f'{self.square}; {self.price_per_meter_uzs}; {self.price_per_meter_uye}; {self.repair};'
+        # f' {self.floor}/{self.total_floor}; {self.room}')
 
 
 def get_all_flats_from_html(url, page):  # UZS -сумм., UYE - y.e.
@@ -116,8 +116,8 @@ def get_details_of_flat(url):
     return details
 
 
-def fill_sheet_olx(sheet):
-    header_sheet(sheet)
+def fill_sheet_olx(sheet, agrs=[]):
+    # header_sheet(sheet)
     url = "https://www.olx.uz/nedvizhimost/kvartiry/prodazha/"
     req = Request(url)
     req.add_header('Accept-Encoding', 'identity')
@@ -125,27 +125,25 @@ def fill_sheet_olx(sheet):
     soup = BeautifulSoup(html, "html.parser")
     max_page = soup.find_all(name="li", attrs={"data-testid": "pagination-list-item"})
     max_page = int(max_page[len(max_page) - 1].get_text())
-    delta = 1
     page = 1
     start = time.time()
     max_page = 1  # TODO max-page
     while page <= max_page:
         results = get_all_flats_from_html(url, page)
         for i in range(0, len(results)):
-            sheet.write(i + delta, 0, results[i].price_uye)
-            sheet.write(i + delta, 1, results[i].price_per_meter_uye)
-            sheet.write(i + delta, 2, results[i].price_uzs)
-            sheet.write(i + delta, 3, results[i].price_per_meter_uzs)
-            sheet.write(i + delta, 4, results[i].square)
-            sheet.write(i + delta, 5, f'{results[i].floor}/{results[i].total_floor}')
-            sheet.write(i + delta, 6, results[i].address)
-            sheet.write(i + delta, 7, results[i].repair)
-            sheet.write(i + delta, 8, results[i].is_new_building)
-            sheet.write(i + delta, 9, results[i].room)
-            sheet.write(i + delta, 10, results[i].url)
-            sheet.write(i + delta, 11, results[i].modified)
+            sheet.append([results[i].price_uye
+                             , results[i].price_per_meter_uye
+                             , results[i].price_uzs
+                             , results[i].price_per_meter_uzs
+                             , results[i].square
+                             , f'{results[i].floor}/{results[i].total_floor}'
+                             , results[i].address
+                             , results[i].repair
+                             , results[i].is_new_building
+                             , results[i].room
+                             , results[i].url
+                             , results[i].modified])
+
         print(f'page:{page}  time: {time.time() - start}')
         time.sleep(10)
-        delta += len(results)
         page += 1
-

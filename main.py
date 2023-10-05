@@ -2,6 +2,10 @@ import datetime
 import os
 import time
 import openpyxl
+from openpyxl.reader.excel import load_workbook
+from openpyxl.workbook import Workbook
+
+from filtr_excel import fill_filtered_data
 from olx_parsing import fill_sheet_olx
 from uybor_api import fill_sheet_uybor
 import locale
@@ -9,37 +13,32 @@ import locale
 
 locale.setlocale(locale.LC_TIME, 'ru_RU')
 
-def read_excel_template():
 
-    if os.path.exists(f"input/template.xlt"):
-
-        read_teplate = xlrd.open_workbook("input/template.xlt", formatting_info=True)
-        book = copy(read_teplate)
-        new_excel_sheet = deepcopy(book.get_sheet(0))
-        new_excel_sheet.set_name(f"{datetime.datetime.now().strftime('%d.%m.%y_%H.%M')}")
-        book = xlwt.Workbook()
-        book._Workbook__worksheets = [new_excel_sheet]
-        print("by_template")
-
+def read_excel_template(template_path="input/template.xlsm"):
+    if os.path.exists(template_path):
+        book = load_workbook(template_path, keep_vba=True)
     else:
-        book = xlwt.Workbook()
-        book.add_sheet(f"{datetime.datetime.now().strftime('%d.%m.%y_%H.%M')}")
+        book = Workbook()
     return book
 
 
-def excel_file(name_of_file, fill_sheet):
+def create_file(name_of_file, fill_sheet, args=[]):
     book = read_excel_template()
-    fill_sheet(book.get_sheet(0))
-    if os.path.exists(f"output/{name_of_file}.xls"):
-        os.remove(f"output/{name_of_file}.xls")
-    book.save(f"output/{name_of_file}.xls")
+    sheet = book[book.sheetnames[0]]
+
+    sheet.title = f"{datetime.datetime.now().strftime('%d.%m.%y_%H.%M')}"
+    fill_sheet(sheet, args)
+    if os.path.exists(f"output/{name_of_file}.xlsm"):
+        os.remove(f"output/{name_of_file}.xlsm")
+    book.save(f"output/{name_of_file}.xlsm")
 
 
-def create_filtered_excel_file(fill_sheet, name):
+def create_filtered_excel_file(fill_sheet, name, filters):
     name += f"_{datetime.datetime.now().strftime('%d%m%y_%H%M')}"
-    excel_file(
-        f"output/{name}",
-        fill_sheet=fill_sheet
+    create_file(
+        name,
+        fill_sheet=fill_sheet,
+        args=filters   # TODO хочу чтобы пришли как дикт
     )
 
 
@@ -47,8 +46,20 @@ if __name__ == "__main__":
     if not os.path.exists("output/"):
         os.mkdir("output")
     start = time.time()
-    excel_file("uybor", fill_sheet_uybor)
+    # excel_file("uybor", fill_sheet_uybor)
     print(time.time() - start)
     start = time.time()
     # excel_file("olx", fill_sheet_olx)
     print(time.time() - start)
+    create_filtered_excel_file(fill_filtered_data,
+                               "uybor",
+                               {
+                                   "resourse": "output/uybor.xlsm",
+                                   "room": "3",
+                                   "repair": "Евроремонт",
+                                   "is_new_building": "Вторичка",
+                                   "square_max": 76,
+                                   "square_min": 70,
+
+                                })
+# TODO получать количество элементов списка и потом кнопка выгрузки
