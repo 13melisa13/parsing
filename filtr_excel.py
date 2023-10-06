@@ -1,8 +1,10 @@
+import os
 from openpyxl import load_workbook
 from olx_parsing import Flat
 
 
 def get_arr_from_excel(name):
+
     input_book = load_workbook(name)
     ws_input_book = input_book[input_book.sheetnames[0]]
     flats = []
@@ -25,47 +27,53 @@ def get_arr_from_excel(name):
 # TODO проверки на существования файла
 
 def filter(filters):
-    results = get_arr_from_excel(filters['resourse'])
-    print(len(results))
+    if os.path.exists(filters['resource']):
+        results = get_arr_from_excel(filters['resource'])
+    else:
+        print("Необходимо выгрузить данные")
+    # print(len(results))
     if 'price_min' in filters:
         if 'uzs' in filters:
             results = [result for result in results if result.price_uzs >= filters['price_min']]
         if 'uye' in filters:
             results = [result for result in results if result.price_uye >= filters['price_min']]
-    print(len(results))
+    # print(len(results))
     if 'price_max' in filters:
         if 'uzs' in filters:
             results = [result for result in results if result.price_uzs <= filters['price_max']]
         if 'uye' in filters:
             results = [result for result in results if result.price_uye <= filters['price_max']]
-    print(len(results))
+    # print(len(results))
     if 'is_new_building' in filters:
         results = [result for result in results if result.is_new_building == filters['is_new_building']]
-    print(len(results))
+    # print(len(results))
     if 'repair' in filters:
         results = [result for result in results if result.repair == filters['repair']]
-    print(len(results))
+    # print(len(results))
     if 'room' in filters:
         results = [result for result in results if result.room == filters['room']]
-    print(len(results))
+    # print(len(results))
     if 'square_min' in filters:
         results = [result for result in results if result.square >= filters['square_min']]
-    print(len(results))
+    # print(len(results))
     if 'square_max' in filters:
         results = [result for result in results if result.square <= filters['square_max']]
-    print(len(results))
+    # print(len(results))
     if 'floor_min' in filters:
         results = [result for result in results if result.floor >= filters['floor_min']]
-    print(len(results))
+    # print(len(results))
     if 'floor_max' in filters:
         results = [result for result in results if int(result.floor) <= int(filters['floor_max'])]
-    print(len(results))
+    # print(len(results))
     return results
 
 
 def fill_filtered_data(sheet, filters):
     # sheet.append(get_arr_from_excel(filters['resourse']))  # path to resourse excel file
     results = filter(filters)
+    if len(results) == 0:
+        print("НЕТ ЭЛЕМЕНТОВ В ВЫБОРКЕ")
+        return None
     for i in range(0, len(results)):
         sheet.append([results[i].price_uye,
                       results[i].price_per_meter_uye,

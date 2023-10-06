@@ -4,8 +4,7 @@ import time
 from urllib.request import urlopen, Request
 from bs4 import BeautifulSoup
 import datetime
-
-from uybor_api import header_sheet
+import requests
 
 
 class Flat:
@@ -48,37 +47,31 @@ class Flat:
 
 def get_all_flats_from_html(url, page):  # UZS -сумм., UYE - y.e.
     list_of_flats = []
-    url1 = url + f'?currency=UYE&page={page}'
-    url += f'?currency=UZS&page={page}'
+    url = url + f'?currency=UYE&page={page}'
     req = Request(url)
     req.add_header('Accept-Encoding', 'identity')
     page = urlopen(url)
-    page1 = urlopen(url1)
     html = page.read().decode('utf-8')
-    html1 = page1.read().decode('utf-8')
     soup = BeautifulSoup(html, "html.parser")
-    soup1 = BeautifulSoup(html1, "html.parser")
     ads = soup.find_all(name="div", attrs={"data-cy": "l-card"})
-    ads1 = soup1.find_all(name="div", attrs={"data-cy": "l-card"})
+    rate = requests.get("https://cbu.uz/ru/arkhiv-kursov-valyut/json/USD/").json()[0]['Rate']
+    # print(rate)
     for ad in ads:
-        ad1 = ads1[ads.index(ad)]
+
         address_with_modified = ad.find(name='p', attrs={"data-testid": "location-date"}).get_text().split(" - ")
-        price1 = ad.find(name='p', attrs={"data-testid": "ad-price"}).get_text().split(" ")
-        price2 = ad1.find(name='p', attrs={"data-testid": "ad-price"}).get_text().split(" ")
+        price_uye = ad.find(name='p', attrs={"data-testid": "ad-price"}).get_text().split(" ")
         square = ad.find(name='div', attrs={"color": "text-global-secondary"}).get_text()
-        final_price1 = 0
-        for i in range(0, len(price1) - 1):
-            final_price1 += (int(price1[len(price1) - 2 - i]) * math.pow(1000, i))
-        final_price2 = 0
-        for i in range(0, len(price2) - 1):
-            final_price2 += (int(price2[len(price2) - 2 - i]) * math.pow(1000, i))
+        final_price = 0
+        for i in range(0, len(price_uye) - 1):
+            final_price += (int(price_uye[len(price_uye) - 2 - i]) * math.pow(1000, i))
+
         if "Сегодня" in address_with_modified[1]:
             now = datetime.datetime.now()
             address_with_modified[1] = f'{now.day} {now.strftime("%B").lower()} {now.year}г.'
         details = get_details_of_flat("https://www.olx.uz" + ad.a.get("href"))
         flat = Flat(
-            price_uye=final_price2,
-            price_uzs=final_price1,
+            price_uye=final_price,
+            price_uzs= float(rate) * float(final_price),
             square=square,
             address=address_with_modified[0],
             modified=address_with_modified[1],
@@ -101,13 +94,15 @@ def get_details_of_flat(url):
     html = page.read().decode('utf-8')
     soup = BeautifulSoup(html, "html.parser")
     ad = soup.find(name="div", attrs={"data-testid": "main"}).find(name="ul").get_text()  # li p parse
+
     details = {
         "room": re.search(r"комнат: (\d+)", ad),
         "floor": re.search(r"Этаж: (\d+)", ad),
         "total_floor": re.search(r"Этажность дома: (\d+)", ad),
-        "repair": re.search(r"Ремонт: ([А-Я][а-я]+)", ad), # TODO repair check
+        "repair": re.search(r"Ремонт: ([А-Я][а-я]+\s*[а-я]*)", ad),
         "is_new_building": re.search(r"жилья: ([А-Я][а-я]+)", ad),
     }
+    # print(details['repair'])
     for detail in details:
         if details[detail] is not None:
             details[detail] = details[detail][1]
@@ -115,7 +110,7 @@ def get_details_of_flat(url):
             details[detail] = ''
     return details
 
-# TODO fix price
+
 def fill_sheet_olx(sheet, agrs=[]):
     # header_sheet(sheet)
     url = "https://www.olx.uz/nedvizhimost/kvartiry/prodazha/"

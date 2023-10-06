@@ -1,10 +1,8 @@
 import datetime
 import os
 import time
-import openpyxl
 from openpyxl.reader.excel import load_workbook
 from openpyxl.workbook import Workbook
-
 from filtr_excel import fill_filtered_data
 from olx_parsing import fill_sheet_olx
 from uybor_api import fill_sheet_uybor
@@ -25,7 +23,6 @@ def read_excel_template(template_path="input/template.xlsm"):
 def create_internal_excel_file(name_of_file, fill_sheet, args=[]):
     book = read_excel_template()
     sheet = book[book.sheetnames[0]]
-
     sheet.title = f"{datetime.datetime.now().strftime('%d.%m.%y_%H.%M')}"
     fill_sheet(sheet, args)
     if os.path.exists(f"output/{name_of_file}.xlsm"):
@@ -35,10 +32,12 @@ def create_internal_excel_file(name_of_file, fill_sheet, args=[]):
 
 def create_filtered_excel_file(fill_sheet, name, filters):
     name += f"_{datetime.datetime.now().strftime('%d%m%y_%H%M')}"
+    if fill_sheet is None:
+        return
     create_internal_excel_file(
         name,
         fill_sheet=fill_sheet,
-        args=filters   # TODO хочу чтобы пришли как дикт
+        args=filters   # TODO input = dict()
     )
 
 
@@ -54,10 +53,10 @@ if __name__ == "__main__":
     create_filtered_excel_file(fill_filtered_data,
                                "uybor",
                                {
-                                   "resourse": "output/uybor.xlsm",
+                                   "resource": "output/uybor.xlsm",
                                    "room": "3",
                                    "repair": "Евроремонт",
-                                   "is_new_building": "Вторичка",
+                                   "is_new_building": "Вторичный",
                                    "square_max": 76,
                                    "square_min": 70,
 

@@ -76,7 +76,7 @@ def fill_sheet_uybor(sheet, agrs=[]):
             if results[i]['isNewBuilding']:
                 is_new_building = 'Новостройка'
             else:
-                is_new_building = 'Вторичка'
+                is_new_building = 'Вторичный'
             if not isinstance(results[i]['room'], int):
                 room = results[i]['room']
             else:
@@ -98,7 +98,7 @@ def fill_sheet_uybor(sheet, agrs=[]):
             )
             sheet.append(row)
             # print(address)
-        return
+        return #TOdo max-page
         page += 1
 
 
