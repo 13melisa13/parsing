@@ -7,8 +7,12 @@ REPAIR_CHOICES_UYBOR = {
     "sredniy": "Средний",
     "kapital": "Требует ремонта",
     "chernovaya": "Черновая отделка",
-    "predchistovaya": "Предчистовая отделка"
+    "predchistovaya": "Предчистовая отделка",
+    " ": "Не выбрано"
 }
+CURRENCY_CHOISES = [
+    "СУММ.", "У.Е."
+]
 
 
 def json_uybor(page=0, limit=100):
@@ -45,7 +49,7 @@ def header_sheet(sheet):
     ])
 
 
-def fill_sheet_uybor(sheet, agrs=[]):
+def fill_sheet_uybor(sheet, progress, agrs=[]):
     # header_sheet(sheet)
     page = 0
     while True:
@@ -54,6 +58,8 @@ def fill_sheet_uybor(sheet, agrs=[]):
         if len(results) == 0:
             return
         for i in range(len(results)):
+            progress.setProperty("value", i * 100 / len(results))
+
             address = ''
             if results[i]['zone'] is not None:
                 address += results[i]['zone']['name']['ru']

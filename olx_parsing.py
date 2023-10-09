@@ -111,7 +111,7 @@ def get_details_of_flat(url):
     return details
 
 
-def fill_sheet_olx(sheet, agrs=[]):
+def fill_sheet_olx(sheet,progress, agrs=[]):
     # header_sheet(sheet)
     url = "https://www.olx.uz/nedvizhimost/kvartiry/prodazha/"
     req = Request(url)
@@ -126,6 +126,7 @@ def fill_sheet_olx(sheet, agrs=[]):
     while page <= max_page:
         results = get_all_flats_from_html(url, page)
         for i in range(0, len(results)):
+            progress.setProperty("value", i * 100 / len(results) + start)
             sheet.append([results[i].price_uye
                              , results[i].price_per_meter_uye
                              , results[i].price_uzs

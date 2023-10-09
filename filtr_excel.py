@@ -12,7 +12,7 @@ def get_arr_from_excel(name):
         flats.append(Flat(
             price_uye=float(row[0].value),
             price_uzs=float(row[2].value),
-            square=  row[4].value,  # TODO FIX TYPES float(row[4].value),
+            square=float(row[4].value.__str__().replace(" ", '')),  # TODO FIX TYPES float(row[4].value),
             address=row[6].value,
             repair=row[7].value,
             is_new_building=row[8].value,
@@ -30,7 +30,7 @@ def filter(filters, resource):
     # if os.path.exists(filters['resource']):
     #     results = get_arr_from_excel(filters['resource'])
     # else:
-    #     print("Необходимо выгрузить данные")
+    #     # todo handle print("Необходимо выгрузить данные")
     results = get_arr_from_excel(resource)
     # print(len(results))
     if 'price_min' in filters:
@@ -45,13 +45,13 @@ def filter(filters, resource):
         if 'uye' in filters:
             results = [result for result in results if result.price_uye <= filters['price_max']]
     # print(len(results))
-    if 'is_new_building' in filters:
+    if 'is_new_building' in filters and filters['is_new_building'] != "Не выбрано":
         results = [result for result in results if result.is_new_building == filters['is_new_building']]
     # print(len(results))
-    if 'repair' in filters:
+    if 'repair' in filters and filters['repair'] != "Не выбрано":
         results = [result for result in results if result.repair == filters['repair']]
     # print(len(results))
-    if 'room' in filters:
+    if 'room' in filters and filters['room'] != "Не выбрано":
         results = [result for result in results if result.room == filters['room']]
     # print(len(results))
     if 'square_min' in filters:
@@ -66,16 +66,25 @@ def filter(filters, resource):
     if 'floor_max' in filters:
         results = [result for result in results if int(result.floor) <= int(filters['floor_max'])]
     # print(len(results))
+    if 'total_floor_min' in filters:
+        results = [result for result in results if result.total_floor >= filters['total_floor_min']]
+    # print(len(results))
+    if 'total_floor_max' in filters:
+        results = [result for result in results if int(result.total_floor) <= int(filters['total_floor_max'])]
+    # print(len(results))
     return results
 
 
-def fill_filtered_data(sheet, results):
+def fill_filtered_data(sheet, results, progress, start=0):
     # sheet.append(get_arr_from_excel(filters['resourse']))  # path to resourse excel file
     # results = filter(filters)
     if len(results) == 0:
+        # todo handle
         print("НЕТ ЭЛЕМЕНТОВ В ВЫБОРКЕ")
         return None
     for i in range(0, len(results)):
+        progress.setProperty("value", i*100/len(results)/2 + start)
+        # print(progress)
         sheet.append([results[i].price_uye,
                       results[i].price_per_meter_uye,
                       results[i].price_uzs,
