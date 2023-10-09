@@ -10,9 +10,9 @@ def get_arr_from_excel(name):
     flats = []
     for row in ws_input_book.iter_rows(min_row=2, max_col=12):
         flats.append(Flat(
-            price_uye=int(row[0].value),
-            price_uzs=int(row[2].value),
-            square=int(row[4].value),
+            price_uye=float(row[0].value),
+            price_uzs=float(row[2].value),
+            square=  row[4].value,  # TODO FIX TYPES float(row[4].value),
             address=row[6].value,
             repair=row[7].value,
             is_new_building=row[8].value,
@@ -26,11 +26,12 @@ def get_arr_from_excel(name):
 
 # TODO проверки на существования файла
 
-def filter(filters):
-    if os.path.exists(filters['resource']):
-        results = get_arr_from_excel(filters['resource'])
-    else:
-        print("Необходимо выгрузить данные")
+def filter(filters, resource):
+    # if os.path.exists(filters['resource']):
+    #     results = get_arr_from_excel(filters['resource'])
+    # else:
+    #     print("Необходимо выгрузить данные")
+    results = get_arr_from_excel(resource)
     # print(len(results))
     if 'price_min' in filters:
         if 'uzs' in filters:
@@ -68,9 +69,9 @@ def filter(filters):
     return results
 
 
-def fill_filtered_data(sheet, filters):
+def fill_filtered_data(sheet, results):
     # sheet.append(get_arr_from_excel(filters['resourse']))  # path to resourse excel file
-    results = filter(filters)
+    # results = filter(filters)
     if len(results) == 0:
         print("НЕТ ЭЛЕМЕНТОВ В ВЫБОРКЕ")
         return None
