@@ -1,15 +1,16 @@
 import sys
 
-from PyQt6.QtCore import *
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPalette, QColor
-from PyQt6.QtWidgets import *
-
-import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton
-
-import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton
-
+from PyQt6.QtWidgets import (
+    QApplication,
+    QHBoxLayout,
+    QMainWindow,
+    QPushButton,
+    QStackedLayout,
+    QVBoxLayout,
+    QWidget,
+)
 
 class Color(QWidget):
 
@@ -23,35 +24,45 @@ class Color(QWidget):
 
 
 class MainWindow(QMainWindow):
-
     def __init__(self):
-        super(MainWindow, self).__init__()
+        super().__init__()
 
         self.setWindowTitle("My App")
 
-        layout1 = QHBoxLayout()
-        layout2 = QVBoxLayout()
-        layout3 = QVBoxLayout()
+        pagelayout = QVBoxLayout()
+        button_layout = QHBoxLayout()
+        self.stacklayout = QStackedLayout()
 
-        layout1.setContentsMargins(0, 0, 0, 0)
-        layout1.setSpacing(20)
+        pagelayout.addLayout(button_layout)
+        pagelayout.addLayout(self.stacklayout)
 
-        layout2.addWidget(Color('red'))
-        layout2.addWidget(Color('yellow'))
-        layout2.addWidget(Color('purple'))
+        btn = QPushButton("red")
+        btn.pressed.connect(self.activate_tab_1)
+        button_layout.addWidget(btn)
+        self.stacklayout.addWidget(Color("red"))
 
-        layout1.addLayout(layout2)
+        btn = QPushButton("green")
+        btn.pressed.connect(self.activate_tab_2)
+        button_layout.addWidget(btn)
+        self.stacklayout.addWidget(Color("green"))
 
-        layout1.addWidget(Color('green'))
-
-        layout3.addWidget(Color('red'))
-        layout3.addWidget(Color('purple'))
-
-        layout1.addLayout(layout3)
+        btn = QPushButton("yellow")
+        btn.pressed.connect(self.activate_tab_3)
+        button_layout.addWidget(btn)
+        self.stacklayout.addWidget(Color("yellow"))
 
         widget = QWidget()
-        widget.setLayout(layout1)
+        widget.setLayout(pagelayout)
         self.setCentralWidget(widget)
+
+    def activate_tab_1(self):
+        self.stacklayout.setCurrentIndex(0)
+
+    def activate_tab_2(self):
+        self.stacklayout.setCurrentIndex(1)
+
+    def activate_tab_3(self):
+        self.stacklayout.setCurrentIndex(2)
 
 
 app = QApplication(sys.argv)

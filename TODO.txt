@@ -1,2 +1,3 @@
 https://www.olx.uz/nedvizhimost/kvartiry/prodazha/
 https://uybor.uz/listings?operationType__eq=sale&category__eq=7
+https://ofb.uz/uz/

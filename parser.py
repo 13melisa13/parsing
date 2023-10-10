@@ -7,12 +7,10 @@
 import os
 import sys
 
-from PyQt6 import QtCore, QtGui, QtWidgets
-
+from PyQt6 import QtWidgets
 from filtr_excel import filter, fill_filtered_data
 from main import create_internal_excel_file, create_filtered_excel_file
 from olx_parsing import fill_sheet_olx
-from setup_palette import setup_palette_again, setup_palette
 from uybor_api import fill_sheet_uybor, CURRENCY_CHOISES, REPAIR_CHOICES_UYBOR
 
 
@@ -73,8 +71,8 @@ class UiParser(QtWidgets.QMainWindow):
         self.horizontal_layout_uybor = QtWidgets.QHBoxLayout(self.uybor_widget)
         self.table_widget_uybor = QtWidgets.QTableWidget(parent=self.uybor_widget)
         self.stats_frame_uybor = QtWidgets.QFrame(parent=self.main_widget)
-        self.label_rows_count = QtWidgets.QLabel(parent=self.stats_frame_uybor)
-        self.rows_count = QtWidgets.QLCDNumber(parent=self.stats_frame_uybor)  # todo set intValue
+        self.label_rows_count_uybor = QtWidgets.QLabel(parent=self.stats_frame_uybor)
+        self.rows_count_uybor = QtWidgets.QLCDNumber(parent=self.stats_frame_uybor)  # todo set intValue
 
         self.table_widget_uybor.setColumnCount(0)
         self.table_widget_uybor.setRowCount(0)
@@ -100,6 +98,33 @@ class UiParser(QtWidgets.QMainWindow):
         self.add_items_for_combo_box()
         self.setup_view_ui()
         self.handler()
+
+    def setup_view_ui(self):
+        self.setup_main_window()
+
+    def setup_main_window(self):
+        self.setObjectName("Parser")
+        self.setAutoFillBackground(True)
+
+    def setup_text_on_components(self):
+        self.setWindowTitle("MAEParser")
+        self.label_floor.setText("Этаж")
+        self.label_currency.setText("Валюта")
+        self.label_square.setText("Площадь")
+        self.label_total_floor.setText("Этажность")
+        self.label_price.setText("Цена")
+        self.filter_button.setText("Отфильтровать")
+        self.label_progress_bar.setText("Процесс:")
+        self.label_current_process_name.setText("")
+        self.label_rows_count_olx.setText("Всего строк:")
+        self.label_rows_count_uybor.setText("Всего строк:")
+        self.update_olx.setText("Обновить Olx")
+        self.update_uybor.setText("Обновить UyBor")
+        self.update_all_data.setText("Обновить данные")
+        self.export_button.setText("Экспортировать в xlsm")
+        self.label_preview.setText("Предпросмотр")
+        self.data_view.setTabText(self.data_view.indexOf(self.uybor_widget), "UyBor")
+        self.data_view.setTabText(self.data_view.indexOf(self.olx_widget), "Olx")
 
     def add_items_for_combo_box(self):
         self.is_new_building_type.addItems(["Тип квартиры", "Новостройки", "Вторичный"])
@@ -130,7 +155,10 @@ class UiParser(QtWidgets.QMainWindow):
         self.label_current_process_name.setText("Фильтрация")
         self.progress_bar.setProperty("value", 0)
         self.results_olx = filter(filters=self.filters, resource="output/internal/olx.xlsm")
+        self.rows_count_olx.setDigitCount(len(self.results_olx))
         self.results_uybor = filter(filters=self.filters, resource="output/internal/uybor.xlsm")
+        self.rows_count_uybor.setDigitCount(len(self.results_uybor))
+
         self.label_current_process_name.setText("Завершено")
         self.progress_bar.setProperty("value", 100)
         if len(self.results_uybor) + len(self.results_olx) > 0:
@@ -197,162 +225,7 @@ class UiParser(QtWidgets.QMainWindow):
         self.filter_button.setCheckable(True)
         self.filter_button.clicked.connect(self.filter_button_clicked)
 
-    def setup_view_ui(self):
-        self.setup_main_window()
-        # self.main_widget.setObjectName("main_widget")
-        # self.filter_frame.setGeometry(QtCore.QRect(10, 130, 1041, 51))
-        # self.filter_frame.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
-        # self.filter_frame.setFrameShadow(QtWidgets.QFrame.Shadow.Raised)
-        # self.filter_frame.setObjectName("FilterFrame")
-        #
-        # self.label_floor.setGeometry(QtCore.QRect(320, 0, 47, 13))
-        # self.label_floor.setObjectName("label_floor")
-        # self.total_floor_max.setGeometry(QtCore.QRect(70, 20, 121, 21))
-        # self.total_floor_max.setObjectName("total_floor_max")
-        # self.label_square.setGeometry(QtCore.QRect(480, 0, 47, 13))
-        # self.label_square.setObjectName("label_square")
-        # self.room_type.setGeometry(QtCore.QRect(600, 10, 151, 41))
-        # self.room_type.setObjectName("room_type")
-        # self.min_floor.setGeometry(QtCore.QRect(320, 20, 31, 21))
-        # self.min_floor.setObjectName("min_floor")
-        # self.max_floor.setGeometry(QtCore.QRect(360, 20, 31, 21))
-        # self.max_floor.setObjectName("max_floor")
-        # self.label_total_floor.setGeometry(QtCore.QRect(390, -4, 81, 20))
-        # self.label_total_floor.setObjectName("label_total_floor")
-        # self.total_floor_min.setGeometry(QtCore.QRect(200, 20, 111, 21))
-        # self.total_floor_min.setObjectName("max_worth")
-        #
-        # self.total_floor_max.setGeometry(QtCore.QRect(440, 20, 31, 21))
-        # self.total_floor_max.setObjectName("max_room_count")
 
-        # self.min_room_count.setGeometry(QtCore.QRect(400, 20, 31, 21))
-        # self.min_room_count.setObjectName("min_room_count")
-
-        # self.label_price.setGeometry(QtCore.QRect(10, 0, 47, 13))
-        # self.label_price.setObjectName("label")
-        #
-        # self.square_min.setGeometry(QtCore.QRect(540, 20, 51, 21))
-        # self.square_min.setObjectName("max_square")
-        #
-        # self.square_max.setGeometry(QtCore.QRect(480, 20, 51, 21))
-        # self.square_max.setObjectName("min_square")
-        #
-        # self.filter_button.setGeometry(QtCore.QRect(920, 20, 111, 21))
-        #
-        # palette = QtGui.QPalette()
-        # self.filter_button.setPalette(setup_palette(palette))
-
-        # self.filter_button.setAutoFillBackground(False)
-        # self.filter_button.setObjectName("filter_button")
-        #
-        # self.currency_type.setGeometry(QtCore.QRect(0, 20, 61, 21))
-        # self.currency_type.setObjectName("currency")
-        #
-        # self.repair_type.setGeometry(QtCore.QRect(760, 10, 151, 41))
-        #
-        # palette = QtGui.QPalette()
-        # self.repair_type.setPalette(setup_palette_again(palette))
-        #
-        # self.repair_type.setObjectName("repair_type")
-        #
-        # self.progress_bar_frame.setGeometry(QtCore.QRect(10, 50, 1051, 80))
-        # self.progress_bar_frame.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
-        # self.progress_bar_frame.setFrameShadow(QtWidgets.QFrame.Shadow.Raised)
-        # self.progress_bar_frame.setObjectName("ProcessBarFrame")
-        # self.label_progress_bar.setGeometry(QtCore.QRect(0, 16, 41, 20))
-        # self.label_progress_bar.setObjectName("label_6")
-        #
-        # self.label_current_process_name.setGeometry(QtCore.QRect(50, 16, 931, 20))
-        # self.label_current_process_name.setObjectName("process_name_label")
-
-        # self.progress_bar.setGeometry(QtCore.QRect(0, 40, 1041, 23))
-
-        # self.progress_bar.setObjectName("progressBar")
-        #
-        # self.stats_frame.setGeometry(QtCore.QRect(10, 720, 1041, 41))
-        # self.stats_frame.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
-        # self.stats_frame.setFrameShadow(QtWidgets.QFrame.Shadow.Raised)
-        # self.stats_frame.setObjectName("StatsFrame")
-        # self.rows_count.setGeometry(QtCore.QRect(80, 0, 91, 23))
-        # self.rows_count.setObjectName("rows_count")
-        # self.label_rows_count.setGeometry(QtCore.QRect(10, 0, 71, 21))
-        # self.label_rows_count.setObjectName("label_5")
-
-        # self.main_functions_frame.setGeometry(QtCore.QRect(10, 0, 1041, 51))
-        # self.main_functions_frame.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
-        # self.main_functions_frame.setFrameShadow(QtWidgets.QFrame.Shadow.Raised)
-        # self.main_functions_frame.setObjectName("MainFunctionsFrame")
-
-        # self.update_olx.setGeometry(QtCore.QRect(450, 10, 141, 31))
-        # self.update_olx.setObjectName("update_olx")
-        #
-        # self.update_uybor.setGeometry(QtCore.QRect(300, 10, 141, 31))
-        # self.update_uybor.setObjectName("update_uybor")
-        #
-        # self.update_all_data.setGeometry(QtCore.QRect(150, 10, 141, 31))
-        # self.update_all_data.setObjectName("update_all_data")
-        #
-        # self.export_button.setGeometry(QtCore.QRect(0, 10, 141, 31))
-        # self.export_button.setObjectName("export_button")
-        #
-        # self.label_preview.setGeometry(QtCore.QRect(10, 200, 81, 16))
-        # self.label_preview.setObjectName("label_7")
-        # self.data_view.setGeometry(QtCore.QRect(10, 220, 1041, 501))
-        # self.data_view.setObjectName("DataView")
-        #
-        # self.uybor_widget.setObjectName("UyBor")
-        # self.horizontal_layout_uybor.setObjectName("horizontalLayout_2")
-        # self.table_widget_uybor.setObjectName("tableWidget")
-
-        # self.olx_widget.setObjectName("Olx")
-        # self.horizontal_layout_olx.setObjectName("horizontalLayout_3")
-
-        # self.table_widget_olx.setObjectName("tableWidget_2")
-
-        self.stats_frame_uybor.raise_()
-        self.stats_frame_olx.raise_()
-        self.progress_bar_frame.raise_()
-        self.filter_frame.raise_()
-        self.main_functions_frame.raise_()
-        self.data_view.raise_()
-
-        # QtCore.QMetaObject.connectSlotsByName(self)
-
-    def setup_main_window(self):
-        self.setObjectName("Parser")
-        # self.resize(1000, 700)
-        # size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
-        # size_policy.setHorizontalStretch(0)
-        # size_policy.setVerticalStretch(0)
-        # size_policy.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
-        # self.setSizePolicy(size_policy)
-        # self.setMinimumSize(QtCore.QSize(1061, 751))
-        # self.setMaximumSize(QtCore.QSize(1061, 751))
-        self.setAutoFillBackground(True)
-
-    def setup_text_on_components(self):
-        _translate = QtCore.QCoreApplication.translate
-        self.setWindowTitle(_translate("Parser", "MAEParser"))
-        self.label_floor.setText(_translate("Parser", "Этаж"))
-        self.label_currency.setText(_translate("Parser", "Валюта"))
-        self.label_square.setText(_translate("Parser", "Площадь"))
-        self.label_total_floor.setText(_translate("Parser", "Этажность"))
-        self.label_price.setText(_translate("Parser", "Цена"))
-        self.filter_button.setText(_translate("Parser", "Отфильтровать"))
-        self.label_progress_bar.setText(_translate("Parser", "Процесс:"))
-        self.label_current_process_name.setText(_translate("Parser", ""))
-        self.label_rows_count.setText(_translate("Parser", "Всего строк:"))
-        self.update_olx.setText(_translate("Parser", "Обновить Olx"))
-        self.update_uybor.setText(_translate("Parser", "Обновить UyBor"))
-        self.update_all_data.setText(_translate("Parser", "Обновить данные"))
-        self.export_button.setText(_translate("Parser", "Экспортировать в xlsm"))
-        self.label_preview.setText(_translate("Parser", "Предпросмотр"))
-        self.data_view.setTabText(
-            self.data_view.indexOf(self.uybor_widget), _translate("Parser", "UyBor")
-        )
-        self.data_view.setTabText(
-            self.data_view.indexOf(self.olx_widget), _translate("Parser", "Olx")
-        )
 
 
 if __name__ == "__main__":
