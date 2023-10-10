@@ -12,7 +12,7 @@ def get_arr_from_excel(name):
         flats.append(Flat(
             price_uye=float(row[0].value),
             price_uzs=float(row[2].value),
-            square=float(row[4].value.__str__().replace(" ", '')),  # TODO FIX TYPES float(row[4].value),
+            square=float(row[4].value.__str__().replace(" ", '')),
             address=row[6].value,
             repair=row[7].value,
             is_new_building=row[8].value,

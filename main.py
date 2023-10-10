@@ -45,4 +45,3 @@ def create_filtered_excel_file(fill_sheet, name,  results,  progress, start=0, p
         os.remove(path)
     book.save(path)
 
-# TODO получать количество элементов списка и потом кнопка выгрузки

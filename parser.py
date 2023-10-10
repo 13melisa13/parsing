@@ -8,6 +8,9 @@ import os
 import sys
 
 from PyQt6 import QtWidgets
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QIntValidator
+
 from filtr_excel import filter, fill_filtered_data
 from main import create_internal_excel_file, create_filtered_excel_file
 from olx_parsing import fill_sheet_olx
@@ -21,6 +24,7 @@ class UiParser(QtWidgets.QMainWindow):
 
     def __init__(self):
         super().__init__()
+        self.setWindowTitle("MAEParser")
         # block main
         self.main_widget = QtWidgets.QWidget()
         page_layout = QtWidgets.QVBoxLayout()
@@ -30,9 +34,11 @@ class UiParser(QtWidgets.QMainWindow):
         self.update_olx = QtWidgets.QPushButton("Обновить Olx")
         self.update_uybor = QtWidgets.QPushButton("Обновить UyBor")
         self.update_all_data = QtWidgets.QPushButton("Обновить данные")
+        self.export_button = QtWidgets.QPushButton("Экспорт")
         self.main_functions_layout.addWidget(self.update_uybor)
         self.main_functions_layout.addWidget(self.update_olx)
         self.main_functions_layout.addWidget(self.update_all_data)
+        self.main_functions_layout.addWidget(self.export_button)
         page_layout.addLayout(self.main_functions_layout)
         # block progress_bar
         self.progress_bar_layout = QtWidgets.QVBoxLayout()
@@ -45,95 +51,99 @@ class UiParser(QtWidgets.QMainWindow):
         self.progress_bar_layout.addStretch(1)
         page_layout.addLayout(self.progress_bar_layout)
         # # block filters
-        # self.filter_frame = QtWidgets.QFrame(parent=self.main_widget)
-        # # labels for first line_input todo only for num
-        # self.label_price = QtWidgets.QLabel(parent=self.filter_frame)
-        # self.label_currency = QtWidgets.QLabel(parent=self.filter_frame)
-        # self.label_square = QtWidgets.QLabel(parent=self.filter_frame)
-        # self.label_floor = QtWidgets.QLabel(parent=self.filter_frame)
-        # self.label_total_floor = QtWidgets.QLabel(parent=self.filter_frame)
-        # # inputs on first line
-        # self.price_min = QtWidgets.QLineEdit(parent=self.filter_frame)
-        # self.price_max = QtWidgets.QLineEdit(parent=self.filter_frame)
-        # self.currency_type = QtWidgets.QComboBox(parent=self.filter_frame)
-        # self.square_min = QtWidgets.QLineEdit(parent=self.filter_frame)
-        # self.square_max = QtWidgets.QLineEdit(parent=self.filter_frame)
-        # self.min_floor = QtWidgets.QLineEdit(parent=self.filter_frame)
-        # self.max_floor = QtWidgets.QLineEdit(parent=self.filter_frame)
-        # self.total_floor_min = QtWidgets.QLineEdit(parent=self.filter_frame)
-        # self.total_floor_max = QtWidgets.QLineEdit(parent=self.filter_frame)
-        # # button on first line
-        # self.filter_button = QtWidgets.QPushButton(parent=self.filter_frame)
-        # # combo_boxs on second line
-        # self.room_type = QtWidgets.QComboBox(parent=self.filter_frame)
-        # self.repair_type = QtWidgets.QComboBox(parent=self.filter_frame)
-        # self.is_new_building_type = QtWidgets.QComboBox(parent=self.filter_frame)
-        # # button on first line
-        # self.export_button = QtWidgets.QPushButton(parent=self.filter_frame)
-        # # endblock filters
-        # # block stats
-        #
-        # self.label_preview = QtWidgets.QLabel(parent=self.main_widget)
-        # self.data_view = QtWidgets.QTabWidget(parent=self.main_widget)
-        #
-        # self.uybor_widget = QtWidgets.QWidget()
-        # self.horizontal_layout_uybor = QtWidgets.QHBoxLayout(self.uybor_widget)
-        # self.table_widget_uybor = QtWidgets.QTableWidget(parent=self.uybor_widget)
-        # self.stats_frame_uybor = QtWidgets.QFrame(parent=self.main_widget)
-        # self.label_rows_count_uybor = QtWidgets.QLabel(parent=self.stats_frame_uybor)
-        # self.rows_count_uybor = QtWidgets.QLCDNumber(parent=self.stats_frame_uybor)  # todo set intValue
-        #
-        # self.table_widget_uybor.setColumnCount(0)
-        # self.table_widget_uybor.setRowCount(0)
-        # self.horizontal_layout_uybor.addWidget(self.table_widget_uybor)
-        # self.data_view.addTab(self.uybor_widget, "")
-        #
-        # self.olx_widget = QtWidgets.QWidget()
-        # self.horizontal_layout_olx = QtWidgets.QHBoxLayout(self.olx_widget)
-        # self.table_widget_olx = QtWidgets.QTableWidget(parent=self.olx_widget)
-        # self.stats_frame_olx = QtWidgets.QFrame(parent=self.olx_widget)
-        # self.label_rows_count_olx = QtWidgets.QLabel(parent=self.stats_frame_olx)
-        # self.rows_count_olx = QtWidgets.QLCDNumber(parent=self.stats_frame_olx)  # todo set intValue
-        #
-        # self.table_widget_olx.setColumnCount(0)
-        # self.table_widget_olx.setRowCount(0)
-        # self.horizontal_layout_olx.addWidget(self.table_widget_olx)
-        # self.data_view.addTab(self.olx_widget, "")
-        #
-        # self.setCentralWidget(self.main_widget)
-        # self.data_view.setCurrentIndex(0)
-        #
-        # self.setup_text_on_components()
+        self.filter_layout = QtWidgets.QGridLayout()
+        # # labels - first line
+        self.label_price = QtWidgets.QLabel("Цена")
+        self.label_square = QtWidgets.QLabel("Площадь")
+        self.label_floor = QtWidgets.QLabel("Этаж")
+        self.label_total_floor = QtWidgets.QLabel("Этажность")
+        self.filter_button = QtWidgets.QPushButton("Фильтрация")
+
+        self.filter_layout.addWidget(self.label_price, 0, 0, 1, 3, Qt.AlignmentFlag.AlignCenter)
+        self.filter_layout.addWidget(self.label_square, 0, 3, 1, 2, Qt.AlignmentFlag.AlignCenter)
+        self.filter_layout.addWidget(self.label_floor, 0, 5, 1, 2, Qt.AlignmentFlag.AlignCenter)
+        self.filter_layout.addWidget(self.label_total_floor, 0, 7, 1, 2, Qt.AlignmentFlag.AlignCenter)
+        self.filter_layout.addWidget(self.filter_button, 2, 9, 1, 2, Qt.AlignmentFlag.AlignCenter)
+        # inputs second line
+        self.price_min = QtWidgets.QLineEdit()
+        self.price_min.setPlaceholderText("min")
+        self.price_min.setValidator(QIntValidator(1, 999999999, self))
+        self.price_max = QtWidgets.QLineEdit()
+        self.price_max.setPlaceholderText("max")
+        self.price_max.setValidator(QIntValidator(1, 999999999, self))
+        self.currency_type = QtWidgets.QComboBox()
+        self.square_min = QtWidgets.QLineEdit()
+        self.square_max = QtWidgets.QLineEdit()
+        self.floor_min = QtWidgets.QLineEdit()
+        self.floor_max = QtWidgets.QLineEdit()
+        self.total_floor_min = QtWidgets.QLineEdit()
+        self.total_floor_max = QtWidgets.QLineEdit()
+        self.square_max.setValidator(QIntValidator(1, 10000, self))
+        self.square_min.setValidator(QIntValidator(1, 10000, self))
+        self.floor_max.setValidator(QIntValidator(1, 200, self))
+        self.floor_min.setValidator(QIntValidator(1, 200, self))
+        self.total_floor_max.setValidator(QIntValidator(1, 200, self))
+        self.total_floor_min.setValidator(QIntValidator(1, 200, self))
+        self.square_max.setPlaceholderText("max")
+        self.floor_max.setPlaceholderText("max")
+        self.total_floor_max.setPlaceholderText("max")
+        self.total_floor_min.setPlaceholderText("min")
+        self.square_min.setPlaceholderText("min")
+        self.floor_min.setPlaceholderText("min")
+
+        self.filter_layout.addWidget(self.price_min, 2, 0, 1, 1, Qt.AlignmentFlag.AlignCenter)
+        self.filter_layout.addWidget(self.price_max, 2, 1, 1, 1, Qt.AlignmentFlag.AlignCenter)
+
+        self.filter_layout.addWidget(self.square_min, 2, 3, 1, 1, Qt.AlignmentFlag.AlignCenter)
+        self.filter_layout.addWidget(self.square_max, 2, 4, 1, 1, Qt.AlignmentFlag.AlignCenter)
+        self.filter_layout.addWidget(self.floor_min, 2, 5, 1, 1, Qt.AlignmentFlag.AlignCenter)
+        self.filter_layout.addWidget(self.floor_max, 2, 6, 1, 1, Qt.AlignmentFlag.AlignCenter)
+        self.filter_layout.addWidget(self.total_floor_min, 2, 7, 1, 1, Qt.AlignmentFlag.AlignCenter)
+        self.filter_layout.addWidget(self.total_floor_max, 2, 8, 1, 1, Qt.AlignmentFlag.AlignCenter)
+
+        # combo_boxs on second line
+        self.room_type = QtWidgets.QComboBox()
+        self.repair_type = QtWidgets.QComboBox()
+        self.is_new_building_type = QtWidgets.QComboBox()
+        self.filter_layout.addWidget(self.currency_type, 3, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
+        self.filter_layout.addWidget(self.is_new_building_type, 3, 3, 1, 2, Qt.AlignmentFlag.AlignCenter)
+        self.filter_layout.addWidget(self.repair_type, 3, 5, 1, 2, Qt.AlignmentFlag.AlignCenter)
+        self.filter_layout.addWidget(self.room_type, 3, 7, 1, 2, Qt.AlignmentFlag.AlignCenter)
+        page_layout.addLayout(self.filter_layout)
+        self.filters.update({"uzs": True})
+        # endblock filters
+        # block preview
+        self.data_view_layout = QtWidgets.QVBoxLayout()
+        self.label_preview = QtWidgets.QLabel("Предпросмотр")
+        self.data_view = QtWidgets.QTabWidget()
+        self.data_view_layout.addWidget(self.label_preview)
+        self.data_view_layout.addWidget(self.data_view)
+        # block uybor table
+        self.uybor_widget = QtWidgets.QWidget()
+        self.layout_uybor = QtWidgets.QVBoxLayout()
+        self.label_rows_count_uybor = QtWidgets.QLabel("Всего строк: 0")
+        self.layout_uybor.addWidget(self.label_rows_count_uybor)
+        self.uybor_widget.setLayout(self.layout_uybor)
+        self.table_widget_uybor = QtWidgets.QTableWidget()
+        self.layout_uybor.addWidget(self.table_widget_uybor)
+        # block olx table
+        self.olx_widget = QtWidgets.QWidget()
+        self.layout_olx = QtWidgets.QVBoxLayout()
+        self.label_rows_count_olx = QtWidgets.QLabel("Всего строк: 0")
+        self.layout_olx.addWidget(self.label_rows_count_olx)
+        self.olx_widget.setLayout(self.layout_olx)
+        self.table_widget_olx = QtWidgets.QTableWidget()
+        self.layout_olx.addWidget(self.table_widget_olx)
+
+        self.data_view.addTab(self.olx_widget, "OLX")
+        self.data_view.addTab(self.uybor_widget, "UyBor")
+        self.data_view.setCurrentIndex(0)
+        page_layout.addLayout(self.data_view_layout)
+        self.setCentralWidget(self.main_widget)
         self.main_widget.setLayout(page_layout)
         self.setCentralWidget(self.main_widget)
-        # self.add_items_for_combo_box()
-        # self.setup_view_ui()
-        # self.handler()
-
-    def setup_view_ui(self):
-        self.setup_main_window()
-
-    def setup_main_window(self):
-        self.setObjectName("Parser")
-        self.setAutoFillBackground(True)
-
-    def setup_text_on_components(self):
-        self.setWindowTitle("MAEParser")
-        # self.label_floor.setText("Этаж")
-        # self.label_currency.setText("Валюта")
-        # self.label_square.setText("Площадь")
-        # self.label_total_floor.setText("Этажность")
-        # self.label_price.setText("Цена")
-        # self.filter_button.setText("Отфильтровать")
-        # self.label_progress_bar.setText("")
-        # self.label_current_process_name.setText("")
-        # self.label_rows_count_olx.setText("Всего строк:")
-        # self.label_rows_count_uybor.setText("Всего строк:")
-
-        # self.export_button.setText("Экспортировать в xlsm")
-        # self.label_preview.setText("Предпросмотр")
-        # self.data_view.setTabText(self.data_view.indexOf(self.uybor_widget), "UyBor")
-        # self.data_view.setTabText(self.data_view.indexOf(self.olx_widget), "Olx")
+        self.add_items_for_combo_box()
+        self.handler()
 
     def add_items_for_combo_box(self):
         self.is_new_building_type.addItems(["Тип квартиры", "Новостройки", "Вторичный"])
@@ -142,47 +152,50 @@ class UiParser(QtWidgets.QMainWindow):
         self.repair_type.addItems([REPAIR_CHOICES_UYBOR[one] for one in REPAIR_CHOICES_UYBOR])
 
     def update_all_data_clicked(self):
-        self.label_current_process_name.setText("Обновление данных с OLX и UyBor")
+        self.label_progress_bar.setText("Процесс: Обновление данных с OLX и UyBor")
         self.update_uybor_clicked()
         self.update_olx_clicked()
 
     def update_uybor_clicked(self):
-        self.label_current_process_name.setText("Обновление UyBor")
+        self.label_progress_bar.setText("Процесс: Обновление UyBor")
         self.progress_bar.setProperty("value", 0)
         create_internal_excel_file("uybor", fill_sheet_uybor, self.progress_bar)
-        self.label_current_process_name.setText("Завершено")
+        self.label_progress_bar.setText("Процесс: Завершено")
         self.progress_bar.setProperty("value", 100)
 
     def update_olx_clicked(self):
-        self.label_current_process_name.setText("Обновление OLX")
+        self.label_progress_bar.setText("Процесс: Обновление OLX")
         self.progress_bar.setProperty("value", 0)
         create_internal_excel_file("olx", fill_sheet_olx, self.progress_bar)
-        self.label_current_process_name.setText("Завершено")
+        self.label_progress_bar.setText("Процесс: Завершено")
         self.progress_bar.setProperty("value", 100)
 
     def filter_button_clicked(self):
-        self.label_current_process_name.setText("Фильтрация")
+        print(self.filters)
+        self.label_progress_bar.setText("Процесс: Фильтрация")
         self.progress_bar.setProperty("value", 0)
         self.results_olx = filter(filters=self.filters, resource="output/internal/olx.xlsm")
-        self.rows_count_olx.setDigitCount(len(self.results_olx))
+        self.label_rows_count_olx.setText(f"Всего строк:{len(self.results_olx)}")
+        # todo print table
         self.results_uybor = filter(filters=self.filters, resource="output/internal/uybor.xlsm")
-        self.rows_count_uybor.setDigitCount(len(self.results_uybor))
-
-        self.label_current_process_name.setText("Завершено")
+        self.label_rows_count_uybor.setText(f"Всего строк:{len(self.results_uybor)}")
+        # print table
+        print(len(self.results_uybor), len(self.results_olx))
+        self.label_progress_bar.setText("Процесс: Завершено")
         self.progress_bar.setProperty("value", 100)
         if len(self.results_uybor) + len(self.results_olx) > 0:
-            self.export_button.setDisabled(False)
+            self.export_button.setEnabled(True)
 
     def export_button_clicked(self):
         if len(self.results_uybor) + len(self.results_olx) < 0:
             self.export_button.setDisabled(True)
             return
-        self.label_current_process_name.setText("Экспорт данных")
+        self.label_progress_bar.setText("Процесс: Экспорт данных")
         self.progress_bar.setProperty("value", 0)
         create_filtered_excel_file(fill_filtered_data, "olx", self.results_olx, progress=self.progress_bar, start=0)
         create_filtered_excel_file(fill_filtered_data, "uybor", self.results_uybor, progress=self.progress_bar,
                                    start=50)
-        self.label_current_process_name.setText("Завершено")
+        self.label_progress_bar.setText("Процесс: Завершено")
         self.progress_bar.setProperty("value", 100)
 
     def cur_chosen(self):
@@ -197,22 +210,73 @@ class UiParser(QtWidgets.QMainWindow):
         # print(self.filters)
 
     def room_chosen(self):
-        if self.room_type.currentText() != "Не выбрано":
+        if self.room_type.currentText() != "Комнаты":
             self.filters.update({"room": self.room_type.currentText()})
         else:
             self.filters.pop("room")
 
     def is_new_building_chosen(self):
-        if self.room_type.currentText() != "Не выбрано":
+        if self.is_new_building_type.currentText() != "Тип квартиры":
             self.filters.update({"is_new_building": self.is_new_building_type.currentText()})
         else:
             self.filters.pop("is_new_building")
 
     def repair_chosen(self):
-        if self.room_type.currentText() != "Не выбрано":
+        if self.repair_type.currentText() != "Ремонт":
             self.filters.update({"repair": self.repair_type.currentText()})
         else:
             self.filters.pop("is_new_building")
+    # todo type from input,
+    #  progressbar fix,
+    #  getting cur from another site
+
+    def price_min_changed(self):
+        if self.price_min.text() != "":
+            self.filters.update({"price_min": int(self.price_min.text())})
+        else:
+            self.filters.pop("price_min")
+
+    def price_max_changed(self):
+        if self.price_max.text() != "":
+            self.filters.update({"price_max": int(self.price_max.text())})
+        else:
+            self.filters.pop("price_max")
+
+    def floor_min_changed(self):
+        if self.floor_min.text() != "":
+            self.filters.update({"floor_min": int(self.floor_min.text())})
+        else:
+            self.filters.pop("floor_min")
+
+    def floor_max_changed(self):
+        if self.floor_max.text() != "":
+            self.filters.update({"floor_max": int(self.floor_max.text())})
+        else:
+            self.filters.pop("floor_max")
+
+    def square_min_changed(self):
+        if self.square_min.text() != "":
+            self.filters.update({"square_min": float(self.square_min.text())})
+        else:
+            self.filters.pop("square_min")
+
+    def square_max_changed(self):
+        if self.square_max.text() != "":
+            self.filters.update({"square_max": float(self.square_max.text())})
+        else:
+            self.filters.pop("square_max")
+
+    def total_floor_min_changed(self):
+        if self.total_floor_min.text() != "":
+            self.filters.update({"total_floor_min": int(self.total_floor_min.text())})
+        else:
+            self.filters.pop("total_floor_min")
+
+    def total_floor_max_changed(self):
+        if self.total_floor_max.text() != "":
+            self.filters.update({"total_floor_max": int(self.total_floor_max.text())})
+        else:
+            self.filters.pop("total_floor_max")
 
     def handler(self):
         self.room_type.activated.connect(self.room_chosen)
@@ -233,8 +297,14 @@ class UiParser(QtWidgets.QMainWindow):
         self.update_uybor.clicked.connect(self.update_uybor_clicked)
         self.filter_button.setCheckable(True)
         self.filter_button.clicked.connect(self.filter_button_clicked)
-
-
+        self.price_min.textChanged.connect(self.price_min_changed)
+        self.price_max.textChanged.connect(self.price_max_changed)
+        self.square_min.textChanged.connect(self.square_min_changed)
+        self.square_max.textChanged.connect(self.square_max_changed)
+        self.floor_min.textChanged.connect(self.floor_min_changed)
+        self.floor_max.textChanged.connect(self.floor_max_changed)
+        self.total_floor_max.textChanged.connect(self.total_floor_max_changed)
+        self.total_floor_min.textChanged.connect(self.total_floor_min_changed)
 
 
 if __name__ == "__main__":
@@ -246,9 +316,9 @@ if __name__ == "__main__":
     ui = UiParser()
     ui.show()
     sys.exit(app.exec())
-# TODO handler qline
-# TODO table view
+
 # TODO testing
 # todo exception
-# todo fix bad data format
-#  todo cnb replece to ..
+# todo button reset filters
+# todo template excel
+

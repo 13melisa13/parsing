@@ -80,7 +80,7 @@ def fill_sheet_uybor(sheet, progress, agrs=[]):
             else:
                 repair = REPAIR_CHOICES_UYBOR['repair']
             if results[i]['isNewBuilding']:
-                is_new_building = 'Новостройка'
+                is_new_building = 'Новостройки'
             else:
                 is_new_building = 'Вторичный'
             if not isinstance(results[i]['room'], int):
