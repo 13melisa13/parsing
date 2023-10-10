@@ -2,13 +2,13 @@ import requests
 
 
 REPAIR_CHOICES_UYBOR = {
-    "evro": "Евроремонт",
+    "repair": "Ремонт",
     "custom": "Авторский проект",
     "sredniy": "Средний",
     "kapital": "Требует ремонта",
     "chernovaya": "Черновая отделка",
     "predchistovaya": "Предчистовая отделка",
-    " ": "Не выбрано"
+    "evro": "Евроремонт"
 }
 CURRENCY_CHOISES = [
     "СУММ.", "У.Е."
@@ -78,7 +78,7 @@ def fill_sheet_uybor(sheet, progress, agrs=[]):
             if results[i]['repair'] is not None:
                 repair = REPAIR_CHOICES_UYBOR[results[i]['repair']]
             else:
-                repair = ''
+                repair = REPAIR_CHOICES_UYBOR['repair']
             if results[i]['isNewBuilding']:
                 is_new_building = 'Новостройка'
             else:

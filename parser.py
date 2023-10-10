@@ -24,81 +24,115 @@ class UiParser(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
         self.main_widget = QtWidgets.QWidget(parent=self)
-        self.ProcessBarFrame = QtWidgets.QFrame(parent=self.main_widget)
-        self.process_name_label = QtWidgets.QLabel(parent=self.ProcessBarFrame)
-        self.FilterFrame = QtWidgets.QFrame(parent=self.main_widget)
-        self.label_floor = QtWidgets.QLabel(parent=self.FilterFrame)
-        self.total_floor_max = QtWidgets.QLineEdit(parent=self.FilterFrame)
-        self.label_square = QtWidgets.QLabel(parent=self.FilterFrame)
-        self.room_type = QtWidgets.QComboBox(parent=self.FilterFrame)
-        self.room_type.addItems([
-            "Не выбрано","Студия", "1", "2", "3", "4", "5", "6+"
-        ])
-        self.is_new_building_type = QtWidgets.QComboBox(parent=self.FilterFrame)
-        self.is_new_building_type.addItems(
-            ["Не выбрано", "Новостройки", "Вторичный"]
-        )
-        self.min_floor = QtWidgets.QLineEdit(parent=self.FilterFrame)
-        self.max_floor = QtWidgets.QLineEdit(parent=self.FilterFrame)
-        self.label_total_floor = QtWidgets.QLabel(parent=self.FilterFrame)
-        self.total_floor_min = QtWidgets.QLineEdit(parent=self.FilterFrame)
-        self.total_floor_max = QtWidgets.QLineEdit(parent=self.FilterFrame)
-        self.min_room_count = QtWidgets.QLineEdit(parent=self.FilterFrame)
-        self.label_price = QtWidgets.QLabel(parent=self.FilterFrame)
-        self.max_square = QtWidgets.QLineEdit(parent=self.FilterFrame)
-        self.min_square = QtWidgets.QLineEdit(parent=self.FilterFrame)
-        self.filter_button = QtWidgets.QPushButton(parent=self.FilterFrame)
-        self.currency_type = QtWidgets.QComboBox(parent=self.FilterFrame)
-        self.currency_type.addItems(CURRENCY_CHOISES)
-        self.repair_type = QtWidgets.QComboBox(parent=self.FilterFrame)
-        self.repair_type.addItems([REPAIR_CHOICES_UYBOR[one] for one in REPAIR_CHOICES_UYBOR])
-        self.label_progress = QtWidgets.QLabel(parent=self.ProcessBarFrame)
-        self.progressBar = QtWidgets.QProgressBar(parent=self.ProcessBarFrame)
-        self.StatsFrame = QtWidgets.QFrame(parent=self.main_widget)
-        self.rows_count = QtWidgets.QLCDNumber(parent=self.StatsFrame)
-        self.label_rows = QtWidgets.QLabel(parent=self.StatsFrame)
-        self.MainFunctionsFrame = QtWidgets.QFrame(parent=self.main_widget)
-        self.update_olx = QtWidgets.QPushButton(parent=self.MainFunctionsFrame)
-        self.update_uybor = QtWidgets.QPushButton(parent=self.MainFunctionsFrame)
-        self.update_all_data = QtWidgets.QPushButton(parent=self.MainFunctionsFrame)
-        self.export_button = QtWidgets.QPushButton(parent=self.MainFunctionsFrame)
+        # block buttons upload
+        self.main_functions_frame = QtWidgets.QFrame(parent=self.main_widget)
+        self.update_olx = QtWidgets.QPushButton(parent=self.main_functions_frame)
+        self.update_uybor = QtWidgets.QPushButton(parent=self.main_functions_frame)
+        self.update_all_data = QtWidgets.QPushButton(parent=self.main_functions_frame)
+        # delete this button from this fram todo button export part1
+        self.export_button = QtWidgets.QPushButton(parent=self.main_functions_frame)
+        # block progress_bar
+        self.progress_bar_frame = QtWidgets.QFrame(parent=self.main_widget)
+        self.label_progress_bar = QtWidgets.QLabel(parent=self.progress_bar_frame)
+        self.label_current_process_name = QtWidgets.QLabel(parent=self.progress_bar_frame)
+        self.progress_bar = QtWidgets.QProgressBar(parent=self.progress_bar_frame)
+        self.progress_bar.setProperty("value", 0)
+        # block filters
+        self.filter_frame = QtWidgets.QFrame(parent=self.main_widget)
+        # labels for first line_input todo only for num
+        self.label_price = QtWidgets.QLabel(parent=self.filter_frame)
+        self.label_currency = QtWidgets.QLabel(parent=self.filter_frame)
+        self.label_square = QtWidgets.QLabel(parent=self.filter_frame)
+        self.label_floor = QtWidgets.QLabel(parent=self.filter_frame)
+        self.label_total_floor = QtWidgets.QLabel(parent=self.filter_frame)
+        # inputs on first line
+        self.price_min = QtWidgets.QLineEdit(parent=self.filter_frame)
+        self.price_max = QtWidgets.QLineEdit(parent=self.filter_frame)
+        self.currency_type = QtWidgets.QComboBox(parent=self.filter_frame)
+        self.square_min = QtWidgets.QLineEdit(parent=self.filter_frame)
+        self.square_max = QtWidgets.QLineEdit(parent=self.filter_frame)
+        self.min_floor = QtWidgets.QLineEdit(parent=self.filter_frame)
+        self.max_floor = QtWidgets.QLineEdit(parent=self.filter_frame)
+        self.total_floor_min = QtWidgets.QLineEdit(parent=self.filter_frame)
+        self.total_floor_max = QtWidgets.QLineEdit(parent=self.filter_frame)
+        # button on first line
+        self.filter_button = QtWidgets.QPushButton(parent=self.filter_frame)
+        # combo_boxs on second line
+        self.room_type = QtWidgets.QComboBox(parent=self.filter_frame)
+        self.repair_type = QtWidgets.QComboBox(parent=self.filter_frame)
+        self.is_new_building_type = QtWidgets.QComboBox(parent=self.filter_frame)
+        # button on first line todo button export part2
+        # self.export_button = QtWidgets.QPushButton(parent=self.filter_frame)
+        # endblock filters
+        # block stats
+
         self.label_preview = QtWidgets.QLabel(parent=self.main_widget)
-        self.DataView = QtWidgets.QTabWidget(parent=self.main_widget)
-        self.UyBor = QtWidgets.QWidget()
-        self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.UyBor)
-        self.tableWidget_uybor = QtWidgets.QTableWidget(parent=self.UyBor)
-        self.Olx = QtWidgets.QWidget()
-        self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.Olx)
-        self.tableWidget_olx = QtWidgets.QTableWidget(parent=self.Olx)
-        self.setup_ui()
+        self.data_view = QtWidgets.QTabWidget(parent=self.main_widget)
+
+        self.uybor_widget = QtWidgets.QWidget()
+        self.horizontal_layout_uybor = QtWidgets.QHBoxLayout(self.uybor_widget)
+        self.table_widget_uybor = QtWidgets.QTableWidget(parent=self.uybor_widget)
+        self.stats_frame_uybor = QtWidgets.QFrame(parent=self.main_widget)
+        self.label_rows_count = QtWidgets.QLabel(parent=self.stats_frame_uybor)
+        self.rows_count = QtWidgets.QLCDNumber(parent=self.stats_frame_uybor)  # todo set intValue
+
+        self.table_widget_uybor.setColumnCount(0)
+        self.table_widget_uybor.setRowCount(0)
+        self.horizontal_layout_uybor.addWidget(self.table_widget_uybor)
+        self.data_view.addTab(self.uybor_widget, "")
+
+        self.olx_widget = QtWidgets.QWidget()
+        self.horizontal_layout_olx = QtWidgets.QHBoxLayout(self.olx_widget)
+        self.table_widget_olx = QtWidgets.QTableWidget(parent=self.olx_widget)
+        self.stats_frame_olx = QtWidgets.QFrame(parent=self.olx_widget)
+        self.label_rows_count_olx = QtWidgets.QLabel(parent=self.stats_frame_olx)
+        self.rows_count_olx = QtWidgets.QLCDNumber(parent=self.stats_frame_olx)  # todo set intValue
+
+        self.table_widget_olx.setColumnCount(0)
+        self.table_widget_olx.setRowCount(0)
+        self.horizontal_layout_olx.addWidget(self.table_widget_olx)
+        self.data_view.addTab(self.olx_widget, "")
+
+        self.setCentralWidget(self.main_widget)
+        self.data_view.setCurrentIndex(0)
+
+        self.setup_text_on_components()
+        self.add_items_for_combo_box()
+        self.setup_view_ui()
         self.handler()
 
+    def add_items_for_combo_box(self):
+        self.is_new_building_type.addItems(["Тип квартиры", "Новостройки", "Вторичный"])
+        self.room_type.addItems(["Комнаты", "Студия", "1", "2", "3", "4", "5", "6+"])
+        self.currency_type.addItems(CURRENCY_CHOISES)
+        self.repair_type.addItems([REPAIR_CHOICES_UYBOR[one] for one in REPAIR_CHOICES_UYBOR])
+
     def update_all_data_clicked(self):
-        self.process_name_label.setText("Обновление данных с OLX и UyBor")
+        self.label_current_process_name.setText("Обновление данных с OLX и UyBor")
         self.update_uybor_clicked()
         self.update_olx_clicked()
 
     def update_uybor_clicked(self):
-        self.process_name_label.setText("Обновление UyBor")
-        self.progressBar.setProperty("value", 0)
-        create_internal_excel_file("uybor", fill_sheet_uybor, self.progressBar)
-        self.process_name_label.setText("Завершено")
-        self.progressBar.setProperty("value", 100)
+        self.label_current_process_name.setText("Обновление UyBor")
+        self.progress_bar.setProperty("value", 0)
+        create_internal_excel_file("uybor", fill_sheet_uybor, self.progress_bar)
+        self.label_current_process_name.setText("Завершено")
+        self.progress_bar.setProperty("value", 100)
 
-    def update_olx_clicked(self, start=0):
-        self.process_name_label.setText("Обновление OLX")
-        self.progressBar.setProperty("value", 0)
-        create_internal_excel_file("olx", fill_sheet_olx, self.progressBar)
-        self.process_name_label.setText("Завершено")
-        self.progressBar.setProperty("value", 100)
+    def update_olx_clicked(self):
+        self.label_current_process_name.setText("Обновление OLX")
+        self.progress_bar.setProperty("value", 0)
+        create_internal_excel_file("olx", fill_sheet_olx, self.progress_bar)
+        self.label_current_process_name.setText("Завершено")
+        self.progress_bar.setProperty("value", 100)
 
     def filter_button_clicked(self):
-        self.process_name_label.setText("Фильтрация")
-        self.progressBar.setProperty("value", 0)
+        self.label_current_process_name.setText("Фильтрация")
+        self.progress_bar.setProperty("value", 0)
         self.results_olx = filter(filters=self.filters, resource="output/internal/olx.xlsm")
         self.results_uybor = filter(filters=self.filters, resource="output/internal/uybor.xlsm")
-        self.process_name_label.setText("Завершено")
-        self.progressBar.setProperty("value", 100)
+        self.label_current_process_name.setText("Завершено")
+        self.progress_bar.setProperty("value", 100)
         if len(self.results_uybor) + len(self.results_olx) > 0:
             self.export_button.setDisabled(False)
 
@@ -106,12 +140,13 @@ class UiParser(QtWidgets.QMainWindow):
         if len(self.results_uybor) + len(self.results_olx) < 0:
             self.export_button.setDisabled(True)
             return
-        self.process_name_label.setText("Экспорт данных")
-        self.progressBar.setProperty("value", 0)
-        create_filtered_excel_file(fill_filtered_data, "olx", self.results_olx, progress=self.progressBar, start=0)
-        create_filtered_excel_file(fill_filtered_data, "uybor", self.results_uybor, progress=self.progressBar, start=50)
-        self.process_name_label.setText("Завершено")
-        self.progressBar.setProperty("value", 100)
+        self.label_current_process_name.setText("Экспорт данных")
+        self.progress_bar.setProperty("value", 0)
+        create_filtered_excel_file(fill_filtered_data, "olx", self.results_olx, progress=self.progress_bar, start=0)
+        create_filtered_excel_file(fill_filtered_data, "uybor", self.results_uybor, progress=self.progress_bar,
+                                   start=50)
+        self.label_current_process_name.setText("Завершено")
+        self.progress_bar.setProperty("value", 100)
 
     def cur_chosen(self):
         if self.currency_type.currentText() == "СУММ.":
@@ -150,7 +185,8 @@ class UiParser(QtWidgets.QMainWindow):
         self.export_button.setCheckable(True)
         if len(self.results_uybor) + len(self.results_olx) < 0:
             self.export_button.setDisabled(True)
-            return
+        else:
+            self.export_button.setDisabled(False)
         self.export_button.clicked.connect(self.export_button_clicked)
         self.update_all_data.setCheckable(True)
         self.update_all_data.clicked.connect(self.update_all_data_clicked)
@@ -161,170 +197,161 @@ class UiParser(QtWidgets.QMainWindow):
         self.filter_button.setCheckable(True)
         self.filter_button.clicked.connect(self.filter_button_clicked)
 
-    def setup_ui(self):
+    def setup_view_ui(self):
         self.setup_main_window()
-        self.main_widget.setObjectName("main_widget")
-        self.FilterFrame.setGeometry(QtCore.QRect(10, 130, 1041, 51))
-        self.FilterFrame.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
-        self.FilterFrame.setFrameShadow(QtWidgets.QFrame.Shadow.Raised)
-        self.FilterFrame.setObjectName("FilterFrame")
+        # self.main_widget.setObjectName("main_widget")
+        # self.filter_frame.setGeometry(QtCore.QRect(10, 130, 1041, 51))
+        # self.filter_frame.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
+        # self.filter_frame.setFrameShadow(QtWidgets.QFrame.Shadow.Raised)
+        # self.filter_frame.setObjectName("FilterFrame")
+        #
+        # self.label_floor.setGeometry(QtCore.QRect(320, 0, 47, 13))
+        # self.label_floor.setObjectName("label_floor")
+        # self.total_floor_max.setGeometry(QtCore.QRect(70, 20, 121, 21))
+        # self.total_floor_max.setObjectName("total_floor_max")
+        # self.label_square.setGeometry(QtCore.QRect(480, 0, 47, 13))
+        # self.label_square.setObjectName("label_square")
+        # self.room_type.setGeometry(QtCore.QRect(600, 10, 151, 41))
+        # self.room_type.setObjectName("room_type")
+        # self.min_floor.setGeometry(QtCore.QRect(320, 20, 31, 21))
+        # self.min_floor.setObjectName("min_floor")
+        # self.max_floor.setGeometry(QtCore.QRect(360, 20, 31, 21))
+        # self.max_floor.setObjectName("max_floor")
+        # self.label_total_floor.setGeometry(QtCore.QRect(390, -4, 81, 20))
+        # self.label_total_floor.setObjectName("label_total_floor")
+        # self.total_floor_min.setGeometry(QtCore.QRect(200, 20, 111, 21))
+        # self.total_floor_min.setObjectName("max_worth")
+        #
+        # self.total_floor_max.setGeometry(QtCore.QRect(440, 20, 31, 21))
+        # self.total_floor_max.setObjectName("max_room_count")
 
-        self.label_floor.setGeometry(QtCore.QRect(320, 0, 47, 13))
-        self.label_floor.setObjectName("label_floor")
-        self.total_floor_max.setGeometry(QtCore.QRect(70, 20, 121, 21))
-        self.total_floor_max.setObjectName("total_floor_max")
-        self.label_square.setGeometry(QtCore.QRect(480, 0, 47, 13))
-        self.label_square.setObjectName("label_square")
-        self.room_type.setGeometry(QtCore.QRect(600, 10, 151, 41))
-        self.room_type.setObjectName("room_type")
-        self.min_floor.setGeometry(QtCore.QRect(320, 20, 31, 21))
-        self.min_floor.setObjectName("min_floor")
-        self.max_floor.setGeometry(QtCore.QRect(360, 20, 31, 21))
-        self.max_floor.setObjectName("max_floor")
-        self.label_total_floor.setGeometry(QtCore.QRect(390, -4, 81, 20))
-        self.label_total_floor.setObjectName("label_total_floor")
-        self.total_floor_min.setGeometry(QtCore.QRect(200, 20, 111, 21))
-        self.total_floor_min.setObjectName("max_worth")
+        # self.min_room_count.setGeometry(QtCore.QRect(400, 20, 31, 21))
+        # self.min_room_count.setObjectName("min_room_count")
 
-        self.total_floor_max.setGeometry(QtCore.QRect(440, 20, 31, 21))
-        self.total_floor_max.setObjectName("max_room_count")
+        # self.label_price.setGeometry(QtCore.QRect(10, 0, 47, 13))
+        # self.label_price.setObjectName("label")
+        #
+        # self.square_min.setGeometry(QtCore.QRect(540, 20, 51, 21))
+        # self.square_min.setObjectName("max_square")
+        #
+        # self.square_max.setGeometry(QtCore.QRect(480, 20, 51, 21))
+        # self.square_max.setObjectName("min_square")
+        #
+        # self.filter_button.setGeometry(QtCore.QRect(920, 20, 111, 21))
+        #
+        # palette = QtGui.QPalette()
+        # self.filter_button.setPalette(setup_palette(palette))
 
-        self.min_room_count.setGeometry(QtCore.QRect(400, 20, 31, 21))
-        self.min_room_count.setObjectName("min_room_count")
+        # self.filter_button.setAutoFillBackground(False)
+        # self.filter_button.setObjectName("filter_button")
+        #
+        # self.currency_type.setGeometry(QtCore.QRect(0, 20, 61, 21))
+        # self.currency_type.setObjectName("currency")
+        #
+        # self.repair_type.setGeometry(QtCore.QRect(760, 10, 151, 41))
+        #
+        # palette = QtGui.QPalette()
+        # self.repair_type.setPalette(setup_palette_again(palette))
+        #
+        # self.repair_type.setObjectName("repair_type")
+        #
+        # self.progress_bar_frame.setGeometry(QtCore.QRect(10, 50, 1051, 80))
+        # self.progress_bar_frame.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
+        # self.progress_bar_frame.setFrameShadow(QtWidgets.QFrame.Shadow.Raised)
+        # self.progress_bar_frame.setObjectName("ProcessBarFrame")
+        # self.label_progress_bar.setGeometry(QtCore.QRect(0, 16, 41, 20))
+        # self.label_progress_bar.setObjectName("label_6")
+        #
+        # self.label_current_process_name.setGeometry(QtCore.QRect(50, 16, 931, 20))
+        # self.label_current_process_name.setObjectName("process_name_label")
 
-        self.label_price.setGeometry(QtCore.QRect(10, 0, 47, 13))
-        self.label_price.setObjectName("label")
+        # self.progress_bar.setGeometry(QtCore.QRect(0, 40, 1041, 23))
 
-        self.max_square.setGeometry(QtCore.QRect(540, 20, 51, 21))
-        self.max_square.setObjectName("max_square")
+        # self.progress_bar.setObjectName("progressBar")
+        #
+        # self.stats_frame.setGeometry(QtCore.QRect(10, 720, 1041, 41))
+        # self.stats_frame.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
+        # self.stats_frame.setFrameShadow(QtWidgets.QFrame.Shadow.Raised)
+        # self.stats_frame.setObjectName("StatsFrame")
+        # self.rows_count.setGeometry(QtCore.QRect(80, 0, 91, 23))
+        # self.rows_count.setObjectName("rows_count")
+        # self.label_rows_count.setGeometry(QtCore.QRect(10, 0, 71, 21))
+        # self.label_rows_count.setObjectName("label_5")
 
-        self.min_square.setGeometry(QtCore.QRect(480, 20, 51, 21))
-        self.min_square.setObjectName("min_square")
+        # self.main_functions_frame.setGeometry(QtCore.QRect(10, 0, 1041, 51))
+        # self.main_functions_frame.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
+        # self.main_functions_frame.setFrameShadow(QtWidgets.QFrame.Shadow.Raised)
+        # self.main_functions_frame.setObjectName("MainFunctionsFrame")
 
-        self.filter_button.setGeometry(QtCore.QRect(920, 20, 111, 21))
+        # self.update_olx.setGeometry(QtCore.QRect(450, 10, 141, 31))
+        # self.update_olx.setObjectName("update_olx")
+        #
+        # self.update_uybor.setGeometry(QtCore.QRect(300, 10, 141, 31))
+        # self.update_uybor.setObjectName("update_uybor")
+        #
+        # self.update_all_data.setGeometry(QtCore.QRect(150, 10, 141, 31))
+        # self.update_all_data.setObjectName("update_all_data")
+        #
+        # self.export_button.setGeometry(QtCore.QRect(0, 10, 141, 31))
+        # self.export_button.setObjectName("export_button")
+        #
+        # self.label_preview.setGeometry(QtCore.QRect(10, 200, 81, 16))
+        # self.label_preview.setObjectName("label_7")
+        # self.data_view.setGeometry(QtCore.QRect(10, 220, 1041, 501))
+        # self.data_view.setObjectName("DataView")
+        #
+        # self.uybor_widget.setObjectName("UyBor")
+        # self.horizontal_layout_uybor.setObjectName("horizontalLayout_2")
+        # self.table_widget_uybor.setObjectName("tableWidget")
 
-        palette = QtGui.QPalette()
-        self.filter_button.setPalette(setup_palette(palette))
+        # self.olx_widget.setObjectName("Olx")
+        # self.horizontal_layout_olx.setObjectName("horizontalLayout_3")
 
-        self.filter_button.setAutoFillBackground(False)
-        self.filter_button.setObjectName("filter_button")
+        # self.table_widget_olx.setObjectName("tableWidget_2")
 
-        self.currency_type.setGeometry(QtCore.QRect(0, 20, 61, 21))
-        self.currency_type.setObjectName("currency")
+        self.stats_frame_uybor.raise_()
+        self.stats_frame_olx.raise_()
+        self.progress_bar_frame.raise_()
+        self.filter_frame.raise_()
+        self.main_functions_frame.raise_()
+        self.data_view.raise_()
 
-        self.repair_type.setGeometry(QtCore.QRect(760, 10, 151, 41))
-
-        palette = QtGui.QPalette()
-        self.repair_type.setPalette(setup_palette_again(palette))
-
-        self.repair_type.setObjectName("repair_type")
-
-        self.ProcessBarFrame.setGeometry(QtCore.QRect(10, 50, 1051, 80))
-        self.ProcessBarFrame.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
-        self.ProcessBarFrame.setFrameShadow(QtWidgets.QFrame.Shadow.Raised)
-        self.ProcessBarFrame.setObjectName("ProcessBarFrame")
-        self.label_progress.setGeometry(QtCore.QRect(0, 16, 41, 20))
-        self.label_progress.setObjectName("label_6")
-
-        self.process_name_label.setGeometry(QtCore.QRect(50, 16, 931, 20))
-        self.process_name_label.setObjectName("process_name_label")
-
-        self.progressBar.setGeometry(QtCore.QRect(0, 40, 1041, 23))
-        self.progressBar.setProperty("value", 0)
-        self.progressBar.setObjectName("progressBar")
-
-        self.StatsFrame.setGeometry(QtCore.QRect(10, 720, 1041, 41))
-        self.StatsFrame.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
-        self.StatsFrame.setFrameShadow(QtWidgets.QFrame.Shadow.Raised)
-        self.StatsFrame.setObjectName("StatsFrame")
-        self.rows_count.setGeometry(QtCore.QRect(80, 0, 91, 23))
-        self.rows_count.setObjectName("rows_count")
-        self.label_rows.setGeometry(QtCore.QRect(10, 0, 71, 21))
-        self.label_rows.setObjectName("label_5")
-        self.MainFunctionsFrame.setGeometry(QtCore.QRect(10, 0, 1041, 51))
-        self.MainFunctionsFrame.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
-        self.MainFunctionsFrame.setFrameShadow(QtWidgets.QFrame.Shadow.Raised)
-        self.MainFunctionsFrame.setObjectName("MainFunctionsFrame")
-
-        self.update_olx.setGeometry(QtCore.QRect(450, 10, 141, 31))
-        self.update_olx.setObjectName("update_olx")
-
-        self.update_uybor.setGeometry(QtCore.QRect(300, 10, 141, 31))
-        self.update_uybor.setObjectName("update_uybor")
-
-        self.update_all_data.setGeometry(QtCore.QRect(150, 10, 141, 31))
-        self.update_all_data.setObjectName("update_all_data")
-
-        self.export_button.setGeometry(QtCore.QRect(0, 10, 141, 31))
-        self.export_button.setObjectName("export_button")
-
-        self.label_preview.setGeometry(QtCore.QRect(10, 200, 81, 16))
-        self.label_preview.setObjectName("label_7")
-        self.DataView.setGeometry(QtCore.QRect(10, 220, 1041, 501))
-        self.DataView.setObjectName("DataView")
-
-        self.UyBor.setObjectName("UyBor")
-        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.tableWidget_uybor.setObjectName("tableWidget")
-        self.tableWidget_uybor.setColumnCount(0)
-        self.tableWidget_uybor.setRowCount(0)
-        self.horizontalLayout_2.addWidget(self.tableWidget_uybor)
-        self.DataView.addTab(self.UyBor, "")
-
-        self.Olx.setObjectName("Olx")
-        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
-
-        self.tableWidget_olx.setObjectName("tableWidget_2")
-        self.tableWidget_olx.setColumnCount(0)
-        self.tableWidget_olx.setRowCount(0)
-        self.horizontalLayout_3.addWidget(self.tableWidget_olx)
-
-        self.DataView.addTab(self.Olx, "")
-        self.StatsFrame.raise_()
-        self.ProcessBarFrame.raise_()
-        self.FilterFrame.raise_()
-        self.MainFunctionsFrame.raise_()
-        self.label_preview.raise_()
-        self.DataView.raise_()
-        self.setCentralWidget(self.main_widget)
-
-        self.retranslate_ui()
-        self.DataView.setCurrentIndex(0)
-        QtCore.QMetaObject.connectSlotsByName(self)
+        # QtCore.QMetaObject.connectSlotsByName(self)
 
     def setup_main_window(self):
         self.setObjectName("Parser")
-        self.resize(1000, 700)
-        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
-        size_policy.setHorizontalStretch(0)
-        size_policy.setVerticalStretch(0)
-        size_policy.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
-        self.setSizePolicy(size_policy)
-        self.setMinimumSize(QtCore.QSize(1061, 751))
-        self.setMaximumSize(QtCore.QSize(1061, 751))
+        # self.resize(1000, 700)
+        # size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
+        # size_policy.setHorizontalStretch(0)
+        # size_policy.setVerticalStretch(0)
+        # size_policy.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
+        # self.setSizePolicy(size_policy)
+        # self.setMinimumSize(QtCore.QSize(1061, 751))
+        # self.setMaximumSize(QtCore.QSize(1061, 751))
         self.setAutoFillBackground(True)
 
-    def retranslate_ui(self):
+    def setup_text_on_components(self):
         _translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(_translate("Parser", "MAEParser"))
         self.label_floor.setText(_translate("Parser", "Этаж"))
+        self.label_currency.setText(_translate("Parser", "Валюта"))
         self.label_square.setText(_translate("Parser", "Площадь"))
         self.label_total_floor.setText(_translate("Parser", "Этажность"))
         self.label_price.setText(_translate("Parser", "Цена"))
         self.filter_button.setText(_translate("Parser", "Отфильтровать"))
-        self.label_progress.setText(_translate("Parser", "Процесс:"))
-        self.process_name_label.setText(_translate("Parser", ""))
-        self.label_rows.setText(_translate("Parser", "Всего строк:"))
+        self.label_progress_bar.setText(_translate("Parser", "Процесс:"))
+        self.label_current_process_name.setText(_translate("Parser", ""))
+        self.label_rows_count.setText(_translate("Parser", "Всего строк:"))
         self.update_olx.setText(_translate("Parser", "Обновить Olx"))
         self.update_uybor.setText(_translate("Parser", "Обновить UyBor"))
         self.update_all_data.setText(_translate("Parser", "Обновить данные"))
         self.export_button.setText(_translate("Parser", "Экспортировать в xlsm"))
         self.label_preview.setText(_translate("Parser", "Предпросмотр"))
-        self.DataView.setTabText(
-            self.DataView.indexOf(self.UyBor), _translate("Parser", "UyBor")
+        self.data_view.setTabText(
+            self.data_view.indexOf(self.uybor_widget), _translate("Parser", "UyBor")
         )
-        self.DataView.setTabText(
-            self.DataView.indexOf(self.Olx), _translate("Parser", "Olx")
+        self.data_view.setTabText(
+            self.data_view.indexOf(self.olx_widget), _translate("Parser", "Olx")
         )
 
 
