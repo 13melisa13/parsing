@@ -33,8 +33,8 @@ class UiParser(QtWidgets.QMainWindow):
         self.main_functions_layout = QtWidgets.QHBoxLayout()
         self.update_olx = QtWidgets.QPushButton("Обновить Olx")
         self.update_uybor = QtWidgets.QPushButton("Обновить UyBor")
-        self.update_all_data = QtWidgets.QPushButton("Обновить данные")
-        self.export_button = QtWidgets.QPushButton("Экспорт")
+        self.update_all_data = QtWidgets.QPushButton("Обновить Olx и UyBor")
+        self.export_button = QtWidgets.QPushButton("Экспорт excel")
         self.main_functions_layout.addWidget(self.update_uybor)
         self.main_functions_layout.addWidget(self.update_olx)
         self.main_functions_layout.addWidget(self.update_all_data)
@@ -57,7 +57,7 @@ class UiParser(QtWidgets.QMainWindow):
         self.label_square = QtWidgets.QLabel("Площадь")
         self.label_floor = QtWidgets.QLabel("Этаж")
         self.label_total_floor = QtWidgets.QLabel("Этажность")
-        self.filter_button = QtWidgets.QPushButton("Фильтрация")
+        self.filter_button = QtWidgets.QPushButton("Отфильтровать")
 
         self.filter_layout.addWidget(self.label_price, 0, 0, 1, 3, Qt.AlignmentFlag.AlignCenter)
         self.filter_layout.addWidget(self.label_square, 0, 3, 1, 2, Qt.AlignmentFlag.AlignCenter)
@@ -105,7 +105,9 @@ class UiParser(QtWidgets.QMainWindow):
         self.room_type = QtWidgets.QComboBox()
         self.repair_type = QtWidgets.QComboBox()
         self.is_new_building_type = QtWidgets.QComboBox()
-        self.filter_layout.addWidget(self.currency_type, 3, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
+        self.label_cur = QtWidgets.QLabel("Валюта")
+self.filter_layout.addWidget(self.label_cur, 3, 0, 1, 1, Qt.AlignmentFlag.AlignCe
+self.filter_layout.addWidget(self.currency_type, 3, 1, 1, 1, Qt.AlignmentFlag.AlignCenter)
         self.filter_layout.addWidget(self.is_new_building_type, 3, 3, 1, 2, Qt.AlignmentFlag.AlignCenter)
         self.filter_layout.addWidget(self.repair_type, 3, 5, 1, 2, Qt.AlignmentFlag.AlignCenter)
         self.filter_layout.addWidget(self.room_type, 3, 7, 1, 2, Qt.AlignmentFlag.AlignCenter)
@@ -147,7 +149,7 @@ class UiParser(QtWidgets.QMainWindow):
 
     def add_items_for_combo_box(self):
         self.is_new_building_type.addItems(["Тип квартиры", "Новостройки", "Вторичный"])
-        self.room_type.addItems(["Комнаты", "Студия", "1", "2", "3", "4", "5", "6+"])
+        self.room_type.addItems(["Кол-во комнат", "Студия", "1", "2", "3", "4", "5", "6+"])
         self.currency_type.addItems(CURRENCY_CHOISES)
         self.repair_type.addItems([REPAIR_CHOICES_UYBOR[one] for one in REPAIR_CHOICES_UYBOR])
 
@@ -210,7 +212,7 @@ class UiParser(QtWidgets.QMainWindow):
         # print(self.filters)
 
     def room_chosen(self):
-        if self.room_type.currentText() != "Комнаты":
+        if self.room_type.currentText() != "Кол-во комнат":
             self.filters.update({"room": self.room_type.currentText()})
         else:
             self.filters.pop("room")
