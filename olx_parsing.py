@@ -9,34 +9,48 @@ import requests
 
 class Flat:
     def __init__(self,
-                 price_uye=1,
-                 price_uzs=1,
-                 square=1,
+                 price_uye,
+                 price_uzs,
+                 square,
+                 room,
+                 floor,
+                 total_floor,
                  address="default",
                  modified=datetime.datetime.now(),
                  url="https://www.olx.uz",
-                 room=1,
-                 floor=1,
-                 total_floor=1,
                  repair="repair",
                  is_new_building=False):
-        self.price_uye = price_uye
-        self.price_uzs = price_uzs
+        self.price_uye = float(price_uye)
+        self.price_uzs = float(price_uzs)
         try:
-            self.price_per_meter_uzs = float(price_uzs) / float(square)
-            self.price_per_meter_uye = float(price_uye) / float(square)
+            self.price_per_meter_uzs = "%.2f" % (float(price_uzs) / float(square))
+            self.price_per_meter_uye = "%.2f" % (float(price_uye) / float(square))
         except Exception:
             self.price_per_meter_uye = 'default'
             self.price_per_meter_uzs = 'default'
-        self.square = square
-        self.floor = floor
+        self.square = float(square)
+        self.floor = int(floor)
         self.room = room
-        self.total_floor = total_floor
+        self.total_floor = int(total_floor)
         self.address = address
         self.repair = repair
         self.is_new_building = is_new_building
         self.modified = modified
         self.url = url
+
+    def prepare_to_list(self):
+        return [self.price_uye
+            , self.price_per_meter_uye
+            , self.price_uzs
+            , self.price_per_meter_uzs
+            , self.square
+            , f'{self.floor}/{self.total_floor}'
+            , self.address
+            , self.repair
+            , self.is_new_building
+            , self.room
+            , self.url
+            , self.modified]
 
     def __str__(self):
         return f'{self.price_uzs}; {self.price_uye}; {self.url}'
@@ -54,8 +68,9 @@ def get_all_flats_from_html(url, page):  # UZS -сумм., UYE - y.e.
     html = page.read().decode('utf-8')
     soup = BeautifulSoup(html, "html.parser")
     ads = soup.find_all(name="div", attrs={"data-cy": "l-card"})
+    # todo rate
     rate = requests.get("https://cbu.uz/ru/arkhiv-kursov-valyut/json/USD/").json()[0]['Rate']
-    # print(rate)
+
     for ad in ads:
 
         address_with_modified = ad.find(name='p', attrs={"data-testid": "location-date"}).get_text().split(" - ")
@@ -71,7 +86,7 @@ def get_all_flats_from_html(url, page):  # UZS -сумм., UYE - y.e.
         details = get_details_of_flat("https://www.olx.uz" + ad.a.get("href"))
         flat = Flat(
             price_uye=final_price,
-            price_uzs= float(rate) * float(final_price),
+            price_uzs=float(rate) * float(final_price),
             square=square,
             address=address_with_modified[0],
             modified=address_with_modified[1],
@@ -111,7 +126,7 @@ def get_details_of_flat(url):
     return details
 
 
-def fill_sheet_olx(sheet,progress, agrs=[]):
+def fill_sheet_olx(sheet, progress, agrs=[]):
     # header_sheet(sheet)
     url = "https://www.olx.uz/nedvizhimost/kvartiry/prodazha/"
     req = Request(url)
@@ -127,19 +142,7 @@ def fill_sheet_olx(sheet,progress, agrs=[]):
         results = get_all_flats_from_html(url, page)
         for i in range(0, len(results)):
             progress.setProperty("value", i * 100 / len(results) + start)
-            sheet.append([results[i].price_uye
-                             , results[i].price_per_meter_uye
-                             , results[i].price_uzs
-                             , results[i].price_per_meter_uzs
-                             , results[i].square
-                             , f'{results[i].floor}/{results[i].total_floor}'
-                             , results[i].address
-                             , results[i].repair
-                             , results[i].is_new_building
-                             , results[i].room
-                             , results[i].url
-                             , results[i].modified])
-
+            sheet.append(results[i].prepare_to_list())
         print(f'page:{page}  time: {time.time() - start}')
         time.sleep(10)
         page += 1

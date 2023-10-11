@@ -10,11 +10,12 @@ import sys
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIntValidator
+from PyQt6.uic.properties import QtCore
 
 from filtr_excel import filter, fill_filtered_data
 from main import create_internal_excel_file, create_filtered_excel_file
 from olx_parsing import fill_sheet_olx
-from uybor_api import fill_sheet_uybor, CURRENCY_CHOISES, REPAIR_CHOICES_UYBOR
+from uybor_api import fill_sheet_uybor, CURRENCY_CHOISES, REPAIR_CHOICES_UYBOR, header
 
 
 class UiParser(QtWidgets.QMainWindow):
@@ -106,8 +107,8 @@ class UiParser(QtWidgets.QMainWindow):
         self.repair_type = QtWidgets.QComboBox()
         self.is_new_building_type = QtWidgets.QComboBox()
         self.label_cur = QtWidgets.QLabel("Валюта")
-self.filter_layout.addWidget(self.label_cur, 3, 0, 1, 1, Qt.AlignmentFlag.AlignCe
-self.filter_layout.addWidget(self.currency_type, 3, 1, 1, 1, Qt.AlignmentFlag.AlignCenter)
+        self.filter_layout.addWidget(self.label_cur, 3, 0, 1, 1, Qt.AlignmentFlag.AlignCenter)
+        self.filter_layout.addWidget(self.currency_type, 3, 1, 1, 1, Qt.AlignmentFlag.AlignCenter)
         self.filter_layout.addWidget(self.is_new_building_type, 3, 3, 1, 2, Qt.AlignmentFlag.AlignCenter)
         self.filter_layout.addWidget(self.repair_type, 3, 5, 1, 2, Qt.AlignmentFlag.AlignCenter)
         self.filter_layout.addWidget(self.room_type, 3, 7, 1, 2, Qt.AlignmentFlag.AlignCenter)
@@ -116,9 +117,9 @@ self.filter_layout.addWidget(self.currency_type, 3, 1, 1, 1, Qt.AlignmentFlag.Al
         # endblock filters
         # block preview
         self.data_view_layout = QtWidgets.QVBoxLayout()
-        self.label_preview = QtWidgets.QLabel("Предпросмотр")
+        # self.label_preview = QtWidgets.QLabel("Предпросмотр")
         self.data_view = QtWidgets.QTabWidget()
-        self.data_view_layout.addWidget(self.label_preview)
+        # self.data_view_layout.addWidget(self.label_preview)
         self.data_view_layout.addWidget(self.data_view)
         # block uybor table
         self.uybor_widget = QtWidgets.QWidget()
@@ -127,6 +128,7 @@ self.filter_layout.addWidget(self.currency_type, 3, 1, 1, 1, Qt.AlignmentFlag.Al
         self.layout_uybor.addWidget(self.label_rows_count_uybor)
         self.uybor_widget.setLayout(self.layout_uybor)
         self.table_widget_uybor = QtWidgets.QTableWidget()
+
         self.layout_uybor.addWidget(self.table_widget_uybor)
         # block olx table
         self.olx_widget = QtWidgets.QWidget()
@@ -136,11 +138,13 @@ self.filter_layout.addWidget(self.currency_type, 3, 1, 1, 1, Qt.AlignmentFlag.Al
         self.olx_widget.setLayout(self.layout_olx)
         self.table_widget_olx = QtWidgets.QTableWidget()
         self.layout_olx.addWidget(self.table_widget_olx)
-
         self.data_view.addTab(self.olx_widget, "OLX")
         self.data_view.addTab(self.uybor_widget, "UyBor")
         self.data_view.setCurrentIndex(0)
         page_layout.addLayout(self.data_view_layout)
+        page_layout.addSpacing(10)
+        page_layout.addStretch(1)
+
         self.setCentralWidget(self.main_widget)
         self.main_widget.setLayout(page_layout)
         self.setCentralWidget(self.main_widget)
@@ -177,11 +181,17 @@ self.filter_layout.addWidget(self.currency_type, 3, 1, 1, 1, Qt.AlignmentFlag.Al
         self.label_progress_bar.setText("Процесс: Фильтрация")
         self.progress_bar.setProperty("value", 0)
         self.results_olx = filter(filters=self.filters, resource="output/internal/olx.xlsm")
-        self.label_rows_count_olx.setText(f"Всего строк:{len(self.results_olx)}")
-        # todo print table
+        self.label_rows_count_olx.setText(f"Всего строк: {len(self.results_olx)}")
+        if 'uzs' in self.filters:
+            cur = 'uzs'
+        else:
+            cur = 'uye'
+        fill_table_pyqt(self.table_widget_olx, header, self.results_olx, cur)
         self.results_uybor = filter(filters=self.filters, resource="output/internal/uybor.xlsm")
-        self.label_rows_count_uybor.setText(f"Всего строк:{len(self.results_uybor)}")
+        self.label_rows_count_uybor.setText(f"Всего строк: {len(self.results_uybor)}")
         # print table
+        fill_table_pyqt(self.table_widget_uybor, header, self.results_uybor, cur)
+
         print(len(self.results_uybor), len(self.results_olx))
         self.label_progress_bar.setText("Процесс: Завершено")
         self.progress_bar.setProperty("value", 100)
@@ -203,10 +213,26 @@ self.filter_layout.addWidget(self.currency_type, 3, 1, 1, 1, Qt.AlignmentFlag.Al
     def cur_chosen(self):
         if self.currency_type.currentText() == "СУММ.":
             self.filters.update({"uzs": True})
+            self.table_widget_uybor.setColumnHidden(0, not False)
+            self.table_widget_uybor.setColumnHidden(1, not False)
+            self.table_widget_uybor.setColumnHidden(2, not True)
+            self.table_widget_uybor.setColumnHidden(3, not True)
+            self.table_widget_olx.setColumnHidden(0, not False)
+            self.table_widget_olx.setColumnHidden(1, not False)
+            self.table_widget_olx.setColumnHidden(2, not True)
+            self.table_widget_olx.setColumnHidden(3, not True)
             if "uye" in self.filters:
                 self.filters.pop("uye")
         else:
             self.filters.update({"uye": True})
+            self.table_widget_uybor.setColumnHidden(0, False)
+            self.table_widget_uybor.setColumnHidden(1, False)
+            self.table_widget_uybor.setColumnHidden(2, True)
+            self.table_widget_uybor.setColumnHidden(3, True)
+            self.table_widget_olx.setColumnHidden(0, False)
+            self.table_widget_olx.setColumnHidden(1, False)
+            self.table_widget_olx.setColumnHidden(2, True)
+            self.table_widget_olx.setColumnHidden(3, True)
             if "uzs" in self.filters:
                 self.filters.pop("uzs")
         # print(self.filters)
@@ -228,7 +254,8 @@ self.filter_layout.addWidget(self.currency_type, 3, 1, 1, 1, Qt.AlignmentFlag.Al
             self.filters.update({"repair": self.repair_type.currentText()})
         else:
             self.filters.pop("is_new_building")
-    # todo type from input,
+
+    # todo
     #  progressbar fix,
     #  getting cur from another site
 
@@ -309,6 +336,36 @@ self.filter_layout.addWidget(self.currency_type, 3, 1, 1, 1, Qt.AlignmentFlag.Al
         self.total_floor_min.textChanged.connect(self.total_floor_min_changed)
 
 
+def fill_table_pyqt(table, header, data, currency):
+    table.setColumnCount(len(header))
+    table.setRowCount(len(data))
+    table.setHorizontalHeaderLabels(header)
+    fill_table_data_pyqt(table, data)
+    table.resizeColumnsToContents()
+    if currency != 'uye':
+        table.setColumnHidden(3, False)
+        table.setColumnHidden(2, False)
+        table.setColumnHidden(1, True)
+        table.setColumnHidden(0, True)
+    else:
+        table.setColumnHidden(0, False)
+        table.setColumnHidden(1, False)
+        table.setColumnHidden(2, True)
+        table.setColumnHidden(3, True)
+
+
+def fill_table_data_pyqt(table, data):
+    for one_row in data:
+        _one_row = one_row.prepare_to_list()
+        for one in _one_row:
+            item = QtWidgets.QTableWidgetItem(str(one))
+            if one is None:
+                # print("None")
+                item = QtWidgets.QTableWidgetItem("-")
+            item.setFlags(Qt.ItemFlag.NoItemFlags)
+            table.setItem(data.index(one_row), _one_row.index(one), item)
+
+
 if __name__ == "__main__":
     if not os.path.exists("output"):
         os.mkdir("output")
@@ -319,8 +376,6 @@ if __name__ == "__main__":
     ui.show()
     sys.exit(app.exec())
 
-# TODO testing
+# TODO tэsting
 # todo exception
-# todo button reset filters
 # todo template excel
-
