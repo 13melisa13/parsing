@@ -1,4 +1,5 @@
-import os
+
+from PyQt6.QtWidgets import QMessageBox
 from openpyxl import load_workbook
 from olx_parsing import Flat
 
@@ -8,29 +9,27 @@ def get_arr_from_excel(name):
     input_book = load_workbook(name)
     ws_input_book = input_book[input_book.sheetnames[0]]
     flats = []
-    for row in ws_input_book.iter_rows(min_row=2, max_col=12):
+    for row in ws_input_book.iter_rows(min_row=6, max_col=12):
         flats.append(Flat(
-            price_uye=float(row[0].value),
-            price_uzs=float(row[2].value),
-            square=float(row[4].value.__str__().replace(" ", '')),
-            address=row[6].value,
-            repair=row[7].value,
-            is_new_building=row[8].value,
-            room=row[9].value,
-            url=row[10].value,
-            modified=row[11].value,
-            floor=int(row[5].value.split("/")[0]),
-            total_floor=int(row[5].value.split("/")[1])))
+            price_uye=float(row[8].value),
+            price_uzs=float(row[10].value),
+            square=float(row[1].value.__str__().replace(" ", '')),
+            address=row[3].value,
+            repair=row[4].value,
+            is_new_building=row[5].value,
+            room=row[6].value,
+            url=row[0].value,
+            modified=row[7].value,
+            floor=int(row[2].value.split("/")[0]),
+            total_floor=int(row[2].value.split("/")[1])))
     return flats
 
-
-# TODO проверки на существования файла
 
 def filter(filters, resource):
     # if os.path.exists(filters['resource']):
     #     results = get_arr_from_excel(filters['resource'])
     # else:
-    #     # todo handle print("Необходимо выгрузить данные")
+    #
     results = get_arr_from_excel(resource)
     # print(len(results))
     if 'price_min' in filters:
@@ -75,14 +74,14 @@ def filter(filters, resource):
     return results
 
 
-def fill_filtered_data(sheet, results, progress, start=0):
-    # sheet.append(get_arr_from_excel(filters['resourse']))  # path to resourse excel file
-    # results = filter(filters)
+def fill_filtered_data(sheet, results, progress, main_window,  name, start=0):
     if len(results) == 0:
-        # todo handle
-        print("НЕТ ЭЛЕМЕНТОВ В ВЫБОРКЕ")
-        return None
+        main_window.message.setText(f"Не найдены данные по запросу для {name}")
+        main_window.message.setIcon(QMessageBox.Icon.Information)
+        main_window.message.exec()
+        return
     for i in range(0, len(results)):
+        # print(i*100/len(results)/2 + start)
         progress.setProperty("value", i*100/len(results)/2 + start)
         # print(progress)
         sheet.append([results[i].price_uye,

@@ -14,18 +14,18 @@ CURRENCY_CHOISES = [
     "СУММ.", "У.Е."
 ]
 header = [
-        "цена, $",
-        "цена за метр, $",
-        "цена, сумм",
-        "цена за метр, сумм",
+        "ссылка",
         "площадь",
         "этаж",
         "адрес",
         "ремонт",
         "новостройка",
         'кол-во комнат',
-        "ссылка",
         "дата обновления",
+        "цена, $",
+        "цена за метр, $",
+        "цена, сумм",
+        "цена за метр, сумм",
     ]
 
 
@@ -90,18 +90,18 @@ def fill_sheet_uybor(sheet, progress, agrs=[]):
                 if results[i]['room'] == 'freeLayout':
                     room = 'Студия'
             row = (
-                    results[i]['prices']['usd'],
-                    results[i]['prices']['usd'] / results[i]['square'],
-                    results[i]['prices']['uzs'],
-                    results[i]['prices']['uzs'] / results[i]['square'],
+                    f'https://uybor.uz/listings/{results[i]["id"]}',
                     int(results[i]['square']),
                     f'{results[i]["floor"]}/{results[i]["floorTotal"]}',
                     address,
                     repair,
                     is_new_building,
                     room,
-                    f'https://uybor.uz/listings/{results[i]["id"]}',
-                    results[i]['updatedAt']
+                    results[i]['updatedAt'],
+                    results[i]['prices']['usd'],
+                    results[i]['prices']['usd'] / results[i]['square'],
+                    results[i]['prices']['uzs'],
+                    results[i]['prices']['uzs'] / results[i]['square'],
             )
             sheet.append(row)
             # print(address)
