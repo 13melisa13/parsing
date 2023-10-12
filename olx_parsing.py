@@ -112,7 +112,6 @@ def get_all_flats_from_html(url, page, progress):  # UZS -сумм., UYE - y.e.
             repair=details['repair'],
             is_new_building=details['is_new_building']
         )
-        # print(flat)
         list_of_flats.append(flat)
     return list_of_flats
 
@@ -151,7 +150,8 @@ def fill_sheet_olx(sheet, progress, agrs=[]):
     max_page = int(max_page[len(max_page) - 1].get_text())
     page = 1
     start = time.time()
-    max_page = 1  # TODO max-page
+
+    # max_page = 1  # TODO test_data
     while page <= max_page:
         results = get_all_flats_from_html(url, page, progress)
         for i in range(0, len(results)):

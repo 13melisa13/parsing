@@ -1,3 +1,4 @@
 https://www.olx.uz/nedvizhimost/kvartiry/prodazha/
 https://uybor.uz/listings?operationType__eq=sale&category__eq=7
 https://ofb.uz/uz/
+pyinstaller --noconfirm --onedir --windowed --name "MAEParser" --add-data "C:/Users/adelina_isaeva/PycharmProjects/api_to_excel/input/template.xlsm;input/" --add-data "C:/Users/adelina_isaeva/PycharmProjects/api_to_excel/input;input/"  "C:/Users/adelina_isaeva/PycharmProjects/api_to_excel/parser.py"

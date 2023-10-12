@@ -14,7 +14,7 @@ import locale
 locale.setlocale(locale.LC_TIME, 'ru_RU')
 
 
-def read_excel_template(main_window, template_path="input/template.xlsm"):
+def read_excel_template(main_window, template_path="_internal/input/template.xlsm"):
     if os.path.exists(template_path):
         book = load_workbook(template_path, keep_vba=True)
     else:
