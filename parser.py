@@ -182,26 +182,26 @@ class UiParser(QtWidgets.QMainWindow):
         print(self.filters)
         self.label_progress_bar.setText("Процесс: Фильтрация")
         self.progress_bar.setProperty("value", 0)
-        if (not os.path.exists("output/internal/olx.xlsm") or
-                not os.path.exists("output/internal/uybor.xlsm")):
-            if (not os.path.exists("output/internal/olx.xlsm")
-                    and not os.path.exists("output/internal/uybor.xlsm")):
+        if (not os.path.exists("_internal/output/internal/olx.xlsm") or
+                not os.path.exists("_internal/output/internal/uybor.xlsm")):
+            if (not os.path.exists("_internal/output/internal/olx.xlsm")
+                    and not os.path.exists("_internal/output/internal/uybor.xlsm")):
                 self.message.setText("Необходимо загрузить данные с UyBor и Olx")
-            elif not os.path.exists("output/internal/uybor.xlsm"):
+            elif not os.path.exists("_internal/output/internal/uybor.xlsm"):
                 self.message.setText("Необходимо загрузить данные с UyBor")
             else:
                 self.message.setText("Необходимо загрузить данные с Olx")
             self.message.setIcon(QMessageBox.Icon.Information)
             self.message.exec()
             return
-        self.results_olx = filter(filters=self.filters, resource="output/internal/olx.xlsm")
+        self.results_olx = filter(filters=self.filters, resource="_internal/output/internal/olx.xlsm")
         self.label_rows_count_olx.setText(f"Всего строк: {len(self.results_olx)}")
         if 'uzs' in self.filters:
             cur = 'uzs'
         else:
             cur = 'uye'
         fill_table_pyqt(self.table_widget_olx, header, self.results_olx, cur)
-        self.results_uybor = filter(filters=self.filters, resource="output/internal/uybor.xlsm")
+        self.results_uybor = filter(filters=self.filters, resource="_internal/output/internal/uybor.xlsm")
         self.label_rows_count_uybor.setText(f"Всего строк: {len(self.results_uybor)}")
         # print table
         fill_table_pyqt(self.table_widget_uybor, header, self.results_uybor, cur)
@@ -388,10 +388,10 @@ def fill_table_data_pyqt(table, data):
 
 
 if __name__ == "__main__":
-    if not os.path.exists("output"):
-        os.mkdir("output")
+    if not os.path.exists("_internal/output"):
+        os.mkdir("_internal/output")
     if not os.path.exists("output/internal"):
-        os.mkdir("output/internal")
+        os.mkdir("_internal/output/internal")
     app = QtWidgets.QApplication(sys.argv)
     ui = UiParser()
     ui.show()
