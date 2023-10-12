@@ -1,15 +1,10 @@
 import datetime
+import locale
 import os
 import sys
 
-from PyQt6 import QtGui
 from PyQt6.QtWidgets import QMessageBox
-
-from PyQt6 import QtCore
 from openpyxl.reader.excel import load_workbook
-
-import locale
-
 
 locale.setlocale(locale.LC_TIME, 'ru_RU')
 
@@ -25,7 +20,10 @@ def read_excel_template(main_window, template_path="_internal/input/template.xls
     return book
 
 
-def create_internal_excel_file(name_of_file, fill_sheet, progress, path='_internal/output/internal/',args=[], main_window=None):
+def create_internal_excel_file(name_of_file, fill_sheet, progress, path='_internal/output/internal/', args=None,
+                               main_window=None):
+    if args is None:
+        args = []
     book = read_excel_template(main_window)
     sheet = book[book.sheetnames[0]]
     sheet.title = f"{datetime.datetime.now().strftime('%d.%m.%y_%H.%M')}"
@@ -45,16 +43,7 @@ def create_internal_excel_file(name_of_file, fill_sheet, progress, path='_intern
     book.save(path)
 
 
-def create_filtered_excel_file(fill_sheet, name,  results,  progress, start=0, path='_internal/output/', main_window=None):
-    name += f"_{datetime.datetime.now().strftime('%d%m%y_%H%M')}"
-    if fill_sheet is None:
-        return
-    book = read_excel_template(main_window)
-    sheet = book[book.sheetnames[0]]
-    sheet.title = f"{datetime.datetime.now().strftime('%d.%m.%y_%H.%M')}"
-    fill_sheet(sheet=sheet, results=results, progress=progress, start=start, main_window=main_window, name=name)
-    path += f'{name}.xlsm'
-    if os.path.exists(path):
-        os.remove(path)
-    book.save(path)
+
+
+
 

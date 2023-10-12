@@ -1,5 +1,12 @@
-import requests
+import os
+import sys
+from datetime import datetime
 
+import requests
+from PyQt6.QtCore import QThread
+from PyQt6.QtWidgets import QMessageBox
+
+from main import read_excel_template
 
 REPAIR_CHOICES_UYBOR = {
     "repair": "Ремонт",
@@ -105,8 +112,41 @@ def fill_sheet_uybor(sheet, progress, agrs=[]):
             )
             sheet.append(row)
             # print(address)
-        # return  # TOdo remove
+        return  # TOdo remove
         page += 1
+
+
+class ApiParser(QThread):
+    def __init__(self, path='_internal/output/internal/', main_window=None):
+        super().__init__()
+        self.path = path
+        self.main_window = main_window
+
+    def run(self):
+        self.main_window.update_uybor.setCheckable(False)
+        self.main_window.update_uybor.setDisabled(True)
+        self.main_window.update_all_data.setDisabled(True)
+        book = read_excel_template(self.main_window)
+        sheet = book[book.sheetnames[0]]
+        sheet.title = f"{datetime.now().strftime('%d.%m.%y_%H.%M')}"
+        if not os.path.exists(self.path):
+            self.main_window.message.setText(f"Повреждена файловая система! Перезагрузите приложение")
+            self.main_window.message.setIcon(QMessageBox.Icon.Critical)
+            self.main_window.message.exec()
+            sys.exit()
+        # self.main_window.label_progress_bar.setText("Процесс: Обновление UyBor")
+        self.main_window.progress_bar.setProperty("value", 0)
+        # header_sheet(sheet)
+        fill_sheet_uybor(sheet, self.main_window.progress_bar)
+        self.path += f'uybor.xlsm'
+        if os.path.exists(self.path):
+            os.remove(self.path)
+        book.save(self.path)
+        # self.main_window.label_progress_bar.setText("Процесс: Обновление UyBor - Завершено")
+        self.main_window.progress_bar.setProperty("value", 100)
+        self.main_window.update_uybor.setDisabled(False)
+        self.main_window.update_uybor.setCheckable(True)
+        self.main_window.update_all_data.setDisabled(False)
 
 
 

@@ -1,10 +1,15 @@
 import math
+import os
 import re
+import sys
 import time
 from urllib.request import urlopen, Request
+from PyQt6.QtCore import QThread
+from PyQt6.QtWidgets import QMessageBox
 from bs4 import BeautifulSoup
 import datetime
-import requests
+
+from main import read_excel_template
 
 
 class Flat:
@@ -42,17 +47,17 @@ class Flat:
     def prepare_to_list(self):
         return [
             self.url,
-             self.square,
+            self.square,
             f'{self.floor}/{self.total_floor}',
-             self.address,
-             self.repair,
-             self.is_new_building,
+            self.address,
+            self.repair,
+            self.is_new_building,
             self.room,
             self.modified,
             self.price_uye,
-             self.price_per_meter_uye,
-             self.price_uzs,
-             self.price_per_meter_uzs
+            self.price_per_meter_uye,
+            self.price_uzs,
+            self.price_per_meter_uzs
         ]
 
     def __str__(self):
@@ -70,7 +75,6 @@ def get_rate():
     soup = BeautifulSoup(html, "html.parser")
     curs = soup.find_all(name="div", attrs={"class": "currency"})
     return float(re.search(r"(\d+)\.(\d+)", curs[0].get_text())[0])
-# print(get_rate())
 
 
 def get_all_flats_from_html(url, page, progress):  # UZS -сумм., UYE - y.e.
@@ -139,25 +143,57 @@ def get_details_of_flat(url):
     return details
 
 
-def fill_sheet_olx(sheet, progress, agrs=[]):
-    # header_sheet(sheet)
-    url = "https://www.olx.uz/nedvizhimost/kvartiry/prodazha/"
-    req = Request(url)
-    req.add_header('Accept-Encoding', 'identity')
-    html = urlopen(url).read().decode('utf-8')
-    soup = BeautifulSoup(html, "html.parser")
-    max_page = soup.find_all(name="li", attrs={"data-testid": "pagination-list-item"})
-    max_page = int(max_page[len(max_page) - 1].get_text())
-    page = 1
-    start = time.time()
+# print(get_rate())
 
-    # max_page = 1  # TODO test_data
-    while page <= max_page:
-        results = get_all_flats_from_html(url, page, progress)
-        for i in range(0, len(results)):
-            # print(results[i].prepare_to_list())
-            progress.setProperty("value", i * 100 / len(results) + 50)
-            sheet.append(results[i].prepare_to_list())
-        time.sleep(1)
-        print(time.time()-start)
-        page += 1
+class OlxParser(QThread):
+
+    def __init__(self, path='_internal/output/internal/', main_window=None):
+        super().__init__()
+        self.path = path
+        self.main_window = main_window
+
+    def run(self):
+        self.main_window.update_all_data.setDisabled(True)
+        self.main_window.update_olx.setCheckable(False)
+        self.main_window.update_olx.setDisabled(True)
+        book = read_excel_template(self.main_window)
+        sheet = book[book.sheetnames[0]]
+        sheet.title = f"{datetime.datetime.now().strftime('%d.%m.%y_%H.%M')}"
+        if not os.path.exists(self.path):
+            self.main_window.message.setText(f"Повреждена файловая система! Перезагрузите приложение")
+            self.main_window.message.setIcon(QMessageBox.Icon.Critical)
+            self.main_window.message.exec()
+            sys.exit()
+        # self.main_window.label_progress_bar.setText("Процесс: Обновление OLX")
+        self.main_window.progress_bar.setProperty("value", 0)
+        # header_sheet(sheet)
+        url = "https://www.olx.uz/nedvizhimost/kvartiry/prodazha/"
+        req = Request(url)
+        req.add_header('Accept-Encoding', 'identity')
+        html = urlopen(url).read().decode('utf-8')
+        soup = BeautifulSoup(html, "html.parser")
+        max_page = soup.find_all(name="li", attrs={"data-testid": "pagination-list-item"})
+        max_page = int(max_page[len(max_page) - 1].get_text())
+        page = 1
+        start = time.time()
+
+        max_page = 1  # TODO test_data
+        while page <= max_page:
+            results = get_all_flats_from_html(url, page, self.main_window.progress_bar)
+            for i in range(0, len(results)):
+                # print(results[i].prepare_to_list())
+                self.main_window.progress_bar.setProperty("value", i * 100 / len(results) + 50)
+                sheet.append(results[i].prepare_to_list())
+            time.sleep(1)
+            print(time.time() - start)
+            page += 1
+        self.path += f'olx.xlsm'
+        if os.path.exists(self.path):
+            os.remove(self.path)
+        book.save(self.path)
+        # self.main_window.label_progress_bar.setText("Процесс: Обновление OLX - Завершено")
+        self.main_window.progress_bar.setProperty("value", 100)
+        self.main_window.update_olx.setDisabled(False)
+        self.main_window.update_olx.setCheckable(True)
+        self.main_window.update_all_data.setDisabled(False)
+

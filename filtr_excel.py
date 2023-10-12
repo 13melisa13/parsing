@@ -1,6 +1,6 @@
-
 from PyQt6.QtWidgets import QMessageBox
 from openpyxl import load_workbook
+
 from olx_parsing import Flat
 
 
@@ -25,7 +25,7 @@ def get_arr_from_excel(name):
     return flats
 
 
-def filter(filters, resource):
+def filtration(filters, resource):
     # if os.path.exists(filters['resource']):
     #     results = get_arr_from_excel(filters['resource'])
     # else:
