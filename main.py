@@ -25,7 +25,7 @@ def read_excel_template(main_window, template_path="_internal/input/template.xls
     return book
 
 
-def create_internal_excel_file(name_of_file, fill_sheet, progress, path='output/internal/',args=[], main_window=None):
+def create_internal_excel_file(name_of_file, fill_sheet, progress, path='_internal/output/internal/',args=[], main_window=None):
     book = read_excel_template(main_window)
     sheet = book[book.sheetnames[0]]
     sheet.title = f"{datetime.datetime.now().strftime('%d.%m.%y_%H.%M')}"
@@ -45,7 +45,7 @@ def create_internal_excel_file(name_of_file, fill_sheet, progress, path='output/
     book.save(path)
 
 
-def create_filtered_excel_file(fill_sheet, name,  results,  progress, start=0, path='output/', main_window=None):
+def create_filtered_excel_file(fill_sheet, name,  results,  progress, start=0, path='_internal/output/', main_window=None):
     name += f"_{datetime.datetime.now().strftime('%d%m%y_%H%M')}"
     if fill_sheet is None:
         return
