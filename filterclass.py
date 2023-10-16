@@ -1,19 +1,17 @@
 import datetime
 import os
-import time
 
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import QThread, Qt
-from PyQt6.QtWidgets import QMessageBox
 
-from filtr_excel import filtration, fill_filtered_data
+from filtr_excel import fill_filtered_data
 from main import read_excel_template
 
-from uybor_api import header
 
 def fill_table_pyqt(table, header, data, currency):
     table.setColumnCount(len(header))
     table.setRowCount(len(data))
+    print(header[12])
     table.setHorizontalHeaderLabels(header)
     fill_table_data_pyqt(table, data)
     table.resizeColumnsToContents()
@@ -32,6 +30,7 @@ def fill_table_pyqt(table, header, data, currency):
 def fill_table_data_pyqt(table, data):
     for one_row in data:
         _one_row = one_row.prepare_to_list()
+        # print(len(_one_row))
         for one in _one_row:
             item = QtWidgets.QTableWidgetItem(str(one))
             if one is None:
@@ -41,18 +40,18 @@ def fill_table_data_pyqt(table, data):
             table.setItem(data.index(one_row), _one_row.index(one), item)
 
 
-class Filter(QThread):
-    def __init__(self, main_window):
-        super().__init__()
-        self.main_window = main_window
-
-    def run(self):
-        self.main_window.filter_button.setDisabled(True)
-        self.main_window.filter_button.setCheckable(False)
+# class Filter(QThread):
+#     def __init__(self, main_window):
+#         super().__init__()
+#         self.main_window = main_window
+#
+#     def run(self):
+        # self.main_window.filter_button.setDisabled(True)
+        # self.main_window.filter_button.setCheckable(False)
         #
         # # print(self.filters)
         # self.main_window.label_progress_bar.setText("Процесс: Фильтрация")
-        self.main_window.progress_bar.setProperty("value", 0)
+        # self.main_window.progress_bar.setProperty("value", 0)
         # if (not os.path.exists("_internal/output/internal/olx.xlsm") or
         #         not os.path.exists("_internal/output/internal/uybor.xlsm")):
         #     if (not os.path.exists("_internal/output/internal/olx.xlsm")
@@ -85,15 +84,14 @@ class Filter(QThread):
         # self.main_window.export_button.setEnabled(len(self.main_window.results_uybor)
         #                                             + len(self.main_window.results_olx) > 0)
         #
-        self.main_window.progress_bar.setProperty("value", 100)
-        time.sleep(10)
+        # self.main_window.progress_bar.setProperty("value", 100)
+        # time.sleep(10)
         # print(len(self.results_uybor), len(self.results_olx))
         # self.main_window.label_progress_bar.setText("Процесс: Фильтрация - Завершено")
 
 
-
 class Exporter(QThread):
-    def __init__(self, name, path='_internal/output/', main_window=None, results=None):
+    def __init__(self, name, path='output/', main_window=None, results=None):
         super().__init__()
         self.path = path
         self.main_window = main_window
@@ -101,8 +99,17 @@ class Exporter(QThread):
         self.results = results
 
     def run(self):
-        self.main_window.update_uybor.setCheckable(False)
-        self.main_window.update_uybor.setDisabled(True)
+        if not os.path.exists("output"):
+            os.mkdir("output")
+        name = self.name
+        if name == "Uybor":
+            self.main_window.export_button_uybor.setCheckable(False)
+            self.main_window.export_button_uybor.setDisabled(True)
+        else:
+            self.main_window.export_button_olx.setCheckable(False)
+            self.main_window.export_button_olx.setDisabled(True)
+        self.main_window.export_button_all_data.setCheckable(False)
+        self.main_window.export_button_all_data.setDisabled(True)
         self.name += f"_{datetime.datetime.now().strftime('%d%m%y_%H%M')}"
         # self.main_window.label_progress_bar.setText(f"Процесс: Экспорт  в {self.name}.xlsm")
         book = read_excel_template(self.main_window)
@@ -119,6 +126,16 @@ class Exporter(QThread):
         book.save(self.path)
         # self.main_window.label_progress_bar.setText("Процесс: Обновление UyBor - Завершено")
         self.main_window.progress_bar.setProperty("value", 100)
-        self.main_window.update_uybor.setDisabled(False)
-        self.main_window.update_uybor.setCheckable(True)
 
+        if name == "Uybor":
+            # print(self.name + "1")
+            self.main_window.export_button_uybor.setCheckable(True)
+            self.main_window.export_button_uybor.setEnabled(True)
+        else:
+            # print(self.name + "2")
+            self.main_window.export_button_olx.setCheckable(not False)
+            self.main_window.export_button_olx.setDisabled(not True)
+        if (self.main_window.export_button_olx.isEnabled() and
+                self.main_window.export_button_uybor.isEnabled()):
+            self.main_window.export_button_all_data.setCheckable(not False)
+            self.main_window.export_button_all_data.setDisabled(not True)

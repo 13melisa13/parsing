@@ -5,11 +5,10 @@ from olx_parsing import Flat
 
 
 def get_arr_from_excel(name):
-
     input_book = load_workbook(name)
     ws_input_book = input_book[input_book.sheetnames[0]]
     flats = []
-    for row in ws_input_book.iter_rows(min_row=6, max_col=12):
+    for row in ws_input_book.iter_rows(min_row=6, max_col=13):
         flats.append(Flat(
             price_uye=float(row[8].value),
             price_uzs=float(row[10].value),
@@ -21,7 +20,9 @@ def get_arr_from_excel(name):
             url=row[0].value,
             modified=row[7].value,
             floor=int(row[2].value.split("/")[0]),
-            total_floor=int(row[2].value.split("/")[1])))
+            total_floor=int(row[2].value.split("/")[1]),
+            description=row[12].value
+        ))
     return flats
 
 
@@ -71,10 +72,18 @@ def filtration(filters, resource):
     if 'total_floor_max' in filters:
         results = [result for result in results if int(result.total_floor) <= int(filters['total_floor_max'])]
     # print(len(results))
+    if 'keywords' in filters:
+        old = results
+        results = []
+        for result in old:
+            for keyword in filters['keywords']:
+                if keyword in (result.description + result.address) and not (result in results):
+                    results.append(result)
+                    # print(result.url)
     return results
 
 
-def fill_filtered_data(sheet, results, progress, main_window,  name, start=0):
+def fill_filtered_data(sheet, results, progress, main_window, name, start=0):
     if len(results) == 0:
         main_window.message.setText(f"Не найдены данные по запросу для {name}")
         main_window.message.setIcon(QMessageBox.Icon.Information)
@@ -82,7 +91,7 @@ def fill_filtered_data(sheet, results, progress, main_window,  name, start=0):
         return
     for i in range(0, len(results)):
         # print(i*100/len(results)/2 + start)
-        progress.setProperty("value", i*100/len(results)/2 + start)
+        progress.setProperty("value", i * 100 / len(results) / 2 + start)
         # print(progress)
         sheet.append([results[i].price_uye,
                       results[i].price_per_meter_uye,

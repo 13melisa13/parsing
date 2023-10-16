@@ -24,7 +24,8 @@ class Flat:
                  modified=datetime.datetime.now(),
                  url="https://www.olx.uz",
                  repair="repair",
-                 is_new_building=False):
+                 is_new_building=False,
+                 description=""):
         self.price_uye = float(price_uye)
         self.price_uzs = float(price_uzs)
         try:
@@ -34,7 +35,7 @@ class Flat:
             self.price_per_meter_uye = 'default'
             self.price_per_meter_uzs = 'default'
         self.square = float(square.__str__().replace(" ", ''))
-
+        self.description = description
         self.floor = int(floor)
         self.room = room
         self.total_floor = int(total_floor)
@@ -57,7 +58,8 @@ class Flat:
             self.price_uye,
             self.price_per_meter_uye,
             self.price_uzs,
-            self.price_per_meter_uzs
+            self.price_per_meter_uzs,
+            self.description
         ]
 
     def __str__(self):
@@ -114,7 +116,8 @@ def get_all_flats_from_html(url, page, progress):  # UZS -сумм., UYE - y.e.
             floor=details['floor'],
             total_floor=details['total_floor'],
             repair=details['repair'],
-            is_new_building=details['is_new_building']
+            is_new_building=details['is_new_building'],
+            description=details['description']
         )
         list_of_flats.append(flat)
     return list_of_flats
@@ -127,17 +130,21 @@ def get_details_of_flat(url):
     html = page.read().decode('utf-8')
     soup = BeautifulSoup(html, "html.parser")
     ad = soup.find(name="div", attrs={"data-testid": "main"}).find(name="ul").get_text()  # li p parse
+    ad_desc = soup.find(name="div", attrs={"data-cy": "ad_description", }).find(name="div").get_text()
+    # print(ad_desc, url)
     details = {
         "room": re.search(r"комнат: (\d+)", ad),
         "floor": re.search(r"Этаж: (\d+)", ad),
         "total_floor": re.search(r"Этажность дома: (\d+)", ad),
         "repair": re.search(r"Ремонт: ([А-Я][а-я]+\s*[а-я]*)", ad),
         "is_new_building": re.search(r"жилья: ([А-Я][а-я]+)", ad),
+        "description": ad_desc.replace("\n", ";")
     }
     # print(details['repair'])
     for detail in details:
         if details[detail] is not None:
-            details[detail] = details[detail][1]
+            if detail != "description":
+                details[detail] = details[detail][1]
         else:
             details[detail] = ''
     return details
@@ -196,4 +203,4 @@ class OlxParser(QThread):
         self.main_window.update_olx.setDisabled(False)
         self.main_window.update_olx.setCheckable(True)
         self.main_window.update_all_data.setDisabled(False)
-
+        self.main_window.filter_button_clicked()

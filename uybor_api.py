@@ -21,19 +21,21 @@ CURRENCY_CHOISES = [
     "СУММ.", "У.Е."
 ]
 header = [
-        "ссылка",
-        "площадь",
-        "этаж",
-        "адрес",
-        "ремонт",
-        "новостройка",
-        'кол-во комнат',
-        "дата обновления",
-        "цена, $",
-        "цена за метр, $",
-        "цена, сумм",
-        "цена за метр, сумм",
+        "Ссылка",
+        "Площадь",
+        "Этаж",
+        "Адрес",
+        "Ремонт",
+        "Новостройка",
+        'Кол-во комнат',
+        "Дата обновления",
+        "Цена, $",
+        "Цена за метр, $",
+        "Цена, сумм",
+        "Цена за метр, сумм",
+        "Описание"
     ]
+
 
 
 def json_uybor(page=0, limit=100):
@@ -109,6 +111,7 @@ def fill_sheet_uybor(sheet, progress, agrs=[]):
                     results[i]['prices']['usd'] / results[i]['square'],
                     results[i]['prices']['uzs'],
                     results[i]['prices']['uzs'] / results[i]['square'],
+                    results[i]['description']
             )
             sheet.append(row)
             # print(address)
@@ -147,6 +150,7 @@ class ApiParser(QThread):
         self.main_window.update_uybor.setDisabled(False)
         self.main_window.update_uybor.setCheckable(True)
         self.main_window.update_all_data.setDisabled(False)
+        self.main_window.filter_button_clicked()
 
 
 
