@@ -151,6 +151,8 @@ class ApiParser(QThread):
         self.main_window.update_uybor.setCheckable(True)
         self.main_window.update_all_data.setDisabled(False)
         self.main_window.filter_button_clicked()
+        self.main_window.time_last.setText(f"{self.main_window.time_fixed.currentTime().toString()}")
+        # print(self.main_window.time_last, f"{datetime.now().strftime('%d%m%y%H:%M')}")
 
 
 

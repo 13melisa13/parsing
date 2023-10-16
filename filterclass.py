@@ -11,10 +11,11 @@ from main import read_excel_template
 def fill_table_pyqt(table, header, data, currency):
     table.setColumnCount(len(header))
     table.setRowCount(len(data))
-    print(header[12])
+    # print(header[12])
     table.setHorizontalHeaderLabels(header)
     fill_table_data_pyqt(table, data)
     table.resizeColumnsToContents()
+    table.setColumnHidden(12, True)
     if currency == 'uye':
         table.setColumnHidden(8, False)
         table.setColumnHidden(9, False)
