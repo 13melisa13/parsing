@@ -26,7 +26,8 @@ class UiParser(QtWidgets.QMainWindow):
         self.timer.timeout.connect(self.time_update)
         self.set_time_label = QtWidgets.QLabel("Время обновления: ")
         self.set_time_button = QtWidgets.QPushButton("Настроить время обновления")
-        self.can_be_closed = True
+        self.set_time_label_time = QtWidgets.QLabel("Не выбрано")
+        self.can_be_closed = [True, True, True, True]
         if json_data is not None and json_data["time_last_olx"]["h"] != -1:
             self.time_last_olx = QDateTime(
                 json_data["time_last_olx"]["y"],
@@ -54,7 +55,7 @@ class UiParser(QtWidgets.QMainWindow):
             self.time_last_uybor = QDateTime()
             self.label_progress_bar_uybor = QtWidgets.QLabel("Данные с uybor не загружены")
         if json_data is None or json_data["time_fixed"]["h"] == -1:
-            self.set_time_label_time = QtWidgets.QLabel("Не выбрано")
+
             self.set_time_input = QtWidgets.QTimeEdit()
         else:
             self.time_fixed = QTime(json_data["time_fixed"]["h"],
@@ -272,9 +273,20 @@ class UiParser(QtWidgets.QMainWindow):
         print("dump done")
 
     def closeEvent(self, event):
-        if not self.can_be_closed:
-            self.show_message_info("Невозможно закрыть окно! Дождитесь завершения процесса!")
-            event.ignore()
+        if (not self.can_be_closed[0] or not self.can_be_closed[1]
+                or not self.can_be_closed[2] or not self.can_be_closed[3]):
+            message = QMessageBox()
+            message.setText("Процесс скачивания продожается! Вы уверены, что хотите закрыть приложение? ")
+            message.setIcon(QMessageBox.Icon.Question)
+            close = message.addButton("Закрыть", QMessageBox.ButtonRole.YesRole)
+            message.addButton("Отмена", QMessageBox.ButtonRole.NoRole)
+            message.exec()
+            if close == message.clickedButton():
+                self.seria()
+                event.accept()
+
+            else:
+                event.ignore()
         else:
             self.seria()
             event.accept()
@@ -300,14 +312,25 @@ class UiParser(QtWidgets.QMainWindow):
         self.thread_uybor.updated.connect(self.update_uybor_progress_bar)
         self.thread_uybor.throw_exception.connect(self.show_message_with_exit)
         self.thread_uybor.block_export.connect(self.block)
-        self.thread_uybor.block_closing.connect(self.block_close)
+        self.thread_uybor.block_closing.connect(self.block_close_uybor)
         self.thread_uybor.finished.connect(self.finished_uybor_thread)
         self.thread_uybor.start()
 
-    def block_close(self, block_closing):
+    def block_close_uybor(self, block_closing):
         # print(can_be_closed)
-        self.can_be_closed = not block_closing
+        self.can_be_closed[0] = not block_closing
 
+    def block_close_olx(self, block_closing):
+        # print(can_be_closed)
+        self.can_be_closed[1] = not block_closing
+
+    def block_close_uybor_expot(self, block_closing):
+        # print(can_be_closed)
+        self.can_be_closed[2] = not block_closing
+
+    def block_close_olx_export(self, block_closing):
+        # print(can_be_closed)
+        self.can_be_closed[3] = not block_closing
 
     def block(self, boolen, str_):
         if str_ == "uybor":
@@ -345,9 +368,9 @@ class UiParser(QtWidgets.QMainWindow):
         self.set_time_button.setEnabled(False)
         now = datetime.datetime.now()
         self.time_fixed = self.time_temp
-        self.set_time_label.setText(f"Каждый день в {self.time_fixed.toString()}")
-        if (now.hour >= self.time_temp.hour() or
-                (now.hour == self.time_temp.hour() and now.minute >= self.time_temp.minute())):
+        self.set_time_label_time.setText(f"Каждый день в {self.time_fixed.toString()}")
+        if (now.hour > self.time_temp.hour() or
+                (now.hour == self.time_temp.hour() and now.minute > self.time_temp.minute())):
             msec = 1000 * 60 * (24 * 60 - (now.hour * 60 + now.minute)
                                 + self.time_temp.hour() * 60 + self.time_temp.minute())
 
@@ -376,7 +399,7 @@ class UiParser(QtWidgets.QMainWindow):
         self.thread_olx.throw_exception.connect(self.show_message_with_exit)
         self.thread_olx.finished.connect(self.finished_olx_thread)
         self.thread_olx.block_export.connect(self.block)
-        self.thread_olx.block_closing.connect(self.block_close)
+        self.thread_olx.block_closing.connect(self.block_close_olx)
 
         self.thread_olx.start()
 
@@ -447,7 +470,7 @@ class UiParser(QtWidgets.QMainWindow):
         self.thread_export_olx.throw_exception.connect(self.show_message_with_exit)
         self.thread_export_olx.throw_info.connect(self.show_message_info)
         self.thread_export_olx.finished.connect(self.finised_export_olx)
-        self.thread_export_olx.block_closing.connect(self.block_close)
+        self.thread_export_olx.block_closing.connect(self.block_close_olx_export)
 
         self.thread_export_olx.start()
 
@@ -460,7 +483,7 @@ class UiParser(QtWidgets.QMainWindow):
         self.thread_export_uybor.throw_exception.connect(self.show_message_with_exit)
         self.thread_export_uybor.throw_info.connect(self.show_message_info)
         self.thread_export_uybor.finished.connect(self.finised_export_uybor)
-        self.thread_export_uybor.block_closing.connect(self.block_close)
+        self.thread_export_uybor.block_closing.connect(self.block_close_uybor_expot)
         self.thread_export_uybor.start()
 
     def finised_export_olx(self):

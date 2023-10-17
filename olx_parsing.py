@@ -93,7 +93,7 @@ def get_all_flats_from_html(url, page, progress, max_page, prev_count):  # UZS -
     rate = get_rate()
     for ad in ads:
         # print(math.floor((ads.index(ad)+prev_count) * 100 / len(ads) / max_page))
-        progress.emit(math.floor((ads.index(ad)+prev_count) * 100 / len(ads) / max_page))
+        progress.emit(math.ceil((ads.index(ad)+prev_count) * 100 / len(ads) / max_page))
         address_with_modified = ad.find(name='p', attrs={"data-testid": "location-date"}).get_text().split(" - ")
         price_uye = ad.find(name='p', attrs={"data-testid": "ad-price"}).get_text().split(" ")
         square = ad.find(name='div', attrs={"color": "text-global-secondary"}).get_text()

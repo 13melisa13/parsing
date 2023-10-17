@@ -89,7 +89,7 @@ class ApiParser(QThread):
                 return
             for i in range(len(results)):
                 # print((i + prev_res) * 100 / total)
-                self.updated.emit(math.floor((i + prev_res) * 100 / total))
+                self.updated.emit(math.ceil((i + prev_res) * 100 / total))
                 address = ''
                 if results[i]['zone'] is not None:
                     address += results[i]['zone']['name']['ru']
