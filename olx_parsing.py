@@ -4,7 +4,7 @@ import re
 import sys
 import time
 from urllib.request import urlopen, Request
-from PyQt6.QtCore import QThread
+from PyQt6.QtCore import QThread, pyqtSignal
 from PyQt6.QtWidgets import QMessageBox
 from bs4 import BeautifulSoup
 import datetime
@@ -79,7 +79,7 @@ def get_rate():
     return float(re.search(r"(\d+)\.(\d+)", curs[0].get_text())[0])
 
 
-def get_all_flats_from_html(url, page, progress):  # UZS -сумм., UYE - y.e.
+def get_all_flats_from_html(url, page, progress, max_page, prev_count):  # UZS -сумм., UYE - y.e.
     list_of_flats = []
     url = url + f'?currency=UYE&page={page}'
     req = Request(url)
@@ -92,7 +92,8 @@ def get_all_flats_from_html(url, page, progress):  # UZS -сумм., UYE - y.e.
     # rate = requests.get("https://cbu.uz/ru/arkhiv-kursov-valyut/json/USD/").json()[0]['Rate']
     rate = get_rate()
     for ad in ads:
-        progress.setProperty("value", ads.index(ad) * 100 / len(ads))
+        # print(math.floor((ads.index(ad)+prev_count) * 100 / len(ads) / max_page))
+        progress.emit(math.floor((ads.index(ad)+prev_count) * 100 / len(ads) / max_page))
         address_with_modified = ad.find(name='p', attrs={"data-testid": "location-date"}).get_text().split(" - ")
         price_uye = ad.find(name='p', attrs={"data-testid": "ad-price"}).get_text().split(" ")
         square = ad.find(name='div', attrs={"color": "text-global-secondary"}).get_text()
@@ -150,29 +151,24 @@ def get_details_of_flat(url):
     return details
 
 
-# print(get_rate())
-
 class OlxParser(QThread):
+    updated = pyqtSignal(int)
+    throw_exception = pyqtSignal(str)
+    block_export = pyqtSignal(bool, str)
+    block_closing = pyqtSignal(bool)
 
-    def __init__(self, path='_internal/output/internal/', main_window=None):
+    def __init__(self, path='_internal/output/internal/'):
         super().__init__()
         self.path = path
-        self.main_window = main_window
 
     def run(self):
-        self.main_window.update_all_data.setDisabled(True)
-        self.main_window.update_olx.setCheckable(False)
-        self.main_window.update_olx.setDisabled(True)
-        book = read_excel_template(self.main_window)
+        self.block_closing.emit(True)
+        book = read_excel_template(self.throw_exception)
         sheet = book[book.sheetnames[0]]
         sheet.title = f"{datetime.datetime.now().strftime('%d.%m.%y_%H.%M')}"
         if not os.path.exists(self.path):
-            self.main_window.message.setText(f"Повреждена файловая система! Перезагрузите приложение")
-            self.main_window.message.setIcon(QMessageBox.Icon.Critical)
-            self.main_window.message.exec()
-            sys.exit()
-        # self.main_window.label_progress_bar.setText("Процесс: Обновление OLX")
-        self.main_window.progress_bar.setProperty("value", 0)
+            self.throw_exception.emit("Повреждена файловая система! Перезагрузите приложение")
+
         # header_sheet(sheet)
         url = "https://www.olx.uz/nedvizhimost/kvartiry/prodazha/"
         req = Request(url)
@@ -183,26 +179,24 @@ class OlxParser(QThread):
         max_page = int(max_page[len(max_page) - 1].get_text())
         page = 1
         start = time.time()
-
-        max_page = 1  # TODO test_data
+        # max_page = 3  # TODO test_data
+        prev_count = 0
         while page <= max_page:
-            results = get_all_flats_from_html(url, page, self.main_window.progress_bar)
+            results = get_all_flats_from_html(url, page, self.updated, max_page, prev_count)
+
             for i in range(0, len(results)):
-                # print(results[i].prepare_to_list())
-                self.main_window.progress_bar.setProperty("value", i * 100 / len(results) + 50)
                 sheet.append(results[i].prepare_to_list())
             time.sleep(1)
-            print(time.time() - start)
+            # print(time.time() - start)
             page += 1
+            prev_count += len(results)
         self.path += f'olx.xlsm'
+        self.block_export.emit(True, "olx")
         if os.path.exists(self.path):
             os.remove(self.path)
         book.save(self.path)
-        # self.main_window.label_progress_bar.setText("Процесс: Обновление OLX - Завершено")
-        self.main_window.progress_bar.setProperty("value", 100)
-        self.main_window.update_olx.setDisabled(False)
-        self.main_window.update_olx.setCheckable(True)
-        self.main_window.update_all_data.setDisabled(False)
-        self.main_window.filter_button_clicked()
-        self.main_window.time_last.setText(f"{self.main_window.time_fixed.currentTime().toString()}")
+        self.block_export.emit(False, "olx")
+        self.block_closing.emit(False)
+
+
 

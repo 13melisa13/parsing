@@ -27,10 +27,6 @@ def get_arr_from_excel(name):
 
 
 def filtration(filters, resource):
-    # if os.path.exists(filters['resource']):
-    #     results = get_arr_from_excel(filters['resource'])
-    # else:
-    #
     results = get_arr_from_excel(resource)
     # print(len(results))
     if 'price_min' in filters:
@@ -77,22 +73,17 @@ def filtration(filters, resource):
         results = []
         for result in old:
             for keyword in filters['keywords']:
-                if keyword in (result.description + result.address) and not (result in results):
+                if keyword in (result.description.lower() + result.address.lower()) and not (result in results):
                     results.append(result)
                     # print(result.url)
     return results
 
 
-def fill_filtered_data(sheet, results, progress, main_window, name, start=0):
+def fill_filtered_data(sheet, results, throw_info, name):
     if len(results) == 0:
-        main_window.message.setText(f"Не найдены данные по запросу для {name}")
-        main_window.message.setIcon(QMessageBox.Icon.Information)
-        main_window.message.exec()
+        throw_info.emit(f"Не найдены данные по запросу для {name}")
         return
     for i in range(0, len(results)):
-        # print(i*100/len(results)/2 + start)
-        progress.setProperty("value", i * 100 / len(results) / 2 + start)
-        # print(progress)
         sheet.append([results[i].price_uye,
                       results[i].price_per_meter_uye,
                       results[i].price_uzs,
