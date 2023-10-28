@@ -55,7 +55,7 @@ class UiParser(QtWidgets.QMainWindow):
             self.time_last_uybor = QDateTime()
             self.label_progress_bar_uybor = QtWidgets.QLabel("Данные с uybor не загружены")
         if json_data is None or json_data["time_fixed"]["h"] == -1:
-
+            self.time_fixed = QTime()
             self.set_time_input = QtWidgets.QTimeEdit()
         else:
             self.time_fixed = QTime(json_data["time_fixed"]["h"],
@@ -540,14 +540,16 @@ class UiParser(QtWidgets.QMainWindow):
         if self.room_type.currentText() != "Кол-во комнат":
             self.filters.update({"room": self.room_type.currentText()})
         else:
-            self.filters.pop("room")
+            if "room" in self.filters:
+                self.filters.pop("room")
 
     def is_new_building_chosen(self):
         self.filter_button.setEnabled(True)
         if self.is_new_building_type.currentText() != "Тип квартиры":
             self.filters.update({"is_new_building": self.is_new_building_type.currentText()})
         else:
-            self.filters.pop("is_new_building")
+            if "is_new_building" in self.filters:
+                self.filters.pop("is_new_building")
         time.sleep(1)
 
     def repair_chosen(self):
@@ -556,21 +558,24 @@ class UiParser(QtWidgets.QMainWindow):
         if self.repair_type.currentText() != "Ремонт":
             self.filters.update({"repair": self.repair_type.currentText()})
         else:
-            self.filters.pop("repair")
+            if "repair" in self.filters:
+                self.filters.pop("repair")
 
     def price_min_changed(self):
         self.filter_button.setEnabled(True)
         if self.price_min.text() != "":
             self.filters.update({"price_min": int(self.price_min.text())})
         else:
-            self.filters.pop("price_min")
+            if "price_min" in self.filters:
+                self.filters.pop("price_min")
 
     def price_max_changed(self):
         self.filter_button.setEnabled(True)
         if self.price_max.text() != "":
             self.filters.update({"price_max": int(self.price_max.text())})
         else:
-            self.filters.pop("price_max")
+            if "price_max" in self.filters:
+                self.filters.pop("price_max")
 
     def time_changed(self):
         self.set_time_button.setEnabled(True)
@@ -585,21 +590,24 @@ class UiParser(QtWidgets.QMainWindow):
             print(keywords)
             self.filters.update({"keywords": keywords})
         else:
-            self.filters.pop("keywords")
+            if "keywords" in self.filters:
+                self.filters.pop("keywords")
 
     def floor_min_changed(self):
         self.filter_button.setCheckable(True)
         if self.floor_min.text() != "":
             self.filters.update({"floor_min": int(self.floor_min.text())})
         else:
-            self.filters.pop("floor_min")
+            if "floor_min" in self.filters:
+                self.filters.pop("floor_min")
 
     def floor_max_changed(self):
         self.filter_button.setEnabled(True)
         if self.floor_max.text() != "":
             self.filters.update({"floor_max": int(self.floor_max.text())})
         else:
-            self.filters.pop("floor_max")
+            if "floor_max" in self.filters:
+                self.filters.pop("floor_max")
 
     def square_min_changed(self):
         self.filter_button.setEnabled(True)
@@ -607,7 +615,8 @@ class UiParser(QtWidgets.QMainWindow):
         if self.square_min.text() != "":
             self.filters.update({"square_min": float(self.square_min.text())})
         else:
-            self.filters.pop("square_min")
+            if "square_min" in self.filters:
+                self.filters.pop("square_min")
 
     def square_max_changed(self):
         self.filter_button.setEnabled(True)
@@ -615,7 +624,8 @@ class UiParser(QtWidgets.QMainWindow):
         if self.square_max.text() != "":
             self.filters.update({"square_max": float(self.square_max.text())})
         else:
-            self.filters.pop("square_max")
+            if "square_max" in self.filters:
+                self.filters.pop("square_max")
 
     def total_floor_min_changed(self):
         self.filter_button.setEnabled(True)
@@ -623,7 +633,8 @@ class UiParser(QtWidgets.QMainWindow):
         if self.total_floor_min.text() != "":
             self.filters.update({"total_floor_min": int(self.total_floor_min.text())})
         else:
-            self.filters.pop("total_floor_min")
+            if "total_floor_min" in self.filters:
+                self.filters.pop("total_floor_min")
 
     def total_floor_max_changed(self):
         self.filter_button.setEnabled(True)
@@ -631,7 +642,8 @@ class UiParser(QtWidgets.QMainWindow):
         if self.total_floor_max.text() != "":
             self.filters.update({"total_floor_max": int(self.total_floor_max.text())})
         else:
-            self.filters.pop("total_floor_max")
+            if "total_floor_max" in self.filters:
+                self.filters.pop("total_floor_max")
 
     def handler(self):
         self.set_time_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
@@ -706,7 +718,7 @@ if __name__ == "__main__":
         with open("_internal/input/dumps/dump.json", 'r') as f:
             json_data = json.load(f)
             ui = UiParser(json_data)
-            # print("dump")
+            print("dump")
     else:
         ui = UiParser()
     ui.show()

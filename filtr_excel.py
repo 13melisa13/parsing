@@ -19,8 +19,8 @@ def get_arr_from_excel(name):
             room=row[6].value,
             url=row[0].value,
             modified=row[7].value,
-            floor=int(row[2].value.split("/")[0]),
-            total_floor=int(row[2].value.split("/")[1]),
+            floor=row[2].value.split("/")[0],
+            total_floor=row[2].value.split("/")[1],
             description=row[12].value
         ))
     return flats
@@ -28,6 +28,7 @@ def get_arr_from_excel(name):
 
 def filtration(filters, resource):
     results = get_arr_from_excel(resource)
+    print(filters)
     # print(len(results))
     if 'price_min' in filters:
         if 'uzs' in filters:
@@ -84,15 +85,16 @@ def fill_filtered_data(sheet, results, throw_info, name):
         throw_info.emit(f"Не найдены данные по запросу для {name}")
         return
     for i in range(0, len(results)):
-        sheet.append([results[i].price_uye,
-                      results[i].price_per_meter_uye,
-                      results[i].price_uzs,
-                      results[i].price_per_meter_uzs,
-                      results[i].square,
-                      f'{results[i].floor}/{results[i].total_floor}',
-                      results[i].address,
-                      results[i].repair,
-                      results[i].is_new_building,
-                      results[i].room,
-                      results[i].url,
-                      results[i].modified])
+        sheet.append(results[i].prepare_to_list())
+        # sheet.append([results[i].price_uye,
+        #               results[i].price_per_meter_uye,
+        #               results[i].price_uzs,
+        #               results[i].price_per_meter_uzs,
+        #               results[i].square,
+        #               f'{results[i].floor}/{results[i].total_floor}',
+        #               results[i].address,
+        #               results[i].repair,
+        #               results[i].is_new_building,
+        #               results[i].room,
+        #               results[i].url,
+        #               results[i].modified])

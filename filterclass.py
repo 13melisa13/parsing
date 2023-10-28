@@ -53,7 +53,7 @@ class Exporter(QThread):
         self.block_closing.emit(True)
         if not os.path.exists("output"):
             os.mkdir("output")
-        self.name += f"_{datetime.datetime.now().strftime('%d%m%y_%H%M')}"
+        self.name = f"{datetime.datetime.now().strftime('%d-%m-%Y-%H-%M-%S')}_{self.name}"
         book = read_excel_template(self.throw_exception)
         sheet = book[book.sheetnames[0]]
         sheet.title = f"{datetime.datetime.now().strftime('%d.%m.%y_%H.%M')}"

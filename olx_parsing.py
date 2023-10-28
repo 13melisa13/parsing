@@ -14,12 +14,12 @@ from main import read_excel_template
 
 class Flat:
     def __init__(self,
-                 price_uye,
-                 price_uzs,
-                 square,
-                 room,
-                 floor,
-                 total_floor,
+                 price_uye=1.0,
+                 price_uzs=1.0,
+                 square=1.0,
+                 room='',
+                 floor='',
+                 total_floor='',
                  address="default",
                  modified=datetime.datetime.now(),
                  url="https://www.olx.uz",
@@ -36,9 +36,9 @@ class Flat:
             self.price_per_meter_uzs = 'default'
         self.square = float(square.__str__().replace(" ", ''))
         self.description = description
-        self.floor = int(floor)
+        self.floor = floor
         self.room = room
-        self.total_floor = int(total_floor)
+        self.total_floor = total_floor
         self.address = address
         self.repair = repair
         self.is_new_building = is_new_building
@@ -96,6 +96,8 @@ def get_all_flats_from_html(url, page, progress, max_page, prev_count):  # UZS -
         progress.emit(math.ceil((ads.index(ad)+prev_count) * 100 / len(ads) / max_page))
         address_with_modified = ad.find(name='p', attrs={"data-testid": "location-date"}).get_text().split(" - ")
         price_uye = ad.find(name='p', attrs={"data-testid": "ad-price"}).get_text().split(" ")
+        if price_uye is None:
+            price_uye = 1
         square = ad.find(name='div', attrs={"color": "text-global-secondary"}).get_text()
         final_price = 0
         for i in range(0, len(price_uye) - 1):
@@ -105,6 +107,7 @@ def get_all_flats_from_html(url, page, progress, max_page, prev_count):  # UZS -
             now = datetime.datetime.now()
             address_with_modified[1] = f'{now.day} {now.strftime("%B").lower()} {now.year}г.'
         details = get_details_of_flat("https://www.olx.uz" + ad.a.get("href"))
+        # print(details['floor'], "floor", ad.a.get("href"))
 
         flat = Flat(
             price_uye=final_price,
@@ -179,7 +182,7 @@ class OlxParser(QThread):
         max_page = int(max_page[len(max_page) - 1].get_text())
         page = 1
         start = time.time()
-        # max_page = 3  # TODO test_data
+        max_page = 3  # TODO test_data
         prev_count = 0
         while page <= max_page:
             results = get_all_flats_from_html(url, page, self.updated, max_page, prev_count)

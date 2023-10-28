@@ -118,6 +118,8 @@ class ApiParser(QThread):
                 else:
                     if results[i]['room'] == 'freeLayout':
                         room = 'Студия'
+                    else:
+                        room = ''
                 row = (
                     f'https://uybor.uz/listings/{results[i]["id"]}',
                     int(results[i]['square']),
