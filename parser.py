@@ -213,8 +213,9 @@ class UiParser(QtWidgets.QMainWindow):
         self.layout_uybor.addWidget(self.label_rows_count_uybor)
         self.uybor_widget.setLayout(self.layout_uybor)
         self.table_widget_uybor = QtWidgets.QTableWidget()
-
+        # self.table_widget_uybor.verticalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.layout_uybor.addWidget(self.table_widget_uybor)
+        self.layout_uybor.setStretchFactor(self.table_widget_uybor, 1)
         # block olx table
         self.olx_widget = QtWidgets.QWidget()
         self.layout_olx = QtWidgets.QVBoxLayout()
@@ -226,9 +227,13 @@ class UiParser(QtWidgets.QMainWindow):
         self.data_view.addTab(self.olx_widget, "OLX")
         self.data_view.addTab(self.uybor_widget, "UyBor")
         self.data_view.setCurrentIndex(0)
+        self.data_view_layout.setStretchFactor(self.layout_uybor, 1)
+
+        # self.data_view_layout.setStretch(0, 1)
+
         page_layout.addLayout(self.data_view_layout)
         page_layout.addSpacing(10)
-        page_layout.addStretch(1)
+        page_layout.setStretchFactor(self.data_view_layout, 1)
         self.setCentralWidget(self.main_widget)
         self.main_widget.setLayout(page_layout)
         self.setCentralWidget(self.main_widget)
@@ -347,7 +352,7 @@ class UiParser(QtWidgets.QMainWindow):
 
     def finished_uybor_thread(self):
         self.thread_uybor.deleteLater()
-        self.time_last_uybor = self.time_last_uybor.currentDateTime(zone=QTimeZone().systemTimeZone())
+        self.time_last_uybor = self.time_last_uybor.currentDateTime(QTimeZone.systemTimeZone())
         self.label_progress_bar_uybor.setText(
             f"Процесс: Обновление UyBor - Завершено {self.time_last_uybor.toString()}")
         self.progress_bar_uybor.setProperty("value", 100)
@@ -414,7 +419,7 @@ class UiParser(QtWidgets.QMainWindow):
 
     def finished_olx_thread(self):
         self.thread_olx.deleteLater()
-        self.time_last_olx = self.time_last_olx.currentDateTime(zone=QTimeZone().systemTimeZone())
+        self.time_last_olx = self.time_last_olx.currentDateTime(QTimeZone.systemTimeZone())
         self.label_progress_bar_olx.setText(f"Процесс: Обновление OLX - Завершено {self.time_last_olx.toString()}")
         print(f"last update olx{self.time_last_uybor.toString()}")
 
@@ -721,11 +726,12 @@ class UiParser(QtWidgets.QMainWindow):
 
 if not os.path.exists("_internal/output"):
     os.mkdir("_internal/output")
-log = open('_internal/output/log.txt', 'a')
+log = open('_internal/output/log.txt', 'a', encoding="utf-8")
 
 if __name__ == "__main__":
     sys.stdout = log
     sys.stderr = log
+
     if not os.path.exists("_internal/output/internal"):
         os.mkdir("_internal/output/internal")
     app = QtWidgets.QApplication(sys.argv)
@@ -739,4 +745,8 @@ if __name__ == "__main__":
     ui.show()
     app.setWindowIcon(QIcon('_internal/input/icon.ico'))
     ui.setWindowIcon(QIcon('_internal/input/icon.ico'))
-    sys.exit(app.exec())
+    try:
+        sys.exit(app.exec())
+    except Exception as err:
+        print(err)
+

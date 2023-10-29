@@ -1,17 +1,21 @@
 import math
 import os
 import re
-import sys
+# import logging
 import time
 from urllib.request import urlopen, Request
 from PyQt6.QtCore import QThread, pyqtSignal
-from PyQt6.QtWidgets import QMessageBox
+# from PyQt6.QtWidgets import QMessageBox
 from bs4 import BeautifulSoup
 import datetime
 
 from main import read_excel_template
-
-
+#
+# logger = loggingbasicConfig(filename="MAEParser.log",
+#                     encoding="utf-8",
+#                     filemode='a',
+#                     format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+#                     datefmt='%H:%M:%S')
 class Flat:
     def __init__(self,
                  price_uye=1.0,
@@ -165,6 +169,7 @@ class OlxParser(QThread):
         self.path = path
 
     def run(self):
+
         self.block_closing.emit(True)
         book = read_excel_template(self.throw_exception)
         sheet = book[book.sheetnames[0]]
@@ -200,6 +205,8 @@ class OlxParser(QThread):
         book.save(self.path)
         self.block_export.emit(False, "olx")
         self.block_closing.emit(False)
+
+
 
 
 
