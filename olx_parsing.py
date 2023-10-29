@@ -182,7 +182,7 @@ class OlxParser(QThread):
         max_page = int(max_page[len(max_page) - 1].get_text())
         page = 1
         start = time.time()
-        max_page = 3  # TODO test_data
+        # max_page = 3  # TODO test_data
         prev_count = 0
         while page <= max_page:
             results = get_all_flats_from_html(url, page, self.updated, max_page, prev_count)

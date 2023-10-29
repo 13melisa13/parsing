@@ -28,7 +28,7 @@ def get_arr_from_excel(name):
 
 def filtration(filters, resource):
     results = get_arr_from_excel(resource)
-    print(filters)
+    print(f"filters: {filters}")
     # print(len(results))
     if 'price_min' in filters:
         if 'uzs' in filters:

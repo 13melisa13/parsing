@@ -3,16 +3,17 @@ import json
 import os
 import sys
 import time
-
 from PyQt6 import QtWidgets
-from PyQt6.QtCore import Qt, QTime, QTimer, QDateTime
-from PyQt6.QtGui import QIntValidator, QCursor
+from PyQt6.QtCore import Qt, QTime, QTimer, QDateTime, QTimeZone
+from PyQt6.QtGui import QIntValidator, QCursor, QIcon
 from PyQt6.QtWidgets import QMessageBox
-
 from filterclass import Exporter, fill_table_pyqt
 from filtr_excel import filtration
 from olx_parsing import OlxParser
 from uybor_api import CURRENCY_CHOISES, REPAIR_CHOICES_UYBOR, ApiParser, header
+import pytz
+
+tz = pytz.timezone('Europe/Moscow')
 
 
 class UiParser(QtWidgets.QMainWindow):
@@ -22,6 +23,7 @@ class UiParser(QtWidgets.QMainWindow):
 
     def __init__(self, json_data=None):
         super().__init__()
+        print(f"time start app {datetime.datetime.now(tz=tz)}")
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.time_update)
         self.set_time_label = QtWidgets.QLabel("Время обновления: ")
@@ -65,7 +67,6 @@ class UiParser(QtWidgets.QMainWindow):
             self.set_time_input = QtWidgets.QTimeEdit(self.time_fixed)
             self.set_time_label_time = QtWidgets.QLabel(f"Каждый день в {self.time_fixed.toString()}")
 
-
         # self.thread_filter = None
         # self.thread_export_uybor = None
         # self.thread_export_olx = None
@@ -77,6 +78,7 @@ class UiParser(QtWidgets.QMainWindow):
         page_layout = QtWidgets.QVBoxLayout()
         self.message = QMessageBox(self)
         self.message.setWindowTitle("MAEParser")
+        self.message.setWindowIcon(QIcon('_internal/input/icon.ico'))
         # block buttons upload
         self.set_time_layout = QtWidgets.QHBoxLayout()
         # self.set_time_button.setEnabled(False)
@@ -234,7 +236,6 @@ class UiParser(QtWidgets.QMainWindow):
         self.handler()
         self.filter_button_clicked()
 
-
         # self.timer_seria = QTimer(self)
         # self.timer_seria.timeout.connect(self.seria)
         # time_for_seria = 60
@@ -270,12 +271,14 @@ class UiParser(QtWidgets.QMainWindow):
                 "time_last_uybor": time_last_uybor,
                 "time_last_olx": time_last_olx
             }, file)
-        print("dump done")
+        print("dump done before closing")
 
     def closeEvent(self, event):
         if (not self.can_be_closed[0] or not self.can_be_closed[1]
                 or not self.can_be_closed[2] or not self.can_be_closed[3]):
             message = QMessageBox()
+            message.setWindowTitle("MAEParser")
+            message.setWindowIcon(QIcon('_internal/input/icon.ico'))
             message.setText("Процесс скачивания продожается! Вы уверены, что хотите закрыть приложение? ")
             message.setIcon(QMessageBox.Icon.Question)
             close = message.addButton("Закрыть", QMessageBox.ButtonRole.YesRole)
@@ -283,14 +286,15 @@ class UiParser(QtWidgets.QMainWindow):
             message.exec()
             if close == message.clickedButton():
                 self.seria()
+                log.close()
                 event.accept()
 
             else:
                 event.ignore()
         else:
             self.seria()
+            log.close()
             event.accept()
-
 
     def add_items_for_combo_box(self):
         self.is_new_building_type.addItems(["Тип квартиры", "Новостройки", "Вторичный"])
@@ -343,14 +347,19 @@ class UiParser(QtWidgets.QMainWindow):
 
     def finished_uybor_thread(self):
         self.thread_uybor.deleteLater()
-        self.time_last_uybor = self.time_last_uybor.currentDateTimeUtc()
-        self.label_progress_bar_uybor.setText(f"Процесс: Обновление UyBor - Завершено {self.time_last_uybor.toString()}")
+        self.time_last_uybor = self.time_last_uybor.currentDateTime(zone=QTimeZone().systemTimeZone())
+        self.label_progress_bar_uybor.setText(
+            f"Процесс: Обновление UyBor - Завершено {self.time_last_uybor.toString()}")
         self.progress_bar_uybor.setProperty("value", 100)
+        print(f"last update uybor{self.time_last_uybor.toString()}")
         self.update_uybor.setDisabled(False)
         self.update_uybor.setCheckable(True)
         self.update_all_data.setDisabled(False)
         self.filter_button_clicked()
-        self.label_progress_bar_uybor = QtWidgets.QLabel(f"Последнее обновление UyBor {self.time_last_uybor.toString()}")
+        self.export_button_uybor.setEnabled(True)
+
+        # self.label_progress_bar_uybor = QtWidgets.QLabel(
+        #     f"Последнее обновление UyBor {self.time_last_uybor.toString()}")
 
     def show_message_with_exit(self, text):
         self.show_message_info(text)
@@ -366,7 +375,7 @@ class UiParser(QtWidgets.QMainWindow):
 
     def time_clicked(self):
         self.set_time_button.setEnabled(False)
-        now = datetime.datetime.now()
+        now = datetime.datetime.now(tz)
         self.time_fixed = self.time_temp
         self.set_time_label_time.setText(f"Каждый день в {self.time_fixed.toString()}")
         if (now.hour > self.time_temp.hour() or
@@ -377,11 +386,11 @@ class UiParser(QtWidgets.QMainWindow):
         else:
             msec = 1000 * 60 * ((now.hour * 60 + now.minute) -
                                 self.time_temp.hour() * 60 - self.time_temp.minute()) * (-1)
-        print(msec / 1000 / 60 / 60)
+        # print(msec / 1000 / 60 / 60)
         self.timer.start(msec)
 
     def time_update(self):
-        print(f"data_updating_start{datetime.datetime.now().time()}")
+        print(f"datatime updating start {datetime.datetime.now(tz).time()}")
         self.update_all_data_clicked()
         self.timer.setInterval(24 * 60 * 60 * 1000)
 
@@ -405,8 +414,10 @@ class UiParser(QtWidgets.QMainWindow):
 
     def finished_olx_thread(self):
         self.thread_olx.deleteLater()
-        self.time_last_olx = self.time_last_olx.currentDateTimeUtc()
+        self.time_last_olx = self.time_last_olx.currentDateTime(zone=QTimeZone().systemTimeZone())
         self.label_progress_bar_olx.setText(f"Процесс: Обновление OLX - Завершено {self.time_last_olx.toString()}")
+        print(f"last update olx{self.time_last_uybor.toString()}")
+
         self.progress_bar_olx.setProperty("value", 100)
         self.update_olx.setDisabled(False)
         self.update_olx.setCheckable(True)
@@ -587,7 +598,7 @@ class UiParser(QtWidgets.QMainWindow):
         if self.keywords.text() != "":
             keywords = self.keywords.text().split(";")
             keywords = [keyword.lower() for keyword in keywords if keyword != '']
-            print(keywords)
+            # print(keywords)
             self.filters.update({"keywords": keywords})
         else:
             if "keywords" in self.filters:
@@ -704,13 +715,17 @@ class UiParser(QtWidgets.QMainWindow):
 
     # def show(self):
     #     super().show()
-        # self.anti_close()
-        # self.filter_button_clicked()
+    # self.anti_close()
+    # self.filter_button_clicked()
 
+
+if not os.path.exists("_internal/output"):
+    os.mkdir("_internal/output")
+log = open('_internal/output/log.txt', 'a')
 
 if __name__ == "__main__":
-    if not os.path.exists("_internal/output"):
-        os.mkdir("_internal/output")
+    sys.stdout = log
+    sys.stderr = log
     if not os.path.exists("_internal/output/internal"):
         os.mkdir("_internal/output/internal")
     app = QtWidgets.QApplication(sys.argv)
@@ -718,8 +733,10 @@ if __name__ == "__main__":
         with open("_internal/input/dumps/dump.json", 'r') as f:
             json_data = json.load(f)
             ui = UiParser(json_data)
-            print("dump")
+            print(f"dump opened {datetime.datetime.now(tz)}")
     else:
         ui = UiParser()
     ui.show()
+    app.setWindowIcon(QIcon('_internal/input/icon.ico'))
+    ui.setWindowIcon(QIcon('_internal/input/icon.ico'))
     sys.exit(app.exec())
