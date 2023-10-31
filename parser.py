@@ -291,14 +291,16 @@ class UiParser(QtWidgets.QMainWindow):
             message.exec()
             if close == message.clickedButton():
                 self.seria()
-                log.close()
+                log_out.close()
+                log_err.close()
                 event.accept()
 
             else:
                 event.ignore()
         else:
             self.seria()
-            log.close()
+            log_out.close()
+            log_err.close()
             event.accept()
 
     def add_items_for_combo_box(self):
@@ -316,13 +318,17 @@ class UiParser(QtWidgets.QMainWindow):
         self.update_uybor.setDisabled(True)
         self.update_all_data.setDisabled(True)
         self.filter_button.setEnabled(True)
-        self.label_progress_bar_uybor.setText("Процесс: Обновление UyBor")
+        # self.label_progress_bar_uybor.setText("Процесс: Обновление UyBor")
         self.thread_uybor = ApiParser()
         self.thread_uybor.updated.connect(self.update_uybor_progress_bar)
         self.thread_uybor.throw_exception.connect(self.show_message_with_exit)
         self.thread_uybor.block_export.connect(self.block)
         self.thread_uybor.block_closing.connect(self.block_close_uybor)
+        self.thread_uybor.throw_info.connect(self.show_message_info)
         self.thread_uybor.finished.connect(self.finished_uybor_thread)
+        self.thread_uybor.label.connect(self.update_uybor_label)
+        self.thread_uybor.date.connect(self.update_date_uybor)
+
         self.thread_uybor.start()
 
     def block_close_uybor(self, block_closing):
@@ -352,10 +358,10 @@ class UiParser(QtWidgets.QMainWindow):
 
     def finished_uybor_thread(self):
         self.thread_uybor.deleteLater()
-        self.time_last_uybor = self.time_last_uybor.currentDateTime(QTimeZone.systemTimeZone())
-        self.label_progress_bar_uybor.setText(
-            f"Процесс: Обновление UyBor - Завершено {self.time_last_uybor.toString()}")
-        self.progress_bar_uybor.setProperty("value", 100)
+        # self.time_last_uybor = self.time_last_uybor.currentDateTime(QTimeZone.systemTimeZone())
+        # self.label_progress_bar_uybor.setText(
+        #     f" {self.time_last_uybor.toString()}")
+        # self.progress_bar_uybor.setProperty("value", 100)
         print(f"last update uybor{self.time_last_uybor.toString()}")
         self.update_uybor.setDisabled(False)
         self.update_uybor.setCheckable(True)
@@ -377,6 +383,12 @@ class UiParser(QtWidgets.QMainWindow):
 
     def update_uybor_progress_bar(self, value):
         self.progress_bar_uybor.setProperty("value", value)
+
+    def update_uybor_label(self, value):
+        self.label_progress_bar_uybor.setText(f"{value}. Последнее обновление: {self.time_last_uybor.toString()}")
+
+    def update_date_uybor(self):
+        self.time_last_uybor = self.time_last_uybor.currentDateTime(QTimeZone.systemTimeZone())
 
     def time_clicked(self):
         self.set_time_button.setEnabled(False)
@@ -406,30 +418,31 @@ class UiParser(QtWidgets.QMainWindow):
         self.update_olx.setCheckable(False)
         self.update_olx.setDisabled(True)
         # self.export_button_olx.setDisabled(True)
-        self.label_progress_bar_olx.setText("Процесс: Обновление OLX")
-        self.progress_bar_olx.setProperty("value", 0)
         self.thread_olx = OlxParser()
         self.thread_olx.updated.connect(self.update_olx_progress_bar)
         self.thread_olx.throw_exception.connect(self.show_message_with_exit)
         self.thread_olx.finished.connect(self.finished_olx_thread)
         self.thread_olx.block_export.connect(self.block)
+        self.thread_olx.date.connect(self.update_date_olx)
+        self.thread_olx.label.connect(self.update_olx_label)
         self.thread_olx.block_closing.connect(self.block_close_olx)
-
+        self.thread_olx.throw_info.connect(self.show_message_info)
         self.thread_olx.start()
 
     def finished_olx_thread(self):
         self.thread_olx.deleteLater()
-        self.time_last_olx = self.time_last_olx.currentDateTime(QTimeZone.systemTimeZone())
-        self.label_progress_bar_olx.setText(f"Процесс: Обновление OLX - Завершено {self.time_last_olx.toString()}")
-        print(f"last update olx{self.time_last_uybor.toString()}")
-
-        self.progress_bar_olx.setProperty("value", 100)
+        print(f"last update olx {self.time_last_uybor.toString()}")
         self.update_olx.setDisabled(False)
         self.update_olx.setCheckable(True)
         self.update_all_data.setDisabled(False)
         self.filter_button_clicked()
-
         self.export_button_olx.setEnabled(True)
+
+    def update_olx_label(self, value):
+        self.label_progress_bar_olx.setText(f"{value}. Последнее обновление: {self.time_last_olx.toString()}")
+
+    def update_date_olx(self):
+        self.time_last_olx = self.time_last_olx.currentDateTime(QTimeZone.systemTimeZone())
 
     def update_olx_progress_bar(self, value):
         self.progress_bar_olx.setProperty("value", value)
@@ -448,7 +461,8 @@ class UiParser(QtWidgets.QMainWindow):
                 self.message.setIcon(QMessageBox.Icon.Information)
                 self.message.exec()
                 return
-            elif not os.path.exists("_internal/output/internal/uybor.xlsm"):
+            elif (not os.path.exists("_internal/output/internal/uybor.xlsm")
+                  and self.progress_bar_uybor.value() % 100 == 0):
                 self.message.setText("Необходимо загрузить данные с UyBor")
                 self.message.setIcon(QMessageBox.Icon.Information)
                 self.message.exec()
@@ -458,7 +472,8 @@ class UiParser(QtWidgets.QMainWindow):
                 self.export_button_olx.setEnabled(len(self.results_olx) > 0)
 
                 return
-            else:
+            elif (not os.path.exists("_internal/output/internal/olx.xlsm")
+                  and self.progress_bar_olx.value() % 100 == 0):
                 self.message.setText("Необходимо загрузить данные с Olx")
                 self.message.setIcon(QMessageBox.Icon.Information)
                 self.message.exec()
@@ -485,6 +500,7 @@ class UiParser(QtWidgets.QMainWindow):
         self.thread_export_olx = Exporter(name="Olx", results=self.results_olx)
         self.thread_export_olx.throw_exception.connect(self.show_message_with_exit)
         self.thread_export_olx.throw_info.connect(self.show_message_info)
+
         self.thread_export_olx.finished.connect(self.finised_export_olx)
         self.thread_export_olx.block_closing.connect(self.block_close_olx_export)
 
@@ -676,21 +692,9 @@ class UiParser(QtWidgets.QMainWindow):
         self.currency_type.activated.connect(self.cur_chosen)
         self.is_new_building_type.activated.connect(self.is_new_building_chosen)
         self.export_button_olx.setCheckable(True)
-        if len(self.results_olx) == 0:
-            self.export_button_olx.setDisabled(True)
-        else:
-            self.export_button_olx.setDisabled(False)
+
         self.export_button_uybor.setCheckable(True)
-        if len(self.results_olx) == 0:
-            self.export_button_uybor.setDisabled(True)
-        else:
-            self.export_button_uybor.setDisabled(False)
-        self.export_button_all_data.setCheckable(True)
-        if len(self.results_uybor) + len(self.results_olx) == 0:
-            self.export_button_all_data.setDisabled(True)
-        else:
-            self.export_button_all_data.setDisabled(False)
-            self.export_button_all_data.isEnabled()
+
         self.export_button_olx.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.export_button_uybor.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.export_button_all_data.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
@@ -718,19 +722,22 @@ class UiParser(QtWidgets.QMainWindow):
         self.total_floor_min.textChanged.connect(self.total_floor_min_changed)
         self.set_time_input.timeChanged.connect(self.time_changed)
 
-    # def show(self):
-    #     super().show()
+    def show(self):
+        super().show()
+        # raise Exception("1")
     # self.anti_close()
     # self.filter_button_clicked()
 
 
 if not os.path.exists("_internal/output"):
     os.mkdir("_internal/output")
-log = open('_internal/output/log.txt', 'a', encoding="utf-8")
+log_out = open('_internal/output/log_out.txt', 'a', encoding="utf-8")
+log_err = open('_internal/output/log_err.txt', 'a', encoding="utf-8")
+
 
 if __name__ == "__main__":
-    sys.stdout = log
-    sys.stderr = log
+    # sys.stdout = log_out
+    sys.stderr = log_err
 
     if not os.path.exists("_internal/output/internal"):
         os.mkdir("_internal/output/internal")
@@ -748,5 +755,8 @@ if __name__ == "__main__":
     try:
         sys.exit(app.exec())
     except Exception as err:
-        print(err)
+        print("catch", err)
+    finally:
+        log_out.close()
+        log_err.close()
 

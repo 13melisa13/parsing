@@ -1,21 +1,18 @@
 import math
 import os
 import re
-# import logging
+
 import time
 from urllib.request import urlopen, Request
 from PyQt6.QtCore import QThread, pyqtSignal
-# from PyQt6.QtWidgets import QMessageBox
+
 from bs4 import BeautifulSoup
 import datetime
 
 from main import read_excel_template
-#
-# logger = loggingbasicConfig(filename="MAEParser.log",
-#                     encoding="utf-8",
-#                     filemode='a',
-#                     format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
-#                     datefmt='%H:%M:%S')
+
+
+
 class Flat:
     def __init__(self,
                  price_uye=1.0,
@@ -74,9 +71,17 @@ class Flat:
 
 
 def get_rate():
+    print("\tget rate")
     url = 'https://ofb.uz/uz/'
-    Request(url).add_header('Accept-Encoding', 'identity')
-    page = urlopen(url)
+    # Request(url).add_header('Accept-Encoding', 'identity')
+    while True:
+        try:
+            page = urlopen(url)
+            break
+        except Exception as arr:
+            print(arr, url)
+            time.sleep(1)
+            continue
     html = page.read().decode('utf-8')
     soup = BeautifulSoup(html, "html.parser")
     curs = soup.find_all(name="div", attrs={"class": "currency"})
@@ -85,10 +90,18 @@ def get_rate():
 
 def get_all_flats_from_html(url, page, progress, max_page, prev_count):  # UZS -сумм., UYE - y.e.
     list_of_flats = []
+    print("\tget_all_flats_from_html", page)
     url = url + f'?currency=UYE&page={page}'
-    req = Request(url)
-    req.add_header('Accept-Encoding', 'identity')
-    page = urlopen(url)
+    # req = Request(url)
+    # req.add_header('Accept-Encoding', 'identity')
+    while True:
+        try:
+            page = urlopen(url)
+            break
+        except Exception as arr:
+            print(arr, url)
+            time.sleep(1)
+            continue
     html = page.read().decode('utf-8')
     soup = BeautifulSoup(html, "html.parser")
     ads = soup.find_all(name="div", attrs={"data-cy": "l-card"})
@@ -97,7 +110,7 @@ def get_all_flats_from_html(url, page, progress, max_page, prev_count):  # UZS -
     rate = get_rate()
     for ad in ads:
         # print(math.floor((ads.index(ad)+prev_count) * 100 / len(ads) / max_page))
-        progress.emit(math.ceil((ads.index(ad)+prev_count) * 100 / len(ads) / max_page))
+        progress.emit(math.ceil((ads.index(ad) + prev_count) * 100 / len(ads) / max_page))
         address_with_modified = ad.find(name='p', attrs={"data-testid": "location-date"}).get_text().split(" - ")
         price_uye = ad.find(name='p', attrs={"data-testid": "ad-price"}).get_text().split(" ")
         if price_uye is None:
@@ -132,9 +145,17 @@ def get_all_flats_from_html(url, page, progress, max_page, prev_count):  # UZS -
 
 
 def get_details_of_flat(url):
+    print("\t\tget_deteil", url)
     req = Request(url)
     req.add_header('Accept-Encoding', 'identity')
-    page = urlopen(url)
+    while True:
+        try:
+            page = urlopen(url)
+            break
+        except Exception as arr:
+            print(arr)
+            time.sleep(1)
+            continue
     html = page.read().decode('utf-8')
     soup = BeautifulSoup(html, "html.parser")
     ad = soup.find(name="div", attrs={"data-testid": "main"}).find(name="ul").get_text()  # li p parse
@@ -161,15 +182,19 @@ def get_details_of_flat(url):
 class OlxParser(QThread):
     updated = pyqtSignal(int)
     throw_exception = pyqtSignal(str)
+    throw_info = pyqtSignal(str)
+    label = pyqtSignal(str)
     block_export = pyqtSignal(bool, str)
     block_closing = pyqtSignal(bool)
+    date = pyqtSignal()
 
     def __init__(self, path='_internal/output/internal/'):
         super().__init__()
         self.path = path
 
     def run(self):
-
+        self.label.emit("Процесс: Обновление OLX")
+        self.updated.emit(0)
         self.block_closing.emit(True)
         book = read_excel_template(self.throw_exception)
         sheet = book[book.sheetnames[0]]
@@ -179,9 +204,20 @@ class OlxParser(QThread):
 
         # header_sheet(sheet)
         url = "https://www.olx.uz/nedvizhimost/kvartiry/prodazha/"
-        req = Request(url)
-        req.add_header('Accept-Encoding', 'identity')
-        html = urlopen(url).read().decode('utf-8')
+        # req = Request(url)
+        # req.add_header('Accept-Encoding', 'identity')
+        while True:
+            try:
+
+                html = urlopen(url).read().decode('utf-8')
+                break
+            except Exception as err:
+                self.throw_info.emit("Проблемы с подключением к сети")
+                print(err)
+                self.label.emit("Процесс: Обновление OLX - Переподключение")
+                # self.updated.emit(0)
+                time.sleep(1)
+
         soup = BeautifulSoup(html, "html.parser")
         max_page = soup.find_all(name="li", attrs={"data-testid": "pagination-list-item"})
         max_page = int(max_page[len(max_page) - 1].get_text())
@@ -189,13 +225,23 @@ class OlxParser(QThread):
         start = time.time()
         # max_page = 3  # TODO test_data
         prev_count = 0
+        # print("olx")
         while page <= max_page:
-            results = get_all_flats_from_html(url, page, self.updated, max_page, prev_count)
 
+            try:
+                results = get_all_flats_from_html(url, page, self.updated, max_page, prev_count)
+                # break
+            except Exception as err:
+                self.throw_info.emit("Проблемы с подключением к сети")
+                print(err)
+                self.label.emit("Процесс: Обновление OLX - Переподключение")
+                # self.updated.emit(0)
+                time.sleep(5)
+                continue
             for i in range(0, len(results)):
                 sheet.append(results[i].prepare_to_list())
-            time.sleep(1)
-            # print(time.time() - start)
+            # time.sleep(0.001)
+            print("olx", time.time() - start, page, " page")
             page += 1
             prev_count += len(results)
         self.path += f'olx.xlsm'
@@ -205,8 +251,5 @@ class OlxParser(QThread):
         book.save(self.path)
         self.block_export.emit(False, "olx")
         self.block_closing.emit(False)
-
-
-
-
-
+        self.updated.emit(100)
+        self.label.emit("Процесс: Обновление OLX - Завершено")

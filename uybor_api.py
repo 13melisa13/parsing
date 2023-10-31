@@ -1,5 +1,6 @@
 import math
 import os
+import time
 from datetime import datetime
 import requests
 from PyQt6.QtCore import QThread, pyqtSignal
@@ -42,7 +43,7 @@ def json_uybor(page=0, limit=100):
         "limit": limit,
         "page": page,
         "mode": "search",
-        "order": "upAt",
+        "order": "-createdAt",
         "embed": "category,residentialComplex,region,city,district,zone,street,metro",
         "operationType__eq": "sale",
         "category__eq": "7"
@@ -55,6 +56,9 @@ class ApiParser(QThread):
     block_export = pyqtSignal(bool, str)
     updated = pyqtSignal(int)
     throw_exception = pyqtSignal(str)
+    throw_info = pyqtSignal(str)
+    label = pyqtSignal(str)
+    date = pyqtSignal()
     block_closing = pyqtSignal(bool)
 
     def __init__(self, path='_internal/output/internal/'):
@@ -62,33 +66,49 @@ class ApiParser(QThread):
         self.path = path
 
     def run(self):
+        self.updated.emit(0)
+        self.label.emit("Процесс: Обновление UyBor")
         self.block_closing.emit(True)
         book = read_excel_template(self.throw_exception)
         sheet = book[book.sheetnames[0]]
         sheet.title = f"{datetime.now().strftime('%d.%m.%y_%H.%M')}"
         if not os.path.exists(self.path):
             self.throw_exception.emit("Повреждена файловая система! Перезагрузите приложение")
-        self.updated.emit(0)
         self.fill_sheet_uybor(sheet)
         self.path += f'uybor.xlsm'
         self.block_export.emit(True, "uybor")
         if os.path.exists(self.path):
             os.remove(self.path)
         book.save(self.path)
+        self.date.emit()
+        self.updated.emit(100)
+        self.label.emit("Процесс: Обновление UyBor - Завершено")
         self.block_export.emit(False, "uybor")
         self.block_closing.emit(False)
 
     def fill_sheet_uybor(self, sheet):
         page = 0
         prev_res = 0
-        total = 1
+        total = 10000
+        limit = 100
         while prev_res < total:
-            # print(page, total, prev_res)
-            results, total = json_uybor(page)
+            try:
+                if limit > (total - prev_res):
+                    limit = total - prev_res
+                results, total = json_uybor(page, limit)
+            except Exception as err:
+                # self.updated.emit(0)
+                self.label.emit("Процесс: Обновление UyBor - Переподключение")
+                self.throw_info.emit("Проблемы с подключением к сети")
+                print(err)
+                time.sleep(1)
+                continue
+            print("uybor ", page, total, prev_res, len(results))
             if len(results) == 0:
-                return
+                break
             for i in range(len(results)):
                 # print((i + prev_res) * 100 / total)
+                # raise Exception(" Я В РОТ АПИ ВАШ")
                 self.updated.emit(math.ceil((i + prev_res) * 100 / total))
                 address = ''
                 if results[i]['zone'] is not None:
