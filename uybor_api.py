@@ -153,7 +153,8 @@ class ApiParser(QThread):
                     results[i]['prices']['usd'] / results[i]['square'],
                     results[i]['prices']['uzs'],
                     results[i]['prices']['uzs'] / results[i]['square'],
-                    results[i]['description']
+                    results[i]['description'],
+                    results[i]['id']
                 )
                 sheet.append(row)
             prev_res += len(results)

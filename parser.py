@@ -1,6 +1,7 @@
 import datetime
 import json
 import os
+import random
 import sys
 import time
 from PyQt6 import QtWidgets
@@ -8,7 +9,7 @@ from PyQt6.QtCore import Qt, QTime, QTimer, QDateTime, QTimeZone
 from PyQt6.QtGui import QIntValidator, QCursor, QIcon
 from PyQt6.QtWidgets import QMessageBox
 from filterclass import Exporter, fill_table_pyqt
-from filtr_excel import filtration
+from olx_parsing import filtration
 from olx_parsing import OlxParser
 from uybor_api import CURRENCY_CHOISES, REPAIR_CHOICES_UYBOR, ApiParser, header
 import pytz
@@ -418,19 +419,21 @@ class UiParser(QtWidgets.QMainWindow):
         self.update_olx.setCheckable(False)
         self.update_olx.setDisabled(True)
         # self.export_button_olx.setDisabled(True)
-        self.thread_olx = OlxParser()
-        self.thread_olx.updated.connect(self.update_olx_progress_bar)
-        self.thread_olx.throw_exception.connect(self.show_message_with_exit)
-        self.thread_olx.finished.connect(self.finished_olx_thread)
-        self.thread_olx.block_export.connect(self.block)
-        self.thread_olx.date.connect(self.update_date_olx)
-        self.thread_olx.label.connect(self.update_olx_label)
-        self.thread_olx.block_closing.connect(self.block_close_olx)
-        self.thread_olx.throw_info.connect(self.show_message_info)
-        self.thread_olx.start()
+        self.threads_olx = [OlxParser(i, self.results_olx) for i in range(1)]
+        for thread_olx in self.threads_olx:
+            thread_olx.updated.connect(self.update_olx_progress_bar)
+            thread_olx.throw_exception.connect(self.show_message_with_exit)
+            thread_olx.finished.connect(self.finished_olx_thread)
+            thread_olx.block_export.connect(self.block)
+            thread_olx.date.connect(self.update_date_olx)
+            thread_olx.label.connect(self.update_olx_label)
+            thread_olx.block_closing.connect(self.block_close_olx)
+            thread_olx.throw_info.connect(self.show_message_info)
+            thread_olx.start()
 
     def finished_olx_thread(self):
-        self.thread_olx.deleteLater()
+        # self.thread_olx.deleteLater()
+        self.threads_olx[0].start()
         print(f"last update olx {self.time_last_uybor.toString()}")
         self.update_olx.setDisabled(False)
         self.update_olx.setCheckable(True)

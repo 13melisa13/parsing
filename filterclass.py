@@ -2,7 +2,7 @@ import datetime
 import os
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import QThread, Qt, pyqtSignal
-from filtr_excel import fill_filtered_data
+from olx_parsing import fill_filtered_data
 from main import read_excel_template
 
 
