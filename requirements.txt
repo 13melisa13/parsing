@@ -1,4 +1,6 @@
 requests~=2.31.0
 beautifulsoup4~=4.12.2
 openpyxl~=3.1.2
-PyQt6
+PyQt6~=6.5.3
+pytz~=2023.3.post1
+aiohttp~=3.8.6

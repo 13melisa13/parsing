@@ -1,18 +1,19 @@
 import datetime
 import json
 import os
-import random
 import sys
 import time
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import Qt, QTime, QTimer, QDateTime, QTimeZone
 from PyQt6.QtGui import QIntValidator, QCursor, QIcon
 from PyQt6.QtWidgets import QMessageBox
-from filterclass import Exporter, fill_table_pyqt
-from olx_parsing import filtration
-from olx_parsing import OlxParser
-from uybor_api import CURRENCY_CHOISES, REPAIR_CHOICES_UYBOR, ApiParser, header
+from export import Exporter, fill_table_pyqt
+from flat import CURRENCY_CHOISES, REPAIR_CHOICES_UYBOR, header
+from getter_from_db import DataFromDB
+from filtration import filtration
 import pytz
+
+from upload_uybor import UploadUybor
 
 tz = pytz.timezone('Europe/Moscow')
 
@@ -20,6 +21,8 @@ tz = pytz.timezone('Europe/Moscow')
 class UiParser(QtWidgets.QMainWindow):
     results_olx = []
     results_uybor = []
+    results_olx_f = []
+    results_uybor_f = []
     filters = {}
 
     def __init__(self, json_data=None):
@@ -67,14 +70,7 @@ class UiParser(QtWidgets.QMainWindow):
             self.time_clicked()
             self.set_time_input = QtWidgets.QTimeEdit(self.time_fixed)
             self.set_time_label_time = QtWidgets.QLabel(f"Каждый день в {self.time_fixed.toString()}")
-
-        # self.thread_filter = None
-        # self.thread_export_uybor = None
-        # self.thread_export_olx = None
-        # self.thread_uybor = None
-        # self.thread_olx = None
         self.setWindowTitle("MAEParser")
-        # block main
         self.main_widget = QtWidgets.QWidget()
         page_layout = QtWidgets.QVBoxLayout()
         self.message = QMessageBox(self)
@@ -229,9 +225,6 @@ class UiParser(QtWidgets.QMainWindow):
         self.data_view.addTab(self.uybor_widget, "UyBor")
         self.data_view.setCurrentIndex(0)
         self.data_view_layout.setStretchFactor(self.layout_uybor, 1)
-
-        # self.data_view_layout.setStretch(0, 1)
-
         page_layout.addLayout(self.data_view_layout)
         page_layout.addSpacing(10)
         page_layout.setStretchFactor(self.data_view_layout, 1)
@@ -241,11 +234,7 @@ class UiParser(QtWidgets.QMainWindow):
         self.add_items_for_combo_box()
         self.handler()
         self.filter_button_clicked()
-
-        # self.timer_seria = QTimer(self)
-        # self.timer_seria.timeout.connect(self.seria)
-        # time_for_seria = 60
-        # self.timer_seria.start(time_for_seria * 1000)
+        self.setup_upload()
 
     def seria(self):
         if not os.path.exists("_internal/input/dumps"):
@@ -320,16 +309,15 @@ class UiParser(QtWidgets.QMainWindow):
         self.update_all_data.setDisabled(True)
         self.filter_button.setEnabled(True)
         # self.label_progress_bar_uybor.setText("Процесс: Обновление UyBor")
-        self.thread_uybor = ApiParser()
+        self.thread_uybor = DataFromDB("uybor")
         self.thread_uybor.updated.connect(self.update_uybor_progress_bar)
         self.thread_uybor.throw_exception.connect(self.show_message_with_exit)
-        self.thread_uybor.block_export.connect(self.block)
+        # self.thread_uybor.block_export.connect(self.block)
         self.thread_uybor.block_closing.connect(self.block_close_uybor)
         self.thread_uybor.throw_info.connect(self.show_message_info)
         self.thread_uybor.finished.connect(self.finished_uybor_thread)
         self.thread_uybor.label.connect(self.update_uybor_label)
         self.thread_uybor.date.connect(self.update_date_uybor)
-
         self.thread_uybor.start()
 
     def block_close_uybor(self, block_closing):
@@ -359,19 +347,11 @@ class UiParser(QtWidgets.QMainWindow):
 
     def finished_uybor_thread(self):
         self.thread_uybor.deleteLater()
-        # self.time_last_uybor = self.time_last_uybor.currentDateTime(QTimeZone.systemTimeZone())
-        # self.label_progress_bar_uybor.setText(
-        #     f" {self.time_last_uybor.toString()}")
-        # self.progress_bar_uybor.setProperty("value", 100)
         print(f"last update uybor{self.time_last_uybor.toString()}")
         self.update_uybor.setDisabled(False)
-        self.update_uybor.setCheckable(True)
         self.update_all_data.setDisabled(False)
         self.filter_button_clicked()
         self.export_button_uybor.setEnabled(True)
-
-        # self.label_progress_bar_uybor = QtWidgets.QLabel(
-        #     f"Последнее обновление UyBor {self.time_last_uybor.toString()}")
 
     def show_message_with_exit(self, text):
         self.show_message_info(text)
@@ -388,7 +368,8 @@ class UiParser(QtWidgets.QMainWindow):
     def update_uybor_label(self, value):
         self.label_progress_bar_uybor.setText(f"{value}. Последнее обновление: {self.time_last_uybor.toString()}")
 
-    def update_date_uybor(self):
+    def update_date_uybor(self, results):
+        self.results_olx = results
         self.time_last_uybor = self.time_last_uybor.currentDateTime(QTimeZone.systemTimeZone())
 
     def time_clicked(self):
@@ -416,24 +397,23 @@ class UiParser(QtWidgets.QMainWindow):
         # self.export_button_all_data.setDisabled(True)
         self.filter_button.setEnabled(True)
         self.update_all_data.setDisabled(True)
-        self.update_olx.setCheckable(False)
+        # self.update_olx.setCheckable(False)
         self.update_olx.setDisabled(True)
         # self.export_button_olx.setDisabled(True)
-        self.threads_olx = [OlxParser(i, self.results_olx) for i in range(1)]
-        for thread_olx in self.threads_olx:
-            thread_olx.updated.connect(self.update_olx_progress_bar)
-            thread_olx.throw_exception.connect(self.show_message_with_exit)
-            thread_olx.finished.connect(self.finished_olx_thread)
-            thread_olx.block_export.connect(self.block)
-            thread_olx.date.connect(self.update_date_olx)
-            thread_olx.label.connect(self.update_olx_label)
-            thread_olx.block_closing.connect(self.block_close_olx)
-            thread_olx.throw_info.connect(self.show_message_info)
-            thread_olx.start()
+        self.thread_olx = DataFromDB("olx")
+        self.thread_olx.updated.connect(self.update_olx_progress_bar)
+        self.thread_olx.throw_exception.connect(self.show_message_with_exit)
+        self.thread_olx.finished.connect(self.finished_olx_thread)
+        # self.thread_olx.block_export.connect(self.block)
+        self.thread_olx.date.connect(self.update_date_olx)
+        self.thread_olx.label.connect(self.update_olx_label)
+        self.thread_olx.block_closing.connect(self.block_close_olx)
+        self.thread_olx.throw_info.connect(self.show_message_info)
+        self.thread_olx.start()
 
     def finished_olx_thread(self):
         # self.thread_olx.deleteLater()
-        self.threads_olx[0].start()
+        self.thread_olx.start()
         print(f"last update olx {self.time_last_uybor.toString()}")
         self.update_olx.setDisabled(False)
         self.update_olx.setCheckable(True)
@@ -444,7 +424,8 @@ class UiParser(QtWidgets.QMainWindow):
     def update_olx_label(self, value):
         self.label_progress_bar_olx.setText(f"{value}. Последнее обновление: {self.time_last_olx.toString()}")
 
-    def update_date_olx(self):
+    def update_date_olx(self, results):
+        self.results_olx = results
         self.time_last_olx = self.time_last_olx.currentDateTime(QTimeZone.systemTimeZone())
 
     def update_olx_progress_bar(self, value):
@@ -456,44 +437,15 @@ class UiParser(QtWidgets.QMainWindow):
             cur = 'uzs'
         else:
             cur = 'uye'
-        if (not os.path.exists("_internal/output/internal/olx.xlsm") or
-                not os.path.exists("_internal/output/internal/uybor.xlsm")):
-            if (not os.path.exists("_internal/output/internal/olx.xlsm")
-                    and not os.path.exists("_internal/output/internal/uybor.xlsm")):
-                self.message.setText("Необходимо загрузить данные с UyBor и Olx")
-                self.message.setIcon(QMessageBox.Icon.Information)
-                self.message.exec()
-                return
-            elif (not os.path.exists("_internal/output/internal/uybor.xlsm")
-                  and self.progress_bar_uybor.value() % 100 == 0):
-                self.message.setText("Необходимо загрузить данные с UyBor")
-                self.message.setIcon(QMessageBox.Icon.Information)
-                self.message.exec()
-                self.results_olx = filtration(filters=self.filters, resource="_internal/output/internal/olx.xlsm")
-                self.label_rows_count_olx.setText(f"Всего строк: {len(self.results_olx)}")
-                fill_table_pyqt(self.table_widget_olx, header, self.results_olx, cur)
-                self.export_button_olx.setEnabled(len(self.results_olx) > 0)
-
-                return
-            elif (not os.path.exists("_internal/output/internal/olx.xlsm")
-                  and self.progress_bar_olx.value() % 100 == 0):
-                self.message.setText("Необходимо загрузить данные с Olx")
-                self.message.setIcon(QMessageBox.Icon.Information)
-                self.message.exec()
-                self.results_uybor = filtration(filters=self.filters, resource="_internal/output/internal/uybor.xlsm")
-                self.label_rows_count_uybor.setText(f"Всего строк: {len(self.results_uybor)}")
-                fill_table_pyqt(self.table_widget_uybor, header, self.results_uybor, cur)
-                self.export_button_uybor.setEnabled(len(self.results_uybor) > 0)
-                return
-        self.results_uybor = filtration(filters=self.filters, resource="_internal/output/internal/uybor.xlsm")
-        self.label_rows_count_uybor.setText(f"Всего строк: {len(self.results_uybor)}")
+        self.results_uybor_f = filtration(filters=self.filters, results=self.results_uybor)
+        self.label_rows_count_uybor.setText(f"Всего строк: {len(self.results_uybor_f)}")
         fill_table_pyqt(self.table_widget_uybor, header, self.results_uybor, cur)
-        self.export_button_uybor.setEnabled(len(self.results_uybor) > 0)
-        self.results_olx = filtration(filters=self.filters, resource="_internal/output/internal/olx.xlsm")
-        self.label_rows_count_olx.setText(f"Всего строк: {len(self.results_olx)}")
-        fill_table_pyqt(self.table_widget_olx, header, self.results_olx, cur)
-        self.export_button_olx.setEnabled(len(self.results_olx) > 0)
-        self.export_button_all_data.setEnabled(len(self.results_uybor) + len(self.results_olx) > 0)
+        self.export_button_uybor.setEnabled(len(self.results_uybor_f) > 0)
+        self.results_olx_f = filtration(filters=self.filters, results=self.results_olx)
+        self.label_rows_count_olx.setText(f"Всего строк: {len(self.results_olx_f)}")
+        fill_table_pyqt(self.table_widget_olx, header, self.results_olx_f, cur)
+        self.export_button_olx.setEnabled(len(self.results_olx_f) > 0)
+        self.export_button_all_data.setEnabled(len(self.results_uybor_f) + len(self.results_olx_f) > 0)
 
     def export_button_clicked_olx(self):
         self.export_button_olx.setCheckable(False)
@@ -503,10 +455,8 @@ class UiParser(QtWidgets.QMainWindow):
         self.thread_export_olx = Exporter(name="Olx", results=self.results_olx)
         self.thread_export_olx.throw_exception.connect(self.show_message_with_exit)
         self.thread_export_olx.throw_info.connect(self.show_message_info)
-
         self.thread_export_olx.finished.connect(self.finised_export_olx)
         self.thread_export_olx.block_closing.connect(self.block_close_olx_export)
-
         self.thread_export_olx.start()
 
     def export_button_clicked_uybor(self):
@@ -725,12 +675,9 @@ class UiParser(QtWidgets.QMainWindow):
         self.total_floor_min.textChanged.connect(self.total_floor_min_changed)
         self.set_time_input.timeChanged.connect(self.time_changed)
 
-    def show(self):
-        super().show()
-        # raise Exception("1")
-    # self.anti_close()
-    # self.filter_button_clicked()
-
+    def setup_upload(self):
+        # upload_olx =
+        self.upload_uybor = UploadUybor("")
 
 if not os.path.exists("_internal/output"):
     os.mkdir("_internal/output")
@@ -740,10 +687,7 @@ log_err = open('_internal/output/log_err.txt', 'a', encoding="utf-8")
 
 if __name__ == "__main__":
     # sys.stdout = log_out
-    sys.stderr = log_err
-
-    if not os.path.exists("_internal/output/internal"):
-        os.mkdir("_internal/output/internal")
+    # sys.stderr = log_err
     app = QtWidgets.QApplication(sys.argv)
     if os.path.exists("_internal/input/dumps/dump.json"):
         with open("_internal/input/dumps/dump.json", 'r') as f:
