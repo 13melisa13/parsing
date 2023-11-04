@@ -412,8 +412,8 @@ class UiParser(QtWidgets.QMainWindow):
         self.thread_olx.start()
 
     def finished_olx_thread(self):
-        # self.thread_olx.deleteLater()
-        self.thread_olx.start()
+        self.thread_olx.deleteLater()
+        # self.thread_olx.start()
         print(f"last update olx {self.time_last_uybor.toString()}")
         self.update_olx.setDisabled(False)
         self.update_olx.setCheckable(True)
