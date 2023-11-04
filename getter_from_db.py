@@ -52,24 +52,24 @@ class DataFromDB(QThread):
         limit = 1
         flats = []
         while prev_res < total:
-            print(page, limit)
+            # print(page, limit)
             try:
                 if limit > (total - prev_res):
                     limit = total - prev_res
                 results, total = json_db(page, limit, domain)
-                print(results, total)
+                # print(results, total)
                 if total == 0:
                     self.label.emit(f"Процесс: Обновление {domain} - Завершение с ошибкой")
                     return []
             except Exception as err:
                 self.label.emit(f"Процесс: Обновление {domain} - Переподключение")
                 # self.throw_info.emit("Проблемы с подключением к сети")
-                print("ДА ЕПТ ТВОЮ МАТЬ", err)
+                print("ERR", err)
                 time.sleep(15)
                 continue
                 # break
             self.label.emit(f"Процесс: Обновление {domain}")
-            print("res", results, total)
+            # print("res", results, total)
             for i in range(len(results)):
                 # todo отсеять не активные зайждя на урл
                 flats.append(Flat(
@@ -78,19 +78,17 @@ class DataFromDB(QThread):
                     floor=f'{results[i]["floor"]}',
                     total_floor=f'{results[i]["total_floor"]}',
                     address=results[i]["address"],
-                    repair=results[i]["repair"], # todo не получаю
+                    repair=results[i]["repair"],
                     is_new_building=results[i]['is_new_building'],
-                    room=results[i]['room'],# todo не получаю
+                    room=results[i]['room'],
                     modified=results[i]['modified'],
                     price_uye=results[i]['price_uye'],
                     price_uzs=results[i]['price_uzs'],
-                    description=results[i]['description'],# todo не получаю
+                    description=results[i]['description'],
                     id=results[i]['external_id'],
                     domain=results[i]["domain"],
                     is_active=results[i]["is_active"]
                 ))
-            # print("1")
             prev_res += len(results)
             page += 1
-        print("блядина", flats)
         return flats

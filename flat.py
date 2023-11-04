@@ -89,22 +89,7 @@ class Flat:
         ]
 
     def prepare_to_dict(self):
-        print(self.__dict__)
-        return {
-            "url": self.url,
-            "square": self.square,
-            "floor": self.floor,
-            "total_floor": self.total_floor,
-            "address": self.address,
-            "repair": self.repair,
-            "is_new_building": self.is_new_building,
-            "room": self.room,
-            "modified": self.modified,
-            "price_uye": self.price_uye,
-            "price_per_meter_uye": self.price_per_meter_uye,
-            "price_uzs": self.price_uzs,
-            "price_per_meter_uzs": self.price_per_meter_uzs,
-            "description": self.description,
-            "id": self.id,
-            "is_active": self.is_active
-        }
+        return self.__dict__
+
+    def __str__(self):
+        return self.__dict__

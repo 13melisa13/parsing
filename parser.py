@@ -369,7 +369,7 @@ class UiParser(QtWidgets.QMainWindow):
         self.label_progress_bar_uybor.setText(f"{value}. Последнее обновление: {self.time_last_uybor.toString()}")
 
     def update_date_uybor(self, results):
-        self.results_olx = results
+        self.results_uybor = results
         self.time_last_uybor = self.time_last_uybor.currentDateTime(QTimeZone.systemTimeZone())
 
     def time_clicked(self):
@@ -439,7 +439,7 @@ class UiParser(QtWidgets.QMainWindow):
             cur = 'uye'
         self.results_uybor_f = filtration(filters=self.filters, results=self.results_uybor)
         self.label_rows_count_uybor.setText(f"Всего строк: {len(self.results_uybor_f)}")
-        fill_table_pyqt(self.table_widget_uybor, header, self.results_uybor, cur)
+        fill_table_pyqt(self.table_widget_uybor, header, self.results_uybor_f, cur)
         self.export_button_uybor.setEnabled(len(self.results_uybor_f) > 0)
         self.results_olx_f = filtration(filters=self.filters, results=self.results_olx)
         self.label_rows_count_olx.setText(f"Всего строк: {len(self.results_olx_f)}")

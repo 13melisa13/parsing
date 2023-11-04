@@ -35,12 +35,14 @@ def fill_table_pyqt(table, header, data, currency):
 def fill_table_data_pyqt(table, data):
     for one_row in data:
         _one_row = one_row.prepare_to_list()
-        for one in _one_row:
-            item = QtWidgets.QTableWidgetItem(str(one))
-            if one is None:
+        # print(_one_row)
+        for i in range(len(_one_row)):
+            if _one_row[i] is None:
                 item = QtWidgets.QTableWidgetItem("-")
+            else:
+                item = QtWidgets.QTableWidgetItem(str(_one_row[i]))
             item.setFlags(Qt.ItemFlag.ItemIsSelectable)
-            table.setItem(data.index(one_row), _one_row.index(one), item)
+            table.setItem(data.index(one_row), i, item)
 
 
 def fill_filtered_data(sheet, results, throw_info, name):
