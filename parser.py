@@ -1,9 +1,10 @@
+import asyncio
 import datetime
 import json
 import os
 import sys
 import time
-from PyQt6 import QtWidgets
+from PyQt6 import QtWidgets, QtCore
 from PyQt6.QtCore import Qt, QTime, QTimer, QDateTime, QTimeZone
 from PyQt6.QtGui import QIntValidator, QCursor, QIcon
 from PyQt6.QtWidgets import QMessageBox
@@ -30,6 +31,7 @@ class UiParser(QtWidgets.QMainWindow):
 
     def __init__(self, json_data=None):
         super().__init__()
+        self.uploaded_uybor = False
         print(f"time start app {datetime.datetime.now(tz=tz)}")
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.time_update)
@@ -174,7 +176,7 @@ class UiParser(QtWidgets.QMainWindow):
         self.filter_layout.addWidget(self.floor_max, 2, 6, 1, 1, Qt.AlignmentFlag.AlignCenter)
         self.filter_layout.addWidget(self.total_floor_min, 2, 7, 1, 1, Qt.AlignmentFlag.AlignCenter)
         self.filter_layout.addWidget(self.total_floor_max, 2, 8, 1, 1, Qt.AlignmentFlag.AlignCenter)
-        self.uploaded_uybor = False
+        # self.uploaded_uybor = False
 
         # self.threads = []
         # combo_boxs on second line
@@ -328,11 +330,11 @@ class UiParser(QtWidgets.QMainWindow):
             self.upload_uybor.finished.connect(self.upload_uybor_finished)
             self.upload_uybor.start()
             self.uploaded_uybor = True
-            timer = QtCore.QTimer()
-            time = QtCore.QTime(0, 0, 0)
-            timer.timeout.connect(timerEvent)
-            timer.start(1000)
+
         self.thread_uybor.start()
+
+
+
 
     def block_close_uybor(self, block_closing):
         # print(can_be_closed)
@@ -390,14 +392,14 @@ class UiParser(QtWidgets.QMainWindow):
         self.results_uybor = results
         self.filter_button_clicked()
 
-    def checker_uybor_finished(self):
-        time.sleep(60*24)
-        self.checker_uybor.update_db(self.results_uybor)
-        self.checker_uybor.start()
-
-    def checker_olx_finished(self):
-        time.sleep(60*24)
-        self.checker_olx.update_db(self.results_olx)
+    # def checker_uybor_finished(self):
+    #     time.sleep(60*24)
+    #     self.checker_uybor.update_db(self.results_uybor)
+    #     self.checker_uybor.start()
+    #
+    # def checker_olx_finished(self):
+    #     time.sleep(60*24)
+    #     self.checker_olx.update_db(self.results_olx)
 
 
     def time_clicked(self):
@@ -455,12 +457,13 @@ class UiParser(QtWidgets.QMainWindow):
     def update_date_olx(self, results):
         self.results_olx = results
         self.time_last_olx = self.time_last_olx.currentDateTime(QTimeZone.systemTimeZone())
-        self.upload_olx = UploadOlx(self.results_olx)
-        self.checker_olx = Checker(self.results_olx)
-        self.checker_olx.finished.connect(self.checker_olx_finished)
+        # self.upload_olx = UploadOlx(self.results_olx)
+        # self.checker_olx = Checker(self.results_olx)
+        # self.checker_olx.finished.connect(self.checker_olx_finished)
         # self.checker_olx.start()
-        self.upload_olx.finished.connect(self.upload_olx_finished)
-        self.upload_olx.init_update_db.connect(self.answer_to_init_update)
+        # self.upload_olx = UploadOlx(self.results_olx)
+        # self.upload_olx.finished.connect(self.upload_olx_finished)
+        # self.upload_olx.init_update_db.connect(self.answer_to_init_update)
         # self.upload_olx.start()
 
     def update_olx_progress_bar(self, value):
@@ -665,7 +668,34 @@ class UiParser(QtWidgets.QMainWindow):
             if "total_floor_max" in self.filters:
                 self.filters.pop("total_floor_max")
 
+    def reset_uybor_uploaded_event(self):
+        self.uploaded_uybor = False
+    # def connect_for_run_olx(self):
+    #     print("BLYADINA")
+    #     runUploadOlx(self.results_olx)
+
     def handler(self):
+        self.timer_reset_uybor_uploaded = QtCore.QTimer()
+        self.timer_reset_uybor_uploaded.timeout.connect(self.reset_uybor_uploaded_event)
+        self.timer_reset_uybor_uploaded.start(1000 * 60 * 60)
+        self.upload_olx = UploadOlx(self.results_olx)
+        self.upload_olx.finished.connect(self.upload_olx_finished)
+        self.upload_olx.init_update_db.connect(self.answer_to_init_update)
+        self.upload_olx.start()
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        # loop.run_until_complete()
+        loop.close()
+        # self.timer_reset_olx_uploaded = QtCore.QTimer()
+        #
+        # self.timer_reset_olx_uploaded.timeout.connect(self.connect_for_run_olx)
+        # self.timer_reset_olx_uploaded.start(1000)
+
+        # self.timer_checker = QtCore.QTimer()
+        # self.timer_checker.timeout.connect(self.reset_uybor_uploaded_event)
+        # self.timer_checker.start(1000 * 60 * 60)
+
+
         self.set_time_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.set_time_button.clicked.connect(self.time_clicked)
         self.room_type.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
@@ -719,7 +749,9 @@ class UiParser(QtWidgets.QMainWindow):
         self.update_uybor_clicked()
 
     def answer_to_init_update(self):
-        self.upload_uybor.update_db(self.results_uybor)
+        # self.update_olx_clicked()
+        print("init")
+        self.upload_olx.update_db(self.results_olx)
 
     def upload_olx_finished(self):
         # time.sleep(60*24)
@@ -736,8 +768,8 @@ log_err = open('_internal/output/log_err.txt', 'a', encoding="utf-8")
 
 
 if __name__ == "__main__":
-    # sys.stdout = log_out
-    # sys.stderr = log_err
+    sys.stdout = log_out
+    sys.stderr = log_err
     app = QtWidgets.QApplication(sys.argv)
     if os.path.exists("_internal/input/dumps/dump.json"):
         with open("_internal/input/dumps/dump.json", 'r') as f:

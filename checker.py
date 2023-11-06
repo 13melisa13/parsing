@@ -36,7 +36,7 @@ class Checker(QThread):
             if one.domain == "uybor":
                 req = get_uybor(one.external_id)
                 print(req, )
-
+                continue
                 if req.get('updatedAt') != one.modified:
                     address = ''
                     if req['zone'] is not None:
@@ -85,7 +85,6 @@ class Checker(QThread):
                         domain="uybor"
                     )
             else:
-                print(req)
                 req = get_olx(one.external_id)
                 if req.get('last_refresh_time') != one.modified:
                     params_get = req.get('params')
@@ -139,6 +138,7 @@ class Checker(QThread):
                     post_r = requests.post(url=url, json=flat_dict)
                 # print(post_r)
                     print(post_r)
+                    #todo emit to update
                 except Exception as err:
                     print(err, "blyadina on checker")
                     time.sleep(10)

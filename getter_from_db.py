@@ -1,3 +1,5 @@
+import datetime
+import math
 import time
 import requests
 from PyQt6.QtCore import pyqtSignal, QThread
@@ -17,7 +19,7 @@ def json_db(page=0, limit=5000, domain="uybor"):
 
     print(response)
     if response.status_code != 200:
-        raise Exception(f"TRY AGAIN {response.status_code}")
+        raise Exception(f"TRY AGAIN {response.status_code} {domain}")
     return response.json()["data"], response.json()["data_length"]
 
 
@@ -49,7 +51,7 @@ class DataFromDB(QThread):
         prev_res = 0
         total = 1000000
         limit = 5000
-        print(limit)
+        # print()
         flats = []
         while prev_res < total:
             # print(page, limit)
@@ -72,6 +74,7 @@ class DataFromDB(QThread):
             self.label.emit(f"Процесс: Обновление {domain}")
             # print("res", results, total)
             for i in range(len(results)):
+                self.updated.emit(math.ceil((i + prev_res) * 100 / total))
                 flats.append(Flat(
                     url=results[i]["url"],
                     square=float(results[i]['square']),
@@ -90,6 +93,7 @@ class DataFromDB(QThread):
                     is_active=results[i]["is_active"]
                 ))
             # print(flats[0].domain)
+            # datetime.datetime.date()
             prev_res += len(results)
             self.init_flats.emit(flats)
             page += 1

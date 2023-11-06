@@ -1,6 +1,7 @@
 import datetime
 import locale
-BASE_API = 'https://ddm5q4hn-8000.euw.devtunnels.ms/'
+BASE_API = 'http://prodamgaraj.ru:8000/'
+# BASE_API = 'https://ddm5q4hn-8000.euw.devtunnels.ms/'
 locale.setlocale(locale.LC_TIME, 'ru_RU')
 REPAIR_CHOICES_UYBOR = {
     "repair": "Ремонт",
@@ -53,13 +54,20 @@ class Flat:
                  id=0,
                  domain="",
                  is_active=True):
-        self.price_uye = float(price_uye)
-        self.price_uzs = float(price_uzs)
         try:
-            self.price_per_meter_uzs = "%.2f" % (float(price_uzs) / float(square))
+            self.price_uye = float(price_uye)
+
             self.price_per_meter_uye = "%.2f" % (float(price_uye) / float(square))
         except Exception:
+            self.price_uye = 0
             self.price_per_meter_uye = 'default'
+        try:
+
+            self.price_uzs = float(price_uzs)
+            self.price_per_meter_uzs = "%.2f" % (float(price_uzs) / float(square))
+
+        except Exception:
+            self.price_uzs = 0
             self.price_per_meter_uzs = 'default'
         self.square = float(square.__str__().replace(" ", ''))
         self.description = description
@@ -107,7 +115,7 @@ class Flat:
             "price_uye": self.price_uye,
             "price_uzs": self.price_uzs,
             "description": self.description,
-            "id": self.external_id,
+            "external_id": self.external_id,
             "domain": self.domain,
             "is_active": self.is_active
         }
