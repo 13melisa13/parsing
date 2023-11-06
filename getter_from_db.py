@@ -1,26 +1,23 @@
 import time
-
 import requests
 from PyQt6.QtCore import pyqtSignal, QThread
-from requests.adapters import HTTPAdapter
-from urllib3 import Retry
-
-from flat import Flat
+from flat import Flat, BASE_API, headers
 
 
-def json_db(page=0, limit=100, domain="uybor"):
-    # усл ед "usd"
-    # суммы "uzs"
-
-    url = "http://localhost:8000/get_flats/"
+def json_db(page=0, limit=5000, domain="uybor"):
+    print(limit)
+    url = BASE_API + "get_flats"
     params = {
         "limit": limit,
         "page": page,
         "domain": domain
     }
 
-    response = requests.get(url, params=params)
-    # print(response)
+    response = requests.get(url, params=params, headers=headers)
+
+    print(response)
+    if response.status_code != 200:
+        raise Exception(f"TRY AGAIN {response.status_code}")
     return response.json()["data"], response.json()["data_length"]
 
 
@@ -31,6 +28,7 @@ class DataFromDB(QThread):
     label = pyqtSignal(str)
     date = pyqtSignal(list)
     block_closing = pyqtSignal(bool)
+    init_flats = pyqtSignal(list)
 
     def __init__(self, domain):
         super().__init__()
@@ -46,10 +44,12 @@ class DataFromDB(QThread):
         self.block_closing.emit(False)
 
     def get_db(self, domain):
+        print("from db")
         page = 0
         prev_res = 0
-        total = 1
-        limit = 1
+        total = 1000000
+        limit = 5000
+        print(limit)
         flats = []
         while prev_res < total:
             # print(page, limit)
@@ -57,9 +57,10 @@ class DataFromDB(QThread):
                 if limit > (total - prev_res):
                     limit = total - prev_res
                 results, total = json_db(page, limit, domain)
-                # print(results, total)
+                print(total, prev_res, "db", domain)
+
                 if total == 0:
-                    self.label.emit(f"Процесс: Обновление {domain} - Завершение с ошибкой")
+                    # self.label.emit(f"Процесс: Обновление {domain} - Завершение с ошибкой")
                     return []
             except Exception as err:
                 self.label.emit(f"Процесс: Обновление {domain} - Переподключение")
@@ -71,7 +72,6 @@ class DataFromDB(QThread):
             self.label.emit(f"Процесс: Обновление {domain}")
             # print("res", results, total)
             for i in range(len(results)):
-                # todo отсеять не активные зайждя на урл
                 flats.append(Flat(
                     url=results[i]["url"],
                     square=float(results[i]['square']),
@@ -89,6 +89,8 @@ class DataFromDB(QThread):
                     domain=results[i]["domain"],
                     is_active=results[i]["is_active"]
                 ))
+            # print(flats[0].domain)
             prev_res += len(results)
+            self.init_flats.emit(flats)
             page += 1
         return flats

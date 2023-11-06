@@ -1,9 +1,9 @@
-import math
+
 import time
 import requests
 from PyQt6.QtCore import QThread
 
-from flat import Flat, REPAIR_CHOICES_UYBOR
+from flat import Flat, REPAIR_CHOICES_UYBOR, BASE_API, headers
 
 
 def json_uybor(page=0, limit=100):
@@ -17,7 +17,8 @@ def json_uybor(page=0, limit=100):
         "operationType__eq": "sale",
         "category__eq": "7"
     }
-    request = requests.get(url, params).json()
+    request = requests.get(url, params, headers=headers).json()
+
     return request["results"], request["total"]
 
 
@@ -32,20 +33,26 @@ class UploadUybor(QThread):
         self.db_res = db_res
 
     def run(self):
+        print("start post uybor")
         page = 0
         prev_res = 0
-        total = 1
+        total = 1000000
         limit = 100
+        flats_to_post = []
         while prev_res < total:
+
             try:
                 if limit > (total - prev_res):
                     limit = total - prev_res
+                    print(limit)
                 results, total = json_uybor(page, limit)
-                flats_to_post = []
+
+                print(prev_res, total, "upload uybor")
             except Exception as err:
                 print(err)
                 time.sleep(1)
                 continue
+
             for i in range(len(results)):
                 address = ''
                 if results[i]['zone'] is not None:
@@ -79,7 +86,7 @@ class UploadUybor(QThread):
                         room = ''
                 flats_to_post.append(Flat(
                     url=f'https://uybor.uz/listings/{results[i]["id"]}',
-                    square=int(results[i]['square']),
+                    square=float(results[i]['square']),
                     floor=f'{results[i]["floor"]}',
                     total_floor=f'{results[i]["floorTotal"]}',
                     address=address,
@@ -94,18 +101,26 @@ class UploadUybor(QThread):
                     domain="uybor"
                 ))
             prev_res += len(results)
-            try:
-                # todo post to database
-                ip = ''
-                url = f"http://{ip}/get_flats"
-                flats_to_post_dict = [flat.__dict__
-                                      for flat in flats_to_post
-                                      if flat not in self.db_res]
-                print(flats_to_post_dict)
-                time.sleep(1000)
-                requests.post(url=url, json=flats_to_post_dict)
-            except Exception as err:
-                print(err)
-                time.sleep(1)
-                continue
             page += 1
+            # print(len(results))
+            if len(flats_to_post) >= 500 or (total - prev_res < 500):
+                while True:
+                    try:
+                        url = BASE_API + "post_flats"
+                        flats_to_post_dict = [flat.prepare_to_dict()
+                                              for flat in flats_to_post
+                                              if flat not in self.db_res]
+                        post_r = requests.post(url=url, json=flats_to_post_dict, headers=headers)
+
+                        if post_r.status_code != 200:
+                            time.sleep(10)
+                            print(post_r.status_code)
+                            continue
+                        flats_to_post = []
+                        break
+                    except Exception as err:
+                        print(err)
+                        time.sleep(10)
+                        continue
+
+

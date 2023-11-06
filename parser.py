@@ -7,12 +7,15 @@ from PyQt6 import QtWidgets
 from PyQt6.QtCore import Qt, QTime, QTimer, QDateTime, QTimeZone
 from PyQt6.QtGui import QIntValidator, QCursor, QIcon
 from PyQt6.QtWidgets import QMessageBox
+
+from checker import Checker
 from export import Exporter, fill_table_pyqt
 from flat import CURRENCY_CHOISES, REPAIR_CHOICES_UYBOR, header
 from getter_from_db import DataFromDB
 from filtration import filtration
 import pytz
 
+from upload_olx import UploadOlx
 from upload_uybor import UploadUybor
 
 tz = pytz.timezone('Europe/Moscow')
@@ -171,6 +174,7 @@ class UiParser(QtWidgets.QMainWindow):
         self.filter_layout.addWidget(self.floor_max, 2, 6, 1, 1, Qt.AlignmentFlag.AlignCenter)
         self.filter_layout.addWidget(self.total_floor_min, 2, 7, 1, 1, Qt.AlignmentFlag.AlignCenter)
         self.filter_layout.addWidget(self.total_floor_max, 2, 8, 1, 1, Qt.AlignmentFlag.AlignCenter)
+        self.uploaded_uybor = False
 
         # self.threads = []
         # combo_boxs on second line
@@ -234,7 +238,7 @@ class UiParser(QtWidgets.QMainWindow):
         self.add_items_for_combo_box()
         self.handler()
         self.filter_button_clicked()
-        self.setup_upload()
+        # self.setup_upload()
 
     def seria(self):
         if not os.path.exists("_internal/input/dumps"):
@@ -318,6 +322,16 @@ class UiParser(QtWidgets.QMainWindow):
         self.thread_uybor.finished.connect(self.finished_uybor_thread)
         self.thread_uybor.label.connect(self.update_uybor_label)
         self.thread_uybor.date.connect(self.update_date_uybor)
+        self.thread_uybor.init_flats.connect(self.update_flats_uybor)
+        if not self.uploaded_uybor:
+            self.upload_uybor = UploadUybor(self.results_uybor)
+            self.upload_uybor.finished.connect(self.upload_uybor_finished)
+            self.upload_uybor.start()
+            self.uploaded_uybor = True
+            timer = QtCore.QTimer()
+            time = QtCore.QTime(0, 0, 0)
+            timer.timeout.connect(timerEvent)
+            timer.start(1000)
         self.thread_uybor.start()
 
     def block_close_uybor(self, block_closing):
@@ -371,6 +385,20 @@ class UiParser(QtWidgets.QMainWindow):
     def update_date_uybor(self, results):
         self.results_uybor = results
         self.time_last_uybor = self.time_last_uybor.currentDateTime(QTimeZone.systemTimeZone())
+
+    def update_flats_uybor(self, results):
+        self.results_uybor = results
+        self.filter_button_clicked()
+
+    def checker_uybor_finished(self):
+        time.sleep(60*24)
+        self.checker_uybor.update_db(self.results_uybor)
+        self.checker_uybor.start()
+
+    def checker_olx_finished(self):
+        time.sleep(60*24)
+        self.checker_olx.update_db(self.results_olx)
+
 
     def time_clicked(self):
         self.set_time_button.setEnabled(False)
@@ -427,6 +455,13 @@ class UiParser(QtWidgets.QMainWindow):
     def update_date_olx(self, results):
         self.results_olx = results
         self.time_last_olx = self.time_last_olx.currentDateTime(QTimeZone.systemTimeZone())
+        self.upload_olx = UploadOlx(self.results_olx)
+        self.checker_olx = Checker(self.results_olx)
+        self.checker_olx.finished.connect(self.checker_olx_finished)
+        # self.checker_olx.start()
+        self.upload_olx.finished.connect(self.upload_olx_finished)
+        self.upload_olx.init_update_db.connect(self.answer_to_init_update)
+        # self.upload_olx.start()
 
     def update_olx_progress_bar(self, value):
         self.progress_bar_olx.setProperty("value", value)
@@ -675,9 +710,24 @@ class UiParser(QtWidgets.QMainWindow):
         self.total_floor_min.textChanged.connect(self.total_floor_min_changed)
         self.set_time_input.timeChanged.connect(self.time_changed)
 
-    def setup_upload(self):
-        # upload_olx =
-        self.upload_uybor = UploadUybor("")
+    def upload_uybor_finished(self):
+        # time.sleep(60*24)
+
+        # self.upload_uybor.update_db(self.results_uybor)
+        self.upload_uybor.deleteLater()
+        self.uploaded_uybor = True
+        self.update_uybor_clicked()
+
+    def answer_to_init_update(self):
+        self.upload_uybor.update_db(self.results_uybor)
+
+    def upload_olx_finished(self):
+        # time.sleep(60*24)
+        self.upload_olx.update_db(self.results_uybor)
+        self.upload_olx.deleteLater()
+        self.update_olx_clicked()
+
+
 
 if not os.path.exists("_internal/output"):
     os.mkdir("_internal/output")

@@ -1,6 +1,6 @@
 import datetime
 import locale
-
+BASE_API = 'https://ddm5q4hn-8000.euw.devtunnels.ms/'
 locale.setlocale(locale.LC_TIME, 'ru_RU')
 REPAIR_CHOICES_UYBOR = {
     "repair": "Ремонт",
@@ -27,8 +27,13 @@ header = [
     "Цена за метр, $",
     "Цена, сумм",
     "Цена за метр, сумм",
-    "Описание"
+    # "Описание"
 ]
+
+headers = {
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36 OPR/60.0.3255.170",
+    "accept": "*/*"
+}
 
 
 class Flat:
@@ -66,7 +71,7 @@ class Flat:
         self.is_new_building = is_new_building
         self.modified = modified
         self.url = url
-        self.id = id
+        self.external_id = id
         self.domain = domain
         self.is_active = is_active
 
@@ -84,12 +89,28 @@ class Flat:
             self.price_per_meter_uye,
             self.price_uzs,
             self.price_per_meter_uzs,
-            self.description,
-            self.id
+            # self.description,
+            # self.external_id
         ]
 
     def prepare_to_dict(self):
-        return self.__dict__
+        return {
+            "url": self.url,
+            "square": self.square,
+            "floor": self.floor,
+            "total_floor": self.total_floor,
+            "address": self.address,
+            "repair": self.repair,
+            "is_new_building": self.is_new_building,
+            "room": self.room,
+            "modified": self.modified,
+            "price_uye": self.price_uye,
+            "price_uzs": self.price_uzs,
+            "description": self.description,
+            "id": self.external_id,
+            "domain": self.domain,
+            "is_active": self.is_active
+        }
 
     def __str__(self):
         return self.__dict__
