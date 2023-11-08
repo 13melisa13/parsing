@@ -1,5 +1,8 @@
 import datetime
 import os
+import sys
+
+
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import QThread, Qt, pyqtSignal
 from openpyxl.reader.excel import load_workbook
@@ -13,10 +16,12 @@ def read_excel_template(throw_exception, template_path="_internal/input/template
         throw_exception.emit("Повреждена файловая система! Обратитесь в поддержку")
 
 
-def fill_table_pyqt(table, header, data, currency):
+def fill_table_pyqt(table, header, data, currency, data_start=0, data_finish=100):
     table.setColumnCount(len(header))
+    data = data[data_start:data_finish]
     table.setRowCount(len(data))
     table.setHorizontalHeaderLabels(header)
+
     fill_table_data_pyqt(table, data)
     table.resizeColumnsToContents()
     table = QtWidgets.QTableWidget()
@@ -40,8 +45,9 @@ def fill_table_data_pyqt(table, data):
             if _one_row[i] is None:
                 item = QtWidgets.QTableWidgetItem("-")
             else:
-                item = QtWidgets.QTableWidgetItem(str(_one_row[i]))
-            item.setFlags(Qt.ItemFlag.ItemIsSelectable)
+                val = str(_one_row[i])
+                item = QtWidgets.QTableWidgetItem(val)
+            item.setFlags(Qt.ItemFlag.ItemIsEditable)
             table.setItem(data.index(one_row), i, item)
 
 
@@ -63,6 +69,10 @@ class Exporter(QThread):
         self.path = path
         self.name = name
         self.results = results
+        log_out = open('_internal/output/log_out.txt', 'a', encoding="utf-8")
+        log_err = open('_internal/output/log_err.txt', 'a', encoding="utf-8")
+        sys.stdout = log_out
+        sys.stderr = log_err
 
     def run(self):
         self.block_closing.emit(True)

@@ -2,12 +2,16 @@ import asyncio
 import datetime
 import json
 import os
+import re
 import sys
 import time
+from urllib.request import urlopen
+
 from PyQt6 import QtWidgets, QtCore
 from PyQt6.QtCore import Qt, QTime, QTimer, QDateTime, QTimeZone
 from PyQt6.QtGui import QIntValidator, QCursor, QIcon
 from PyQt6.QtWidgets import QMessageBox
+from bs4 import BeautifulSoup
 
 from checker import Checker
 from export import Exporter, fill_table_pyqt
@@ -19,7 +23,7 @@ import pytz
 from upload_olx import UploadOlx
 from upload_uybor import UploadUybor
 
-tz = pytz.timezone('Europe/Moscow')
+tz = pytz.timezone('Asia/Tashkent')
 
 
 class UiParser(QtWidgets.QMainWindow):
@@ -29,8 +33,27 @@ class UiParser(QtWidgets.QMainWindow):
     results_uybor_f = []
     filters = {}
 
+    def get_rate(self):
+        # print("\tget rate")
+        url = 'https://ofb.uz/uz/'
+        # Request(url).add_header('Accept-Encoding', 'identity')
+        while True:
+            try:
+                page = urlopen(url)
+                html = page.read().decode('utf-8')
+                soup = BeautifulSoup(html, "html.parser")
+                curs = soup.find_all(name="div", attrs={"class": "currency"})
+                return float(re.search(r"(\d+)\.(\d+)", curs[0].get_text())[0])
+            except Exception as arr:
+                print(arr, url, "rate")
+                time.sleep(10)
+                continue
+
     def __init__(self, json_data=None):
         super().__init__()
+        self.rate = self.get_rate()
+        self.s_ = 0
+        self.f_ = 100
         self.uploaded_uybor = False
         print(f"time start app {datetime.datetime.now(tz=tz)}")
         self.timer = QTimer(self)
@@ -167,7 +190,7 @@ class UiParser(QtWidgets.QMainWindow):
         self.total_floor_min.setPlaceholderText("min")
         self.square_min.setPlaceholderText("min")
         self.floor_min.setPlaceholderText("min")
-        self.time_temp = QTime()
+        self.time_temp = QTime(0, 0, 0)
         self.filter_layout.addWidget(self.price_min, 2, 0, 1, 1, Qt.AlignmentFlag.AlignCenter)
         self.filter_layout.addWidget(self.price_max, 2, 1, 1, 1, Qt.AlignmentFlag.AlignCenter)
         self.filter_layout.addWidget(self.square_min, 2, 3, 1, 1, Qt.AlignmentFlag.AlignCenter)
@@ -216,7 +239,7 @@ class UiParser(QtWidgets.QMainWindow):
         self.layout_uybor.addWidget(self.label_rows_count_uybor)
         self.uybor_widget.setLayout(self.layout_uybor)
         self.table_widget_uybor = QtWidgets.QTableWidget()
-        # self.table_widget_uybor.verticalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
+        self.table_widget_uybor.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Fixed)
         self.layout_uybor.addWidget(self.table_widget_uybor)
         self.layout_uybor.setStretchFactor(self.table_widget_uybor, 1)
         # block olx table
@@ -310,12 +333,15 @@ class UiParser(QtWidgets.QMainWindow):
         self.update_olx_clicked()
 
     def update_uybor_clicked(self):
+        self.export_button_all_data.setDisabled(True)
+        self.export_button_olx.setDisabled(True)
+
         self.update_uybor.setCheckable(False)
         self.update_uybor.setDisabled(True)
         self.update_all_data.setDisabled(True)
         self.filter_button.setEnabled(True)
         # self.label_progress_bar_uybor.setText("Процесс: Обновление UyBor")
-        self.thread_uybor = DataFromDB("uybor")
+        self.thread_uybor = DataFromDB("uybor", self.rate)
         self.thread_uybor.updated.connect(self.update_uybor_progress_bar)
         self.thread_uybor.throw_exception.connect(self.show_message_with_exit)
         # self.thread_uybor.block_export.connect(self.block)
@@ -365,7 +391,8 @@ class UiParser(QtWidgets.QMainWindow):
         self.thread_uybor.deleteLater()
         print(f"last update uybor{self.time_last_uybor.toString()}")
         self.update_uybor.setDisabled(False)
-        self.update_all_data.setDisabled(False)
+        if self.update_olx.isEnabled():
+            self.update_all_data.setDisabled(False)
         self.filter_button_clicked()
         self.export_button_uybor.setEnabled(True)
 
@@ -424,13 +451,13 @@ class UiParser(QtWidgets.QMainWindow):
         self.timer.setInterval(24 * 60 * 60 * 1000)
 
     def update_olx_clicked(self):
-        # self.export_button_all_data.setDisabled(True)
+        self.export_button_all_data.setDisabled(True)
         self.filter_button.setEnabled(True)
         self.update_all_data.setDisabled(True)
         # self.update_olx.setCheckable(False)
         self.update_olx.setDisabled(True)
         # self.export_button_olx.setDisabled(True)
-        self.thread_olx = DataFromDB("olx")
+        self.thread_olx = DataFromDB("olx", self.rate)
         self.thread_olx.updated.connect(self.update_olx_progress_bar)
         self.thread_olx.throw_exception.connect(self.show_message_with_exit)
         self.thread_olx.finished.connect(self.finished_olx_thread)
@@ -447,7 +474,8 @@ class UiParser(QtWidgets.QMainWindow):
         print(f"last update olx {self.time_last_uybor.toString()}")
         self.update_olx.setDisabled(False)
         self.update_olx.setCheckable(True)
-        self.update_all_data.setDisabled(False)
+        if self.update_uybor.isEnabled():
+            self.update_all_data.setDisabled(False)
         self.filter_button_clicked()
         self.export_button_olx.setEnabled(True)
 
@@ -471,24 +499,26 @@ class UiParser(QtWidgets.QMainWindow):
 
     def filter_button_clicked(self):
         # print("1")
+
         if 'uzs' in self.filters:
             cur = 'uzs'
         else:
             cur = 'uye'
         self.results_uybor_f = filtration(filters=self.filters, results=self.results_uybor)
         self.label_rows_count_uybor.setText(f"Всего строк: {len(self.results_uybor_f)}")
-        fill_table_pyqt(self.table_widget_uybor, header, self.results_uybor_f, cur)
+        fill_table_pyqt(self.table_widget_uybor, header, self.results_uybor_f, cur, self.s_, self.f_)
         self.export_button_uybor.setEnabled(len(self.results_uybor_f) > 0)
         self.results_olx_f = filtration(filters=self.filters, results=self.results_olx)
         self.label_rows_count_olx.setText(f"Всего строк: {len(self.results_olx_f)}")
-        fill_table_pyqt(self.table_widget_olx, header, self.results_olx_f, cur)
+        fill_table_pyqt(self.table_widget_olx, header, self.results_olx_f, cur, self.s_, self.f_)
         self.export_button_olx.setEnabled(len(self.results_olx_f) > 0)
-        self.export_button_all_data.setEnabled(len(self.results_uybor_f) + len(self.results_olx_f) > 0)
+        # self.show_message_info(f"{len(self.results_uybor_f)} + {len(self.results_olx_f)}")
+        self.export_button_all_data.setEnabled((len(self.results_uybor_f) * len(self.results_olx_f)) > 0)
 
     def export_button_clicked_olx(self):
         self.export_button_olx.setCheckable(False)
         self.export_button_olx.setDisabled(True)
-        self.export_button_all_data.setCheckable(False)
+        # self.export_button_all_data.setCheckable(False)
         self.export_button_all_data.setDisabled(True)
         self.thread_export_olx = Exporter(name="Olx", results=self.results_olx)
         self.thread_export_olx.throw_exception.connect(self.show_message_with_exit)
@@ -674,6 +704,36 @@ class UiParser(QtWidgets.QMainWindow):
     #     print("BLYADINA")
     #     runUploadOlx(self.results_olx)
 
+    def scroll_bar_olx(self):
+        if self.table_widget_olx.verticalScrollBar().isSliderDown():
+            if self.f_ + 20 < len(self.results_olx_f):
+                # self.s_ += 20
+                self.f_ += 20
+                # print("EPT")
+                self.filter_button_clicked()
+
+        if self.table_widget_olx.verticalScrollBar().value() == 0:
+            if self.f_ - 20 > 100:
+                # self.s_ -= 20
+                self.f_ -= 20
+                # print("OK EPT")
+                self.filter_button_clicked()
+
+    def scroll_bar_uybor(self):
+        if self.table_widget_uybor.verticalScrollBar().isSliderDown():
+            if self.f_ + 20 < len(self.results_olx_f):
+                # self.s_ += 20
+                self.f_ += 20
+                # print("EPT")
+                self.filter_button_clicked()
+
+        if self.table_widget_uybor.verticalScrollBar().value() == 0:
+            if self.f_ - 20 > 100:
+                # self.s_ -= 20
+                self.f_ -= 20
+                # print("OK EPT")
+                self.filter_button_clicked()
+
     def handler(self):
         self.timer_reset_uybor_uploaded = QtCore.QTimer()
         self.timer_reset_uybor_uploaded.timeout.connect(self.reset_uybor_uploaded_event)
@@ -682,19 +742,9 @@ class UiParser(QtWidgets.QMainWindow):
         self.upload_olx.finished.connect(self.upload_olx_finished)
         self.upload_olx.init_update_db.connect(self.answer_to_init_update)
         self.upload_olx.start()
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        # loop.run_until_complete()
-        loop.close()
-        # self.timer_reset_olx_uploaded = QtCore.QTimer()
-        #
-        # self.timer_reset_olx_uploaded.timeout.connect(self.connect_for_run_olx)
-        # self.timer_reset_olx_uploaded.start(1000)
-
-        # self.timer_checker = QtCore.QTimer()
-        # self.timer_checker.timeout.connect(self.reset_uybor_uploaded_event)
-        # self.timer_checker.start(1000 * 60 * 60)
-
+        # self.table_widget_uybor.verticalScrollBar().valueChanged.connect()
+        self.table_widget_olx.verticalScrollBar().valueChanged.connect(self.scroll_bar_olx)
+        self.table_widget_uybor.verticalScrollBar().valueChanged.connect(self.scroll_bar_uybor)
 
         self.set_time_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.set_time_button.clicked.connect(self.time_clicked)
@@ -750,7 +800,7 @@ class UiParser(QtWidgets.QMainWindow):
 
     def answer_to_init_update(self):
         # self.update_olx_clicked()
-        print("init")
+        print("init to olx update")
         self.upload_olx.update_db(self.results_olx)
 
     def upload_olx_finished(self):

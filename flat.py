@@ -3,6 +3,7 @@ import locale
 BASE_API = 'http://prodamgaraj.ru:8000/'
 # BASE_API = 'https://ddm5q4hn-8000.euw.devtunnels.ms/'
 locale.setlocale(locale.LC_TIME, 'ru_RU')
+
 REPAIR_CHOICES_UYBOR = {
     "repair": "Ремонт",
     "custom": "Авторский проект",
@@ -46,7 +47,7 @@ class Flat:
                  floor='',
                  total_floor='',
                  address="default",
-                 modified=datetime.datetime.now(),
+                 modified=datetime.datetime.now().__str__(),
                  url="https://www.olx.uz",
                  repair="repair",
                  is_new_building=False,
@@ -77,7 +78,12 @@ class Flat:
         self.address = address
         self.repair = repair
         self.is_new_building = is_new_building
-        self.modified = modified
+        try:
+            date_time = datetime.datetime.fromisoformat(modified)
+        except Exception as ex:
+            # print(ex, datetime.datetime.now(), modified)
+            date_time = datetime.datetime.now()
+        self.modified = date_time
         self.url = url
         self.external_id = id
         self.domain = domain
@@ -85,18 +91,18 @@ class Flat:
 
     def prepare_to_list(self):
         return [
-            self.url,
-            self.square,
+            self.url.__str__(),
+            self.square.__str__(),
             f'{self.floor}/{self.total_floor}',
-            self.address,
-            self.repair,
-            self.is_new_building,
-            self.room,
-            self.modified,
-            self.price_uye,
-            self.price_per_meter_uye,
+            self.address.__str__(),
+            self.repair.__str__(),
+            self.is_new_building.__str__(),
+            self.room.__str__(),
+            self.modified.__str__(),
+            self.price_uye.__str__(),
+            self.price_per_meter_uye.__str__(),
             self.price_uzs,
-            self.price_per_meter_uzs,
+            self.price_per_meter_uzs.__str__(),
             # self.description,
             # self.external_id
         ]

@@ -98,14 +98,14 @@ class UploadOlx(QThread):
     async def start_olx_polling(self):
         total_elements = []
         while True:
-            print("upload olx start")
+            print("upload olx start", datetime.now())
             db_res = self.db_res
             start_main = datetime.now()
             combo = create_param_combos()
             print(len(combo), )
             # for params in combo:
             params = random.choice(combo)
-            print(combo.index(params), "parMA", params.keys)
+            print(combo.index(params), "parameters")
             start = datetime.now()
 
             new_offers = []
@@ -210,7 +210,7 @@ class UploadOlx(QThread):
                     flats_to_post = []
                     break
                 except Exception as err:
-                    print(err)
+                    print("upload_err_olx", err)
                     await asyncio.sleep(1)
                     continue
 
@@ -221,7 +221,8 @@ class UploadOlx(QThread):
                     response1 = resp1
                 except ClientOSError as er:
                     await asyncio.sleep(10)
-                    print(er)
+                    print("upload_err_olx", er)
+
                     break
                 for one in response1.get('data'):
                     total_floors = ''
@@ -297,7 +298,9 @@ class UploadOlx(QThread):
                     self.init_update_db.emit()
                     print(post_r.status_code)
                 except Exception as err:
-                    print(err)
+
+                    print("upload_err_olx", err)
+
                     await asyncio.sleep(1)
                     continue
             print()
