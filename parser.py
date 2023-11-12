@@ -262,6 +262,8 @@ class UiParser(QtWidgets.QMainWindow):
         self.setCentralWidget(self.main_widget)
         self.add_items_for_combo_box()
         self.handler()
+        self.update_uybor_clicked()
+        self.update_olx_clicked()
         self.filter_button_clicked()
         # self.setup_upload()
 
@@ -824,8 +826,8 @@ log_err = open('_internal/output/log_err.txt', 'a', encoding="utf-8")
 
 
 if __name__ == "__main__":
-    sys.stdout = log_out
-    sys.stderr = log_err
+    # sys.stdout = log_out
+    # sys.stderr = log_err
     app = QtWidgets.QApplication(sys.argv)
     if os.path.exists("_internal/input/dumps/dump.json"):
         with open("_internal/input/dumps/dump.json", 'r') as f:

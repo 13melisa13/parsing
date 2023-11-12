@@ -37,6 +37,7 @@ class UploadUybor(QThread):
         self.db_res = db_res
 
     def run(self):
+        time.sleep(120)
         delay = random.randint(100, 1000)
         print("start post uybor")
         page = 0

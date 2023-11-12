@@ -102,14 +102,15 @@ class UploadOlx(QThread):
     async def start_olx_polling(self):
         total_elements = []
         while True:
+            await asyncio.sleep(120)
             print("upload olx start", datetime.now())
             db_res = self.db_res
             start_main = datetime.now()
             combo = create_param_combos()
-            print(len(combo), )
+            # print(, )
             # for params in combo:
             params = random.choice(combo)
-            print(combo.index(params), "parameters")
+            print("upload olx start", combo.index(params), "parameters", len(combo))
             start = datetime.now()
 
             new_offers = []
@@ -119,7 +120,7 @@ class UploadOlx(QThread):
                     # print(resp)
                     break
                 except (ClientOSError, ClientPayloadError) as er:
-                    await asyncio.sleep(10)
+                    await asyncio.sleep(1)
                     print(er)
                     continue
             response = resp
@@ -200,15 +201,17 @@ class UploadOlx(QThread):
                                         if flat not in db_res
                                           or flat.modified != db_res[db_res.index(flat)].modified]
 
-                    # print(flats_to_post_dict[0])
-                    post_r = requests.post(url=url, json=flats_to_post_dict, headers=headers)
-                    print(post_r.status_code, "olx upload", len(flats_to_post_dict), len(new_offers))
-                    delay = random.randint(50, 150)
+                    # print(len(flats_to_post_dict))
+                    delay = random.randint(5, 15)
                     print("Delay: ", delay)
                     await asyncio.sleep(delay)
+                    post_r = requests.post(url=url, json=flats_to_post_dict, headers=headers)
+                    print(post_r.status_code, "olx upload", len(flats_to_post_dict), len(new_offers),
+                          post_r.status_code)
                     self.init_update_db.emit()
+                    # print()
                     if post_r.status_code != 200:
-                        time.sleep(10)
+                        time.sleep(1)
                         print(post_r.status_code)
                         continue
                     flats_to_post = []
@@ -224,7 +227,7 @@ class UploadOlx(QThread):
                     resp1 = await get_offers(next_page)
                     response1 = resp1
                 except ClientOSError as er:
-                    await asyncio.sleep(10)
+                    await asyncio.sleep(1)
                     print("upload_err_olx2", er)
 
                     break
@@ -249,7 +252,7 @@ class UploadOlx(QThread):
                         elif key == 'number_of_rooms':
                             number_of_rooms = param.get('value').get('key')
                         elif key == 'type_of_market':
-                            if param.get('value').get('key') == 'Вторичный рынок':
+                            if param.get('value').get('key') == 'secondary':
                                 type_of_market = "Вторичный"
                             else:
                                 type_of_market = "Новостройка"
@@ -294,13 +297,13 @@ class UploadOlx(QThread):
                                           if flat not in db_res
                                           or flat.modified != db_res[db_res.index(flat)].modified]
                     # print(len(flats_to_post_dict))
-                    post_r = requests.post(url=url, json=flats_to_post_dict, headers=headers)
-                    print(post_r.status_code, "olx upload", len(flats_to_post_dict), len(new_offers))
-                    delay = random.randint(50, 150)
+                    delay = random.randint(5, 15)
                     print("Delay: ", delay)
                     await asyncio.sleep(delay)
+                    post_r = requests.post(url=url, json=flats_to_post_dict, headers=headers)
+                    print(post_r.status_code, "olx upload", len(flats_to_post_dict), len(new_offers), post_r.status_code)
                     self.init_update_db.emit()
-                    print(post_r.status_code)
+                    # print()
                 except Exception as err:
 
                     print("upload_err_olx", err)

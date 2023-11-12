@@ -19,7 +19,7 @@ def json_db(page=0, limit=5000, domain="uybor"):
     }
     print(f"Запрос на сервак {domain} {datetime.datetime.now().time()}")
     response = requests.get(url, params=params, headers=headers)
-    print(f"Запрос на сервак {domain} {datetime.datetime.now().time()} {response.status_code}")
+    print(f"Ответ сервака {domain} {datetime.datetime.now().time()} {response.status_code}")
     if response.status_code != 200:
         raise Exception(f"TRY AGAIN {response.status_code} {domain}")
     return response.json()["data"], response.json()["data_length"]
