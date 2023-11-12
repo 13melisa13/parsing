@@ -91,6 +91,10 @@ class UploadOlx(QThread):
     def __init__(self, db_res):
         super().__init__()
         self.update_db(db_res)
+        log_out = open('_internal/output/log_out_post_olx.txt', 'a', encoding="utf-8")
+        log_err = open('_internal/output/log_out_post_olx.txt', 'a', encoding="utf-8")
+        # sys.stdout = log_out
+        # sys.stderr = log_err
 
     def update_db(self, db_res):
         self.db_res = db_res
@@ -144,7 +148,7 @@ class UploadOlx(QThread):
                     elif key == 'number_of_rooms':
                         number_of_rooms = param.get('value').get('key')
                     elif key == 'type_of_market':
-                        if param.get('value').get('key') == 'Вторичный рынок':
+                        if param.get('value').get('key') == 'secondary':
                             type_of_market = "Вторичный"
                         else:
                             type_of_market = "Новостройка"
@@ -199,7 +203,7 @@ class UploadOlx(QThread):
                     # print(flats_to_post_dict[0])
                     post_r = requests.post(url=url, json=flats_to_post_dict, headers=headers)
                     print(post_r.status_code, "olx upload", len(flats_to_post_dict), len(new_offers))
-                    delay = random.randint(0, 10)
+                    delay = random.randint(50, 150)
                     print("Delay: ", delay)
                     await asyncio.sleep(delay)
                     self.init_update_db.emit()
@@ -210,7 +214,7 @@ class UploadOlx(QThread):
                     flats_to_post = []
                     break
                 except Exception as err:
-                    print("upload_err_olx", err)
+                    print("upload_err_olx1", err)
                     await asyncio.sleep(1)
                     continue
 
@@ -221,7 +225,7 @@ class UploadOlx(QThread):
                     response1 = resp1
                 except ClientOSError as er:
                     await asyncio.sleep(10)
-                    print("upload_err_olx", er)
+                    print("upload_err_olx2", er)
 
                     break
                 for one in response1.get('data'):
@@ -292,7 +296,7 @@ class UploadOlx(QThread):
                     # print(len(flats_to_post_dict))
                     post_r = requests.post(url=url, json=flats_to_post_dict, headers=headers)
                     print(post_r.status_code, "olx upload", len(flats_to_post_dict), len(new_offers))
-                    delay = random.randint(0, 10)
+                    delay = random.randint(50, 150)
                     print("Delay: ", delay)
                     await asyncio.sleep(delay)
                     self.init_update_db.emit()

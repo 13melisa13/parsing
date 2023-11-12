@@ -323,7 +323,7 @@ class UiParser(QtWidgets.QMainWindow):
             event.accept()
 
     def add_items_for_combo_box(self):
-        self.is_new_building_type.addItems(["Тип квартиры", "Новостройки", "Вторичный"])
+        self.is_new_building_type.addItems(["Тип квартиры", "Новостройка", "Вторичный"])
         self.room_type.addItems(["Кол-во комнат", "Студия", "1", "2", "3", "4", "5", "6+"])
         self.currency_type.addItems(CURRENCY_CHOISES)
         self.repair_type.addItems([REPAIR_CHOICES_UYBOR[one] for one in REPAIR_CHOICES_UYBOR])
@@ -419,6 +419,10 @@ class UiParser(QtWidgets.QMainWindow):
         self.results_uybor = results
         self.filter_button_clicked()
 
+    def update_flats_olx(self, results):
+        self.results_olx = results
+        self.filter_button_clicked()
+
     # def checker_uybor_finished(self):
     #     time.sleep(60*24)
     #     self.checker_uybor.update_db(self.results_uybor)
@@ -466,6 +470,8 @@ class UiParser(QtWidgets.QMainWindow):
         self.thread_olx.label.connect(self.update_olx_label)
         self.thread_olx.block_closing.connect(self.block_close_olx)
         self.thread_olx.throw_info.connect(self.show_message_info)
+        self.thread_olx.init_flats.connect(self.update_flats_olx)
+
         self.thread_olx.start()
 
     def finished_olx_thread(self):

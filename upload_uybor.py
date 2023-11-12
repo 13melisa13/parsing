@@ -1,4 +1,4 @@
-
+import random
 import time
 import requests
 from PyQt6.QtCore import QThread
@@ -28,11 +28,16 @@ class UploadUybor(QThread):
     def __init__(self, db_res):
         super().__init__()
         self.update_db(db_res)
+        log_out = open('_internal/output/log_out_post_uybor.txt', 'a', encoding="utf-8")
+        log_err = open('_internal/output/log_out_post_uybor.txt', 'a', encoding="utf-8")
+        # sys.stdout = log_out
+        # sys.stderr = log_err
 
     def update_db(self, db_res):
         self.db_res = db_res
 
     def run(self):
+        delay = random.randint(100, 1000)
         print("start post uybor")
         page = 0
         prev_res = 0
@@ -74,7 +79,7 @@ class UploadUybor(QThread):
                 else:
                     repair = REPAIR_CHOICES_UYBOR['repair']
                 if results[i]['isNewBuilding']:
-                    is_new_building = 'Новостройки'
+                    is_new_building = 'Новостройка'
                 else:
                     is_new_building = 'Вторичный'
                 if not isinstance(results[i]['room'], int):
@@ -113,14 +118,14 @@ class UploadUybor(QThread):
                         post_r = requests.post(url=url, json=flats_to_post_dict, headers=headers)
 
                         if post_r.status_code != 200:
-                            time.sleep(10)
+                            time.sleep(100)
                             print(post_r.status_code)
                             continue
                         flats_to_post = []
                         break
                     except Exception as err:
                         print(err)
-                        time.sleep(10)
+                        time.sleep(100)
                         continue
 
 

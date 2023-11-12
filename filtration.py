@@ -14,7 +14,15 @@ def filtration(filters, results):
             results = [result for result in results if float(result.price_uye) <= filters['price_max']]
     # print(len(results))
     if 'is_new_building' in filters and filters['is_new_building'] != "Не выбрано":
-        results = [result for result in results if result.is_new_building == filters['is_new_building']]
+        new_res = []
+        for result in results:
+            if filters['is_new_building'] == 'Вторичный':
+                if result.is_new_building == filters['is_new_building']:
+                    new_res.append(result)
+            else:
+                if result.is_new_building == 'Новостройка' or result.is_new_building == 'Новостройки':
+                    new_res.append(result)
+        results = new_res
     # print(len(results))
     if 'repair' in filters and filters['repair'] != "Не выбрано":
         results = [result for result in results if result.repair == filters['repair']]

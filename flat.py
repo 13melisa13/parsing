@@ -1,5 +1,6 @@
 import datetime
 import locale
+
 BASE_API = 'http://prodamgaraj.ru:8000/'
 # BASE_API = 'https://ddm5q4hn-8000.euw.devtunnels.ms/'
 locale.setlocale(locale.LC_TIME, 'ru_RU')
@@ -117,7 +118,7 @@ class Flat:
             "repair": self.repair,
             "is_new_building": self.is_new_building,
             "room": self.room,
-            "modified": self.modified,
+            "modified": self.modified.__str__(),
             "price_uye": self.price_uye,
             "price_uzs": self.price_uzs,
             "description": self.description,
