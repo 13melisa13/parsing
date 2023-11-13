@@ -856,7 +856,7 @@ log_out = open('_internal/output/log_out.txt', 'a', encoding="utf-8")
 log_err = open('_internal/output/log_err.txt', 'a', encoding="utf-8")
 
 if __name__ == "__main__":
-    # sys.stdout = log_out
+    sys.stdout = log_out
     sys.stderr = log_err
     app = QtWidgets.QApplication(sys.argv)
     if os.path.exists("_internal/input/dumps/dump.json"):

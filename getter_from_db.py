@@ -38,8 +38,8 @@ class DataFromDB(QThread):
     def __init__(self, domain, rate=1.0):
         super().__init__()
         self.domain = domain
-        # log_out = open('_internal/output/log_out_get_db.txt', 'a', encoding="utf-8")
-        # log_err = open('_internal/output/log_out_get_db.txt', 'a', encoding="utf-8")
+        # log_out = open('_internal/output/log_out.txt', 'a', encoding="utf-8")
+        # log_err = open('_internal/output/log_err.txt', 'a', encoding="utf-8")
         # sys.stdout = log_out
         # sys.stderr = log_err
         self.rate = rate
