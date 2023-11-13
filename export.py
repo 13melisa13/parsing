@@ -24,7 +24,7 @@ def fill_table_pyqt(table, header, data, currency, data_start=0, data_finish=100
 
     fill_table_data_pyqt(table, data)
     table.resizeColumnsToContents()
-    table = QtWidgets.QTableWidget()
+    # table = QtWidgets.QTableWidget()
     if currency == 'uye':
         table.setColumnHidden(8, False)
         table.setColumnHidden(9, False)
@@ -47,8 +47,10 @@ def fill_table_data_pyqt(table, data):
             else:
                 val = str(_one_row[i])
                 item = QtWidgets.QTableWidgetItem(val)
-            item.setFlags(Qt.ItemFlag.ItemIsEditable)
+            # item.setFlags(Qt.ItemFlag.ItemIsEditable)
             table.setItem(data.index(one_row), i, item)
+            item.setFlags(Qt.ItemFlag.ItemIsUserCheckable)
+
 
 
 def fill_filtered_data(sheet, results, throw_info, name):

@@ -1,3 +1,4 @@
+import asyncio
 import math
 import sys
 import time
@@ -37,11 +38,12 @@ class DataFromDB(QThread):
     def __init__(self, domain, rate=1.0):
         super().__init__()
         self.domain = domain
-        log_out = open('_internal/output/log_out_get_db.txt', 'a', encoding="utf-8")
-        log_err = open('_internal/output/log_out_get_db.txt', 'a', encoding="utf-8")
+        # log_out = open('_internal/output/log_out_get_db.txt', 'a', encoding="utf-8")
+        # log_err = open('_internal/output/log_out_get_db.txt', 'a', encoding="utf-8")
         # sys.stdout = log_out
         # sys.stderr = log_err
         self.rate = rate
+        print("RaTe: ", rate)
 
     def run(self):
         self.updated.emit(1)
@@ -74,12 +76,13 @@ class DataFromDB(QThread):
                 self.label.emit(f"Процесс: Обновление {domain} - Переподключение")
                 # self.throw_info.emit("Проблемы с подключением к сети")
                 print("ERR", err)
-                time.sleep(1)
+                asyncio.sleep(1)
                 continue
                 # break
             self.label.emit(f"Процесс: Обновление {domain}")
             # print("res", results, total)
             for i in range(len(results)):
+                # print("QWER", self.rate * results[i]['price_uye'], self.rate , results[i]['price_uye'])
                 if results[i]['price_uzs'] == 0:
                     price_uzs = self.rate * results[i]['price_uye']
                 else:

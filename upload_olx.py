@@ -88,11 +88,21 @@ class UploadOlx(QThread):
         loop.run_until_complete(self.start_olx_polling())
         loop.close()
 
+    def awake_(self):
+        self.enable_to_post = True
+        print("wake up upload olx")
+
+    def sleep_(self):
+        # asyncio.sleep(10)
+        self.enable_to_post = False
+        print("sleeeeep upload olx")
+
     def __init__(self, db_res):
         super().__init__()
+        self.enable_to_post = True
         self.update_db(db_res)
-        log_out = open('_internal/output/log_out_post_olx.txt', 'a', encoding="utf-8")
-        log_err = open('_internal/output/log_out_post_olx.txt', 'a', encoding="utf-8")
+        # log_out = open('_internal/output/log_out_post_olx.txt', 'a', encoding="utf-8")
+        # log_err = open('_internal/output/log_out_post_olx.txt', 'a', encoding="utf-8")
         # sys.stdout = log_out
         # sys.stderr = log_err
 
@@ -101,8 +111,9 @@ class UploadOlx(QThread):
 
     async def start_olx_polling(self):
         total_elements = []
+
         while True:
-            await asyncio.sleep(120)
+            # await asyncio.sleep(120)
             print("upload olx start", datetime.now())
             db_res = self.db_res
             start_main = datetime.now()
@@ -196,6 +207,10 @@ class UploadOlx(QThread):
             while True:
                 try:
                     url = BASE_API + "post_flats"
+                    if not self.enable_to_post:
+                        await asyncio.sleep(10)
+                        print("Sleeep on 10 in upload olx")
+                        continue
                     flats_to_post_dict = [flat.prepare_to_dict()
                                           for flat in new_offers
                                         if flat not in db_res
@@ -211,7 +226,7 @@ class UploadOlx(QThread):
                     self.init_update_db.emit()
                     # print()
                     if post_r.status_code != 200:
-                        time.sleep(1)
+                        await asyncio.sleep(1)
                         print(post_r.status_code)
                         continue
                     flats_to_post = []
@@ -291,6 +306,10 @@ class UploadOlx(QThread):
                 next_page = resp1.get('links', {}).get('next', {}).get('href')
                 try:
                     # todo post to database
+                    if not self.enable_to_post:
+                        await asyncio.sleep(10)
+                        print("Sleeep on 10 in upload olx")
+                        continue
                     url = BASE_API + "post_flats"
                     flats_to_post_dict = [flat.prepare_to_dict()
                                           for flat in new_offers

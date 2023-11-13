@@ -32,6 +32,7 @@ class UiParser(QtWidgets.QMainWindow):
     results_olx_f = []
     results_uybor_f = []
     filters = {}
+    is_blocked_posts = [False, False]
 
     def get_rate(self):
         # print("\tget rate")
@@ -46,11 +47,12 @@ class UiParser(QtWidgets.QMainWindow):
                 return float(re.search(r"(\d+)\.(\d+)", curs[0].get_text())[0])
             except Exception as arr:
                 print(arr, url, "rate")
-                time.sleep(10)
+                time.sleep(1)
                 continue
 
     def __init__(self, json_data=None):
         super().__init__()
+        self.upload_uybor = None
         self.rate = self.get_rate()
         self.s_ = 0
         self.f_ = 100
@@ -262,10 +264,14 @@ class UiParser(QtWidgets.QMainWindow):
         self.setCentralWidget(self.main_widget)
         self.add_items_for_combo_box()
         self.handler()
-        self.update_uybor_clicked()
-        self.update_olx_clicked()
+
         self.filter_button_clicked()
         # self.setup_upload()
+
+    def show(self):
+        super().show()
+        self.update_uybor_clicked()
+        self.update_olx_clicked()
 
     def seria(self):
         if not os.path.exists("_internal/input/dumps"):
@@ -361,16 +367,42 @@ class UiParser(QtWidgets.QMainWindow):
 
         self.thread_uybor.start()
 
-
-
-
     def block_close_uybor(self, block_closing):
         # print(can_be_closed)
+        self.block_post(block_closing, False)
         self.can_be_closed[0] = not block_closing
 
     def block_close_olx(self, block_closing):
-        # print(can_be_closed)
+        self.block_post(block_closing, True)
         self.can_be_closed[1] = not block_closing
+
+    def block_post(self, block_closing, is_olx):
+
+        if block_closing:
+            if self.upload_uybor is not None:
+                self.upload_uybor.sleep_()
+
+                print("Post to uybor sleep", datetime.datetime.now())
+            if self.upload_olx is not None:
+                self.upload_olx.sleep_()
+
+                print("Post to olx sleep", datetime.datetime.now())
+            if is_olx:
+                self.is_blocked_posts[0] = True
+            else:
+                self.is_blocked_posts[1] = True
+        else:
+            if is_olx:
+                self.is_blocked_posts[0] = False
+            else:
+                self.is_blocked_posts[1] = False
+        if not self.is_blocked_posts[0] and not self.is_blocked_posts[1]:
+            print("Post to all awake", datetime.datetime.now())
+            self.upload_uybor.awake_()
+            self.upload_olx.awake_()
+        else:
+            print("Post not allowed by on of them")
+
 
     def block_close_uybor_expot(self, block_closing):
         # print(can_be_closed)
@@ -433,7 +465,6 @@ class UiParser(QtWidgets.QMainWindow):
     # def checker_olx_finished(self):
     #     time.sleep(60*24)
     #     self.checker_olx.update_db(self.results_olx)
-
 
     def time_clicked(self):
         self.set_time_button.setEnabled(False)
@@ -528,7 +559,7 @@ class UiParser(QtWidgets.QMainWindow):
         self.export_button_olx.setDisabled(True)
         # self.export_button_all_data.setCheckable(False)
         self.export_button_all_data.setDisabled(True)
-        self.thread_export_olx = Exporter(name="Olx", results=self.results_olx)
+        self.thread_export_olx = Exporter(name="Olx", results=self.results_olx_f)
         self.thread_export_olx.throw_exception.connect(self.show_message_with_exit)
         self.thread_export_olx.throw_info.connect(self.show_message_info)
         self.thread_export_olx.finished.connect(self.finised_export_olx)
@@ -540,7 +571,7 @@ class UiParser(QtWidgets.QMainWindow):
         self.export_button_uybor.setDisabled(True)
         self.export_button_all_data.setCheckable(False)
         self.export_button_all_data.setDisabled(True)
-        self.thread_export_uybor = Exporter(name="Uybor", results=self.results_uybor)
+        self.thread_export_uybor = Exporter(name="Uybor", results=self.results_uybor_f)
         self.thread_export_uybor.throw_exception.connect(self.show_message_with_exit)
         self.thread_export_uybor.throw_info.connect(self.show_message_info)
         self.thread_export_uybor.finished.connect(self.finised_export_uybor)
@@ -611,7 +642,7 @@ class UiParser(QtWidgets.QMainWindow):
         else:
             if "is_new_building" in self.filters:
                 self.filters.pop("is_new_building")
-        time.sleep(1)
+        # time.sleep(1)
 
     def repair_chosen(self):
         self.filter_button.setEnabled(True)
@@ -708,6 +739,7 @@ class UiParser(QtWidgets.QMainWindow):
 
     def reset_uybor_uploaded_event(self):
         self.uploaded_uybor = False
+
     # def connect_for_run_olx(self):
     #     print("BLYADINA")
     #     runUploadOlx(self.results_olx)
@@ -818,16 +850,14 @@ class UiParser(QtWidgets.QMainWindow):
         self.update_olx_clicked()
 
 
-
 if not os.path.exists("_internal/output"):
     os.mkdir("_internal/output")
 log_out = open('_internal/output/log_out.txt', 'a', encoding="utf-8")
 log_err = open('_internal/output/log_err.txt', 'a', encoding="utf-8")
 
-
 if __name__ == "__main__":
     # sys.stdout = log_out
-    # sys.stderr = log_err
+    sys.stderr = log_err
     app = QtWidgets.QApplication(sys.argv)
     if os.path.exists("_internal/input/dumps/dump.json"):
         with open("_internal/input/dumps/dump.json", 'r') as f:
@@ -846,4 +876,3 @@ if __name__ == "__main__":
     finally:
         log_out.close()
         log_err.close()
-

@@ -1,3 +1,4 @@
+
 import random
 import time
 import requests
@@ -24,12 +25,22 @@ def json_uybor(page=0, limit=100):
 
 class UploadUybor(QThread):
     db_res = []
+    enable_to_post = True
+
+    def awake_(self):
+        self.enable_to_post = True
+        print("wake up upload uybor")
+
+    def sleep_(self):
+        # asyncio.sleep(10)
+        self.enable_to_post = False
+        print("sleeeeep upload uybor")
 
     def __init__(self, db_res):
         super().__init__()
         self.update_db(db_res)
-        log_out = open('_internal/output/log_out_post_uybor.txt', 'a', encoding="utf-8")
-        log_err = open('_internal/output/log_out_post_uybor.txt', 'a', encoding="utf-8")
+        # log_out = open('_internal/output/log_out_post_uybor.txt', 'a', encoding="utf-8")
+        # log_err = open('_internal/output/log_out_post_uybor.txt', 'a', encoding="utf-8")
         # sys.stdout = log_out
         # sys.stderr = log_err
 
@@ -37,7 +48,12 @@ class UploadUybor(QThread):
         self.db_res = db_res
 
     def run(self):
-        time.sleep(120)
+        # time.sleep(120)
+        # try:
+        #     is_act = requests.get("http://prodamgaraj.ru:8000/is_active?wrong_type_of_market=True")
+        #     print("is active", datetime.datetime.now(), is_act.status_code)
+        # except Exception:
+        #     print("try to is active", datetime.datetime.now())
         delay = random.randint(100, 1000)
         print("start post uybor")
         page = 0
@@ -56,7 +72,9 @@ class UploadUybor(QThread):
                 print(prev_res, total, "upload uybor")
             except Exception as err:
                 print(err)
+                # time.sleep(1)
                 time.sleep(1)
+
                 continue
 
             for i in range(len(results)):
@@ -113,20 +131,24 @@ class UploadUybor(QThread):
                 while True:
                     try:
                         url = BASE_API + "post_flats"
+                        if not self.enable_to_post:
+                            time.sleep(10)
+                            print("Sleeep on 10 in upload uybor")
+                            continue
                         flats_to_post_dict = [flat.prepare_to_dict()
                                               for flat in flats_to_post
                                               if flat not in self.db_res]
                         post_r = requests.post(url=url, json=flats_to_post_dict, headers=headers)
 
                         if post_r.status_code != 200:
-                            time.sleep(100)
+                            time.sleep(1)
                             print(post_r.status_code)
                             continue
                         flats_to_post = []
                         break
                     except Exception as err:
                         print(err)
-                        time.sleep(100)
+                        time.sleep(1)
                         continue
 
 
