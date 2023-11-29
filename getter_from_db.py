@@ -1,13 +1,15 @@
-import asyncio
 import math
-import sys
+import random
 import time
 import datetime
 
 import pytz
 import requests
 from PyQt6.QtCore import pyqtSignal, QThread
-from flat import Flat, BASE_API, headers
+from requests.adapters import HTTPAdapter
+from urllib3 import Retry
+
+from models import Flat, BASE_API, headers
 
 
 def json_db(page=0, limit=5000, domain="uybor"):
@@ -18,11 +20,19 @@ def json_db(page=0, limit=5000, domain="uybor"):
         "page": page,
         "domain": domain
     }
+    session = requests.Session()
+    retry = Retry(connect=3, backoff_factor=0.5)
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('http://', adapter)
+    session.mount('https://', adapter)
+
     print(f"Запрос на сервак {domain} {datetime.datetime.now().time()}")
-    response = requests.get(url, params=params, headers=headers)
+    response = session.get(url, params=params, headers=headers)
     print(f"Ответ сервака {domain} {datetime.datetime.now().time()} {response.status_code}")
     if response.status_code != 200:
         raise Exception(f"TRY AGAIN {response.status_code} {domain}")
+    # else:
+        # print(response.text)
     return response.json()["data"], response.json()["data_length"]
 
 
@@ -54,10 +64,11 @@ class DataFromDB(QThread):
         self.label.emit(f"Процесс: Обновление {self.domain} - Завершено")
         self.block_closing.emit(False)
 
-    def get_db(self, domain):
+    def get_db(self, domain):# todo splito to nedvizh, flat and other
+
         page = 0
         prev_res = 0
-        total = 1000000
+        total = 10000000
         limit = 1000
         # print()
         tz = pytz.timezone('Asia/Tashkent')
@@ -68,15 +79,18 @@ class DataFromDB(QThread):
                 if limit > (total - prev_res):
                     limit = total - prev_res
                 results, total = json_db(page, limit, domain)
-                print(total, prev_res, "db", domain, datetime.datetime.now(tz))
+                print(total, prev_res, "db", domain, datetime.datetime.now(tz), "with limit", limit, "page", page)
+                if not results:
+                    break
                 if total == 0:
                     # self.label.emit(f"Процесс: Обновление {domain} - Завершение с ошибкой")
                     return []
             except Exception as err:
                 self.label.emit(f"Процесс: Обновление {domain} - Переподключение")
                 # self.throw_info.emit("Проблемы с подключением к сети")
-                print("ERR", err)
-                asyncio.sleep(1)
+                print("ERR", err)# todo max retries
+                                #   https://yandex.ru/search/?text=Max+retries+exceeded+with+url&clid=2261451&banerid=0699040049%3ASW-3328a23261b4&win=610&lr=213
+                time.sleep(random.randint(0, 10))
                 continue
                 # break
             self.label.emit(f"Процесс: Обновление {domain}")

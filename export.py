@@ -61,7 +61,7 @@ def fill_filtered_data(sheet, results, throw_info, name):
         sheet.append(results[i].prepare_to_list())
 
 
-class Exporter(QThread):
+class Exporter(QThread): # todo splito to nedvizh, flat and other
     throw_exception = pyqtSignal(str)
     throw_info = pyqtSignal(str)
     block_closing = pyqtSignal(bool)

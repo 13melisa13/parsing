@@ -13,9 +13,8 @@ from PyQt6.QtGui import QIntValidator, QCursor, QIcon
 from PyQt6.QtWidgets import QMessageBox
 from bs4 import BeautifulSoup
 
-from checker import Checker
 from export import Exporter, fill_table_pyqt
-from flat import CURRENCY_CHOISES, REPAIR_CHOICES_UYBOR, header
+from models import CURRENCY_CHOISES, REPAIR_CHOICES_UYBOR, header
 from getter_from_db import DataFromDB
 from filtration import filtration
 import pytz
@@ -50,7 +49,7 @@ class UiParser(QtWidgets.QMainWindow):
                 time.sleep(1)
                 continue
 
-    def __init__(self, json_data=None):
+    def __init__(self, json_data=None):# todo splito to nedvizh, flat and other
         super().__init__()
         self.upload_uybor = None
         self.rate = self.get_rate()
@@ -856,7 +855,8 @@ log_out = open('_internal/output/log_out.txt', 'a', encoding="utf-8")
 log_err = open('_internal/output/log_err.txt', 'a', encoding="utf-8")
 
 if __name__ == "__main__":
-    sys.stdout = log_out
+    # sys.stdout = log_out # todo подумать над логами
+
     sys.stderr = log_err
     app = QtWidgets.QApplication(sys.argv)
     if os.path.exists("_internal/input/dumps/dump.json"):

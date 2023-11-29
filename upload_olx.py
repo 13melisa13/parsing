@@ -7,7 +7,7 @@ from PyQt6.QtCore import QThread, pyqtSignal
 from aiohttp.client_exceptions import ClientOSError, ClientPayloadError
 from datetime import datetime
 
-from flat import Flat, BASE_API, headers
+from models import Flat, BASE_API, headers
 
 
 def create_param_combos():

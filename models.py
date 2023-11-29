@@ -1,10 +1,11 @@
 import datetime
 import locale
 
-BASE_API = 'http://prodamgaraj.ru:8000/'
+# BASE_API = 'http://prodamgaraj.ru:8000/'
+BASE_API = 'http://37.77.106.193:8000/'
 # BASE_API = 'https://ddm5q4hn-8000.euw.devtunnels.ms/'
 locale.setlocale(locale.LC_TIME, 'ru_RU')
-
+# todo type_of_nedv for all
 REPAIR_CHOICES_UYBOR = {
     "repair": "Ремонт",
     "custom": "Авторский проект",
@@ -17,7 +18,7 @@ REPAIR_CHOICES_UYBOR = {
 CURRENCY_CHOISES = [
     "СУММ.", "У.Е."
 ]
-header = [
+header = [ # todo splito to nedvizh, flat and other
     "Ссылка",
     "Площадь",
     "Этаж",
@@ -39,7 +40,7 @@ headers = {
 }
 
 
-class Flat:
+class Flat: # todo splito to nedvizh, flat and other
     def __init__(self,
                  price_uye=1.0,
                  price_uzs=1.0,
@@ -82,7 +83,7 @@ class Flat:
         try:
             date_time = datetime.datetime.fromisoformat(modified)
         except Exception as ex:
-            # print(ex, datetime.datetime.now(), modified)
+
             date_time = datetime.datetime.now()
         self.modified = date_time
         self.url = url
@@ -104,8 +105,6 @@ class Flat:
             self.price_per_meter_uye.__str__(),
             self.price_uzs,
             self.price_per_meter_uzs.__str__(),
-            # self.description,
-            # self.external_id
         ]
 
     def prepare_to_dict(self):

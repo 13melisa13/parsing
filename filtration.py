@@ -1,4 +1,4 @@
-def filtration(filters, results):
+def filtration(filters, results): # todo splito to nedvizh, flat and other
     print(f"filters: {filters}")
     # print(len(results))
     if 'price_min' in filters:
