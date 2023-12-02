@@ -14,12 +14,13 @@ from PyQt6.QtWidgets import QMessageBox
 from bs4 import BeautifulSoup
 
 from export import Exporter, fill_table_pyqt
-from models import CURRENCY_CHOISES, REPAIR_CHOICES_UYBOR, header
+from models.flat import REPAIR_CHOICES_UYBOR, header_flat
+from models.real_estate import CURRENCY_CHOISES
 from getter_from_db import DataFromDB
 from filtration import filtration
 import pytz
 
-from upload_olx import UploadOlx
+from upload.olx import UploadOlx
 from upload_uybor import UploadUybor
 
 tz = pytz.timezone('Asia/Tashkent')
@@ -542,13 +543,13 @@ class UiParser(QtWidgets.QMainWindow):
             cur = 'uzs'
         else:
             cur = 'uye'
-        self.results_uybor_f = filtration(filters=self.filters, results=self.results_uybor)
+        self.results_uybor_f = filtration(filters=self.filters, results=self.results_uybor, type_of_re='flat')
         self.label_rows_count_uybor.setText(f"Всего строк: {len(self.results_uybor_f)}")
-        fill_table_pyqt(self.table_widget_uybor, header, self.results_uybor_f, cur, self.s_, self.f_)
+        fill_table_pyqt(self.table_widget_uybor, header_flat, self.results_uybor_f, cur, self.s_, self.f_)
         self.export_button_uybor.setEnabled(len(self.results_uybor_f) > 0)
-        self.results_olx_f = filtration(filters=self.filters, results=self.results_olx)
+        self.results_olx_f = filtration(filters=self.filters, results=self.results_olx, type_of_re='flat')
         self.label_rows_count_olx.setText(f"Всего строк: {len(self.results_olx_f)}")
-        fill_table_pyqt(self.table_widget_olx, header, self.results_olx_f, cur, self.s_, self.f_)
+        fill_table_pyqt(self.table_widget_olx, header_flat, self.results_olx_f, cur, self.s_, self.f_)
         self.export_button_olx.setEnabled(len(self.results_olx_f) > 0)
         # self.show_message_info(f"{len(self.results_uybor_f)} + {len(self.results_olx_f)}")
         self.export_button_all_data.setEnabled((len(self.results_uybor_f) * len(self.results_olx_f)) > 0)
@@ -777,7 +778,7 @@ class UiParser(QtWidgets.QMainWindow):
         self.timer_reset_uybor_uploaded = QtCore.QTimer()
         self.timer_reset_uybor_uploaded.timeout.connect(self.reset_uybor_uploaded_event)
         self.timer_reset_uybor_uploaded.start(1000 * 60 * 60)
-        self.upload_olx = UploadOlx(self.results_olx)
+        self.upload_olx = UploadOlx(self.results_olx, 'flat')
         self.upload_olx.finished.connect(self.upload_olx_finished)
         self.upload_olx.init_update_db.connect(self.answer_to_init_update)
         self.upload_olx.start()
@@ -857,7 +858,7 @@ log_err = open('_internal/output/log_err.txt', 'a', encoding="utf-8")
 if __name__ == "__main__":
     # sys.stdout = log_out # todo подумать над логами
 
-    sys.stderr = log_err
+    # sys.stderr = log_err
     app = QtWidgets.QApplication(sys.argv)
     if os.path.exists("_internal/input/dumps/dump.json"):
         with open("_internal/input/dumps/dump.json", 'r') as f:

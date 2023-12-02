@@ -13,7 +13,7 @@ from config import BASE_API, headers
 from models.land import Land
 
 
-def create_param_combos():
+def create_param_combos(category_id=13):
     list_combo_params = []
     sorts = ['created_at:desc',
              'filter_float_price:desc',
@@ -21,7 +21,7 @@ def create_param_combos():
              'filter_float_price:asc']
     for _ in range(100):
         for sort in sorts:
-            params = {'category_id': 13}
+            params = {'category_id': category_id}
             if 'limit' not in params.keys():
                 params['limit'] = 50
             if 'offset' not in params.keys():
