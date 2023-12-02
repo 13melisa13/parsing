@@ -1,11 +1,7 @@
-import datetime
-import locale
+from datetime import datetime
 
-# BASE_API = 'http://prodamgaraj.ru:8000/'
-BASE_API = 'http://37.77.106.193:8000/'
-# BASE_API = 'https://ddm5q4hn-8000.euw.devtunnels.ms/'
-locale.setlocale(locale.LC_TIME, 'ru_RU')
-# todo type_of_nedv for all
+from models.real_estate import RealEstate
+
 REPAIR_CHOICES_UYBOR = {
     "repair": "Ремонт",
     "custom": "Авторский проект",
@@ -15,10 +11,8 @@ REPAIR_CHOICES_UYBOR = {
     "predchistovaya": "Предчистовая отделка",
     "evro": "Евроремонт"
 }
-CURRENCY_CHOISES = [
-    "СУММ.", "У.Е."
-]
-header = [ # todo splito to nedvizh, flat and other
+
+header_flat = [
     "Ссылка",
     "Площадь",
     "Этаж",
@@ -31,65 +25,41 @@ header = [ # todo splito to nedvizh, flat and other
     "Цена за метр, $",
     "Цена, сумм",
     "Цена за метр, сумм",
-    # "Описание"
 ]
 
-headers = {
-    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36 OPR/60.0.3255.170",
-    "accept": "*/*"
-}
 
-
-class Flat: # todo splito to nedvizh, flat and other
+class Flat(RealEstate):
     def __init__(self,
                  price_uye=1.0,
                  price_uzs=1.0,
                  square=1.0,
-                 room='',
-                 floor='',
-                 total_floor='',
                  address="default",
-                 modified=datetime.datetime.now().__str__(),
+                 modified=datetime.now().__str__(),
                  url="https://www.olx.uz",
-                 repair="repair",
-                 is_new_building=False,
                  description="",
                  id=0,
                  domain="",
-                 is_active=True):
-        try:
-            self.price_uye = float(price_uye)
-
-            self.price_per_meter_uye = "%.2f" % (float(price_uye) / float(square))
-        except Exception:
-            self.price_uye = 0
-            self.price_per_meter_uye = 'default'
-        try:
-
-            self.price_uzs = float(price_uzs)
-            self.price_per_meter_uzs = "%.2f" % (float(price_uzs) / float(square))
-
-        except Exception:
-            self.price_uzs = 0
-            self.price_per_meter_uzs = 'default'
-        self.square = float(square.__str__().replace(" ", ''))
-        self.description = description
+                 is_active=True,
+                 room='',
+                 floor='',
+                 total_floor='',
+                 repair="repair",
+                 is_new_building=False):
+        super().__init__(price_uye=price_uye,
+                         price_uzs=price_uzs,
+                         square=square,
+                         address=address,
+                         modified=modified,
+                         url=url,
+                         description=description,
+                         id=id,
+                         domain=domain,
+                         is_active=is_active)
         self.floor = floor
         self.room = room
         self.total_floor = total_floor
-        self.address = address
         self.repair = repair
         self.is_new_building = is_new_building
-        try:
-            date_time = datetime.datetime.fromisoformat(modified)
-        except Exception as ex:
-
-            date_time = datetime.datetime.now()
-        self.modified = date_time
-        self.url = url
-        self.external_id = id
-        self.domain = domain
-        self.is_active = is_active
 
     def prepare_to_list(self):
         return [

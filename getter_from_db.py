@@ -2,19 +2,21 @@ import math
 import random
 import time
 import datetime
-
 import pytz
 import requests
 from PyQt6.QtCore import pyqtSignal, QThread
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 
-from models import Flat, BASE_API, headers
+from config import BASE_API, headers
+from models.commerce import Commerce
+from models.flat import Flat
+from models.land import Land
 
 
-def json_db(page=0, limit=5000, domain="uybor"):
+def json_db(page=0, limit=5000, domain="uybor", url_=''):
     print(limit)
-    url = BASE_API + "get_flats"
+    url = BASE_API + url_
     params = {
         "limit": limit,
         "page": page,
@@ -32,8 +34,8 @@ def json_db(page=0, limit=5000, domain="uybor"):
     if response.status_code != 200:
         raise Exception(f"TRY AGAIN {response.status_code} {domain}")
     # else:
-        # print(response.text)
-    return response.json()["data"], response.json()["data_length"]
+    # print(response.text)
+    return response.json()["data"], response.json()["active_data_length"]
 
 
 class DataFromDB(QThread):
@@ -45,26 +47,32 @@ class DataFromDB(QThread):
     block_closing = pyqtSignal(bool)
     init_flats = pyqtSignal(list)
 
-    def __init__(self, domain, rate=1.0):
+    def __init__(self, domain, rate=1.0, real_estate_type='flat'):
         super().__init__()
         self.domain = domain
-        # log_out = open('_internal/output/log_out.txt', 'a', encoding="utf-8")
-        # log_err = open('_internal/output/log_err.txt', 'a', encoding="utf-8")
-        # sys.stdout = log_out
-        # sys.stderr = log_err
         self.rate = rate
+        self.real_estate_type = real_estate_type
         print("RaTe: ", rate)
 
     def run(self):
         self.updated.emit(1)
         self.label.emit(f"Процесс: Обновление {self.domain}")
         self.block_closing.emit(True)
-        self.date.emit(self.get_db(self.domain))
-        self.updated.emit(100)
+        self.date.emit(self.get_db(self.domain, self.real_estate_type))
+        self.updated.emit(100)  # todo array of this and get by id
         self.label.emit(f"Процесс: Обновление {self.domain} - Завершено")
         self.block_closing.emit(False)
 
-    def get_db(self, domain):# todo splito to nedvizh, flat and other
+    def switch_url(self):
+        match self.real_estate_type:
+            case 'flat':
+                return 'get_flats'
+            case 'commerce':
+                return 'get_commerces'
+            case 'land':
+                return 'get_lands'
+
+    def get_db(self, domain, real_estate_type):  # todo splito to nedvizh, flat and other
 
         page = 0
         prev_res = 0
@@ -72,14 +80,14 @@ class DataFromDB(QThread):
         limit = 1000
         # print()
         tz = pytz.timezone('Asia/Tashkent')
-        flats = []
+        real_estates = []
         while prev_res < total:
             # print(page, limit)
             try:
                 if limit > (total - prev_res):
                     limit = total - prev_res
-                results, total = json_db(page, limit, domain)
-                print(total, prev_res, "db", domain, datetime.datetime.now(tz), "with limit", limit, "page", page)
+                results, total = json_db(page, limit, domain, self.switch_url())
+                print(f"{datetime.datetime.now(tz=tz)} db_{real_estate_type} {domain} with limit", limit, "page", page)
                 if not results:
                     break
                 if total == 0:
@@ -88,8 +96,7 @@ class DataFromDB(QThread):
             except Exception as err:
                 self.label.emit(f"Процесс: Обновление {domain} - Переподключение")
                 # self.throw_info.emit("Проблемы с подключением к сети")
-                print("ERR", err)# todo max retries
-                                #   https://yandex.ru/search/?text=Max+retries+exceeded+with+url&clid=2261451&banerid=0699040049%3ASW-3328a23261b4&win=610&lr=213
+                print("ERR", err)
                 time.sleep(random.randint(0, 10))
                 continue
                 # break
@@ -97,31 +104,66 @@ class DataFromDB(QThread):
             # print("res", results, total)
             for i in range(len(results)):
                 # print("QWER", self.rate * results[i]['price_uye'], self.rate , results[i]['price_uye'])
-                if results[i]['price_uzs'] == 0:
-                    price_uzs = self.rate * results[i]['price_uye']
-                else:
-                    price_uzs = results[i]['price_uzs']
-                flats.append(Flat(
-                    url=results[i]["url"],
-                    square=float(results[i]['square']),
-                    floor=f'{results[i]["floor"]}',
-                    total_floor=f'{results[i]["total_floor"]}',
-                    address=results[i]["address"],
-                    repair=results[i]["repair"],
-                    is_new_building=results[i]['is_new_building'],
-                    room=results[i]['room'],
-                    modified=results[i]['modified'],
-                    price_uye=results[i]['price_uye'],
-                    price_uzs=price_uzs,
-                    description=results[i]['description'],
-                    id=results[i]['external_id'],
-                    domain=results[i]["domain"],
-                    is_active=results[i]["is_active"]
-                ))
+
+                real_estate_obj = self.real_estate_obj(results[i])
+                real_estates.append(real_estate_obj)
                 self.updated.emit(math.ceil((i + prev_res) * 100 / total))
             # print(flats[0].domain)
             # datetime.datetime.date()
             prev_res += len(results)
-            self.init_flats.emit(flats)
+            self.init_flats.emit(real_estates)
             page += 1
-        return flats
+        return real_estates
+
+    def real_estate_obj(self, result):
+        if result['price_uzs'] == 0:
+            price_uzs = self.rate * result['price_uye']
+        else:
+            price_uzs = result['price_uzs']
+        match self.real_estate_type:
+            case 'flat':
+                return Flat(
+                    url=result["url"],
+                    square=float(result['square']),
+                    floor=f'{result["floor"]}',
+                    total_floor=f'{result["total_floor"]}',
+                    address=result["address"],
+                    repair=result["repair"],
+                    is_new_building=result['is_new_building'],
+                    room=result['room'],
+                    modified=result['modified'],
+                    price_uye=result['price_uye'],
+                    price_uzs=price_uzs,
+                    description=result['description'],
+                    id=result['external_id'],
+                    domain=result["domain"],
+                    is_active=result["is_active"])
+            case 'commerce':
+                return Commerce(
+                    url=result["url"],
+                    square=float(result['square']),
+                    address=result["address"],
+                    type_of_commerce=result['type_of_commerce'],
+                    modified=result['modified'],
+                    price_uye=result['price_uye'],
+                    price_uzs=price_uzs,
+                    description=result['description'],
+                    id=result['external_id'],
+                    domain=result["domain"],
+                    is_active=result["is_active"])
+            case 'land':
+                return Land(
+                    url=result["url"],
+                    square=float(result['square']),
+                    address=result["address"],
+                    type_of_land=result['type_of_land'],
+                    location_feature=result['location_feature'],
+                    modified=result['modified'],
+                    price_uye=result['price_uye'],
+                    price_uzs=price_uzs,
+                    description=result['description'],
+                    id=result['external_id'],
+                    domain=result["domain"],
+                    is_active=result["is_active"])
+            case _:
+                return None

@@ -1,14 +1,13 @@
 import datetime
 import os
 import sys
-
-
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import QThread, Qt, pyqtSignal
 from openpyxl.reader.excel import load_workbook
 
 
-def read_excel_template(throw_exception, template_path="_internal/input/template.xlsm"):
+def read_excel_template(throw_exception, template_path="flat"):
+    template_path = f"_internal/input/template_{template_path}.xlsm"
     if os.path.exists(template_path):
         book = load_workbook(template_path, keep_vba=True)
         return book
@@ -16,7 +15,7 @@ def read_excel_template(throw_exception, template_path="_internal/input/template
         throw_exception.emit("Повреждена файловая система! Обратитесь в поддержку")
 
 
-def fill_table_pyqt(table, header, data, currency, data_start=0, data_finish=100):
+def fill_table_pyqt(table, header, data, currency, data_start=0, data_finish=100, price_index=8):
     table.setColumnCount(len(header))
     data = data[data_start:data_finish]
     table.setRowCount(len(data))
@@ -26,15 +25,15 @@ def fill_table_pyqt(table, header, data, currency, data_start=0, data_finish=100
     table.resizeColumnsToContents()
     # table = QtWidgets.QTableWidget()
     if currency == 'uye':
-        table.setColumnHidden(8, False)
-        table.setColumnHidden(9, False)
-        table.setColumnHidden(10, True)
-        table.setColumnHidden(11, True)
+        table.setColumnHidden(price_index, False)
+        table.setColumnHidden(price_index+1, False)
+        table.setColumnHidden(price_index+2, True)
+        table.setColumnHidden(price_index+3, True)
     else:
-        table.setColumnHidden(11, False)
-        table.setColumnHidden(10, False)
-        table.setColumnHidden(8, True)
-        table.setColumnHidden(9, True)
+        table.setColumnHidden(price_index+3, False)
+        table.setColumnHidden(price_index+2, False)
+        table.setColumnHidden(price_index+1, True)
+        table.setColumnHidden(price_index, True)
 
 
 def fill_table_data_pyqt(table, data):
@@ -66,22 +65,23 @@ class Exporter(QThread): # todo splito to nedvizh, flat and other
     throw_info = pyqtSignal(str)
     block_closing = pyqtSignal(bool)
 
-    def __init__(self, name, path='output/',  results=None):
+    def __init__(self, name, type_real_estate, path='output/',  results=None):
         super().__init__()
         self.path = path
         self.name = name
         self.results = results
-        log_out = open('_internal/output/log_out.txt', 'a', encoding="utf-8")
-        log_err = open('_internal/output/log_err.txt', 'a', encoding="utf-8")
-        sys.stdout = log_out
-        sys.stderr = log_err
+        self.type_real_estate = type_real_estate
+        # log_out = open('_internal/output/log_out.txt', 'a', encoding="utf-8")
+        # log_err = open('_internal/output/log_err.txt', 'a', encoding="utf-8")
+        # sys.stdout = log_out
+        # sys.stderr = log_err
 
     def run(self):
         self.block_closing.emit(True)
         if not os.path.exists("output"):
             os.mkdir("output")
-        self.name = f"{datetime.datetime.now().strftime('%d-%m-%Y-%H-%M-%S')}_{self.name}"
-        book = read_excel_template(self.throw_exception)
+        self.name = f"{datetime.datetime.now().strftime('%d-%m-%Y-%H-%M-%S')}_{self.type_real_estate}_{self.name}"
+        book = read_excel_template(self.throw_exception, ) # todo
         sheet = book[book.sheetnames[0]]
         sheet.title = f"{datetime.datetime.now().strftime('%d.%m.%y_%H.%M')}"
         fill_filtered_data(sheet=sheet,

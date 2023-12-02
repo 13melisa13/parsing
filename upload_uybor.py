@@ -4,7 +4,8 @@ import time
 import requests
 from PyQt6.QtCore import QThread
 
-from models import Flat, REPAIR_CHOICES_UYBOR, BASE_API, headers
+from models.flat import Flat, REPAIR_CHOICES_UYBOR
+from config import BASE_API, headers
 
 
 def json_uybor(page=0, limit=100):
