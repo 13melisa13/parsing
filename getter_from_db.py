@@ -5,8 +5,6 @@ import datetime
 import pytz
 import requests
 from PyQt6.QtCore import pyqtSignal, QThread
-from requests.adapters import HTTPAdapter
-from urllib3 import Retry
 
 from config import BASE_API, headers
 from models.commerce import Commerce
@@ -22,30 +20,33 @@ def json_db(page=0, limit=5000, domain="uybor", url_=''):
         "page": page,
         "domain": domain
     }
-    session = requests.Session()
-    retry = Retry(connect=3, backoff_factor=0.5)
-    adapter = HTTPAdapter(max_retries=retry)
-    session.mount('http://', adapter)
-    session.mount('https://', adapter)
+    # session = requests.Session()
+    # retry = Retry(total=5, backoff_factor=1, status_forcelist=[ 502, 503, 504 ])
+    # adapter = HTTPAdapter(max_retries=retry)
+    # session.mount('http://', adapter)
+    # session.mount('https://', adapter)
 
-    print(f"Запрос на сервак {domain} {datetime.datetime.now().time()}")
-    response = session.get(url, params=params, headers=headers)
-    print(f"Ответ сервака {domain} {datetime.datetime.now().time()} {response.status_code}")
+    print(f"Запрос на сервак {url_} {domain} {datetime.datetime.now().time()}")
+    response = requests.get(url, params=params, headers=headers, timeout=20)
+
+    # response = requests.get(url, params=params, headers=headers)
+    print(f"Ответ сервака {url_} {domain} {datetime.datetime.now().time()} {response.status_code}")
     if response.status_code != 200:
         raise Exception(f"TRY AGAIN {response.status_code} {domain}")
     # else:
     # print(response.text)
-    return response.json()["data"], response.json()["active_data_length"]
+    return response.json()["data"], response.json()["active_data_len"]
 
 
 class DataFromDB(QThread):
-    updated = pyqtSignal(int)
-    throw_exception = pyqtSignal(str)
+    updated = pyqtSignal(int, str, str)
+    throw_exception = pyqtSignal(str, str, str)
     throw_info = pyqtSignal(str)
-    label = pyqtSignal(str)
-    date = pyqtSignal(list)
+    label = pyqtSignal(str, str, str)
+    date = pyqtSignal(list, str, str)
     block_closing = pyqtSignal(bool)
-    init_flats = pyqtSignal(list)
+    init_flats = pyqtSignal(list, str, str)
+    # finished = pyqtSignal(str, str)
 
     def __init__(self, domain, rate=1.0, real_estate_type='flat'):
         super().__init__()
@@ -55,13 +56,16 @@ class DataFromDB(QThread):
         print("RaTe: ", rate)
 
     def run(self):
-        self.updated.emit(1)
-        self.label.emit(f"Процесс: Обновление {self.domain}")
+        type_ = self.real_estate_type
+        d = self.domain
+        self.updated.emit(1, type_, d)
+        self.label.emit(f"Процесс: Обновление {self.domain}", type_, d)
         self.block_closing.emit(True)
-        self.date.emit(self.get_db(self.domain, self.real_estate_type))
-        self.updated.emit(100)  # todo array of this and get by id
-        self.label.emit(f"Процесс: Обновление {self.domain} - Завершено")
+        self.date.emit(self.get_db(self.domain, type_), type_, d)
+        self.updated.emit(100, type_, d)
+        self.label.emit(f"Процесс: Обновление {self.domain} - Завершено", type_, d)
         self.block_closing.emit(False)
+        # self.finished.emit(type_, d)
 
     def switch_url(self):
         match self.real_estate_type:
@@ -72,18 +76,19 @@ class DataFromDB(QThread):
             case 'land':
                 return 'get_lands'
 
-    def get_db(self, domain, real_estate_type):  # todo splito to nedvizh, flat and other
+    def get_db(self, domain, real_estate_type):
 
         page = 0
         prev_res = 0
         total = 10000000
-        limit = 1000
+        limit = 2000
         # print()
         tz = pytz.timezone('Asia/Tashkent')
         real_estates = []
         while prev_res < total:
             # print(page, limit)
             try:
+                self.label.emit(f"Процесс: Обновление {self.domain}", real_estate_type, domain)
                 if limit > (total - prev_res):
                     limit = total - prev_res
                 results, total = json_db(page, limit, domain, self.switch_url())
@@ -94,24 +99,24 @@ class DataFromDB(QThread):
                     # self.label.emit(f"Процесс: Обновление {domain} - Завершение с ошибкой")
                     return []
             except Exception as err:
-                self.label.emit(f"Процесс: Обновление {domain} - Переподключение")
+                self.label.emit(f"Процесс: Обновление {domain} - Переподключение", real_estate_type, domain)
                 # self.throw_info.emit("Проблемы с подключением к сети")
                 print("ERR", err)
                 time.sleep(random.randint(0, 10))
                 continue
                 # break
-            self.label.emit(f"Процесс: Обновление {domain}")
+            self.label.emit(f"Процесс: Обновление {domain}", real_estate_type, domain)
             # print("res", results, total)
             for i in range(len(results)):
                 # print("QWER", self.rate * results[i]['price_uye'], self.rate , results[i]['price_uye'])
 
                 real_estate_obj = self.real_estate_obj(results[i])
                 real_estates.append(real_estate_obj)
-                self.updated.emit(math.ceil((i + prev_res) * 100 / total))
+                self.updated.emit(math.ceil((i + prev_res) * 100 / total), real_estate_type, domain)
             # print(flats[0].domain)
             # datetime.datetime.date()
             prev_res += len(results)
-            self.init_flats.emit(real_estates)
+            self.init_flats.emit(real_estates, real_estate_type, domain)
             page += 1
         return real_estates
 

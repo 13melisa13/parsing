@@ -52,15 +52,11 @@ def fill_table_data_pyqt(table, data):
 
 
 
-def fill_filtered_data(sheet, results, throw_info, name):
-    if len(results) == 0:
-        throw_info.emit(f"Не найдены данные по запросу для {name}")
-        return
-    for i in range(0, len(results)):
-        sheet.append(results[i].prepare_to_list())
 
 
-class Exporter(QThread): # todo splito to nedvizh, flat and other
+
+
+class Exporter(QThread):
     throw_exception = pyqtSignal(str)
     throw_info = pyqtSignal(str)
     block_closing = pyqtSignal(bool)
@@ -71,26 +67,26 @@ class Exporter(QThread): # todo splito to nedvizh, flat and other
         self.name = name
         self.results = results
         self.type_real_estate = type_real_estate
-        # log_out = open('_internal/output/log_out.txt', 'a', encoding="utf-8")
-        # log_err = open('_internal/output/log_err.txt', 'a', encoding="utf-8")
-        # sys.stdout = log_out
-        # sys.stderr = log_err
 
     def run(self):
         self.block_closing.emit(True)
-        if not os.path.exists("output"):
-            os.mkdir("output")
+
         self.name = f"{datetime.datetime.now().strftime('%d-%m-%Y-%H-%M-%S')}_{self.type_real_estate}_{self.name}"
-        book = read_excel_template(self.throw_exception, ) # todo
+        book = read_excel_template(self.throw_exception, self.type_real_estate)
         sheet = book[book.sheetnames[0]]
         sheet.title = f"{datetime.datetime.now().strftime('%d.%m.%y_%H.%M')}"
-        fill_filtered_data(sheet=sheet,
-                           results=self.results,
-                           throw_info=self.throw_info,
-                           name=self.name)
+
+        if len(self.results) == 0:
+            self.throw_info.emit(f"Не найдены данные по запросу для {self.name}")
+            return
+        for i in range(0, len(self.results)):
+            sheet.append(self.results[i].prepare_to_list())
         self.path += f'{self.name}.xlsm'
-        if os.path.exists(self.path):
-            os.remove(self.path)
+        try:
+            if os.path.exists(self.path):
+                os.remove(self.path)
+        except Exception as e:
+            print(e)
         book.save(self.path)
         self.block_closing.emit(False)
 

@@ -5,7 +5,7 @@ CURRENCY_CHOISES = [
 ]
 
 
-class RealEstate:  # todo splito to nedvizh, flat and other
+class RealEstate:
     def __init__(self,
                  price_uye=1.0,
                  price_uzs=1.0,
@@ -34,7 +34,10 @@ class RealEstate:  # todo splito to nedvizh, flat and other
         self.address = address
         try:
             date_time = datetime.fromisoformat(modified)
+        except ValueError:
+            date_time = datetime.strptime(modified, "%Y-%m-%dT%H:%M:%S.%fZ")
         except Exception as ex:
+            # print('blyat modified', modified, type(ex))
             date_time = datetime.now()
         self.modified = date_time
         self.url = url

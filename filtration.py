@@ -1,12 +1,21 @@
-def filtration_lands(filters, results): #todo
+def filtration_lands(filters, results): #todo test
+    if 'purpose_type_land' in filters and filters['purpose_type_land'] != "Не выбрано":
+        results = [result for result in results if filters['purpose_type_land'] in result.type_of_land]
+    # print(len(results))
+    if 'location_type_land' in filters and filters['location_type_land'] != "Не выбрано":
+        results = [result for result in results if filters['location_type_land'] in result.location_feature]
+    # print(len(results))
     return results
 
 
-def filtration_commerces(filters, results): #todo
+def filtration_commerces(filters, results): #todo test
+    if 'type_commerce' in filters and filters['type_commerce'] != "Не выбрано":
+        results = [result for result in results if filters['type_commerce'] in result.type_of_commerce]
+    # print(len(results))
     return results
 
 
-def filtration(filters, results, type_of_re): # todo splito to nedvizh, flat and other
+def filtration(filters, results, type_of_re):
     print(f"filters: {filters}")
     # print(len(results))
     if 'price_min' in filters:
