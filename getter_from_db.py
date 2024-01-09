@@ -12,8 +12,20 @@ from models.flat import Flat
 from models.land import Land
 
 
+def address_is_upper(name):
+    # print(name)
+    result = name[0]
+    for letter in name[1:]:
+        if letter.isupper():
+            result += f' {letter}'
+        else:
+            result += letter
+    result = result.replace(r'/\s+/g', ' ')
+    return result
+
+
 def json_db(page=0, limit=5000, domain="uybor", url_=''):
-    print(limit)
+    # print(limit)
     url = BASE_API + url_
     params = {
         "limit": limit,
@@ -26,11 +38,11 @@ def json_db(page=0, limit=5000, domain="uybor", url_=''):
     # session.mount('http://', adapter)
     # session.mount('https://', adapter)
 
-    print(f"Запрос на сервак {url_} {domain} {datetime.datetime.now().time()}")
+    print(f"Request to {url_} {domain} {datetime.datetime.now().time()}")
     response = requests.get(url, params=params, headers=headers, timeout=20)
 
     # response = requests.get(url, params=params, headers=headers)
-    print(f"Ответ сервака {url_} {domain} {datetime.datetime.now().time()} {response.status_code}")
+    print(f"Response from {url_} {domain} {datetime.datetime.now().time()} {response.status_code}")
     if response.status_code != 200:
         raise Exception(f"TRY AGAIN {response.status_code} {domain}")
     # else:
@@ -46,6 +58,7 @@ class DataFromDB(QThread):
     date = pyqtSignal(list, str, str)
     block_closing = pyqtSignal(bool)
     init_flats = pyqtSignal(list, str, str)
+
     # finished = pyqtSignal(str, str)
 
     def __init__(self, domain, rate=1.0, real_estate_type='flat'):
@@ -77,48 +90,51 @@ class DataFromDB(QThread):
                 return 'get_lands'
 
     def get_db(self, domain, real_estate_type):
+        try:
+            page = 0
+            prev_res = 0
+            total = 10000000
+            limit = 500
+            # print()
+            tz = pytz.timezone('Asia/Tashkent')
+            real_estates = []
+            while prev_res < total:
+                # print(page, limit)
+                try:
+                    self.label.emit(f"Процесс: Обновление {self.domain}", real_estate_type, domain)
+                    if limit > (total - prev_res):
+                        limit = total - prev_res
+                    results, total = json_db(page, limit, domain, self.switch_url())
+                    print(f"{datetime.datetime.now(tz=tz)} db_{real_estate_type} {domain} with limit", limit, "page",
+                          page)
+                    if not results:
+                        break
+                    if total == 0:
+                        # self.label.emit(f"Процесс: Обновление {domain} - Завершение с ошибкой")
+                        return []
+                except Exception as err:
+                    self.label.emit(f"Процесс: Обновление {domain} - Переподключение", real_estate_type, domain)
+                    # self.throw_info.emit("Проблемы с подключением к сети")
+                    print("ERR", err)
+                    time.sleep(random.randint(0, 10))
+                    continue
+                    # break
+                self.label.emit(f"Процесс: Обновление {domain}", real_estate_type, domain)
+                # print("res", results, total)
+                for i in range(len(results)):
+                    # print("QWER", self.rate * results[i]['price_uye'], self.rate , results[i]['price_uye'])
 
-        page = 0
-        prev_res = 0
-        total = 10000000
-        limit = 2000
-        # print()
-        tz = pytz.timezone('Asia/Tashkent')
-        real_estates = []
-        while prev_res < total:
-            # print(page, limit)
-            try:
-                self.label.emit(f"Процесс: Обновление {self.domain}", real_estate_type, domain)
-                if limit > (total - prev_res):
-                    limit = total - prev_res
-                results, total = json_db(page, limit, domain, self.switch_url())
-                print(f"{datetime.datetime.now(tz=tz)} db_{real_estate_type} {domain} with limit", limit, "page", page)
-                if not results:
-                    break
-                if total == 0:
-                    # self.label.emit(f"Процесс: Обновление {domain} - Завершение с ошибкой")
-                    return []
-            except Exception as err:
-                self.label.emit(f"Процесс: Обновление {domain} - Переподключение", real_estate_type, domain)
-                # self.throw_info.emit("Проблемы с подключением к сети")
-                print("ERR", err)
-                time.sleep(random.randint(0, 10))
-                continue
-                # break
-            self.label.emit(f"Процесс: Обновление {domain}", real_estate_type, domain)
-            # print("res", results, total)
-            for i in range(len(results)):
-                # print("QWER", self.rate * results[i]['price_uye'], self.rate , results[i]['price_uye'])
-
-                real_estate_obj = self.real_estate_obj(results[i])
-                real_estates.append(real_estate_obj)
-                self.updated.emit(math.ceil((i + prev_res) * 100 / total), real_estate_type, domain)
-            # print(flats[0].domain)
-            # datetime.datetime.date()
-            prev_res += len(results)
-            self.init_flats.emit(real_estates, real_estate_type, domain)
-            page += 1
-        return real_estates
+                    real_estate_obj = self.real_estate_obj(results[i])
+                    real_estates.append(real_estate_obj)
+                    self.updated.emit(1 + math.ceil((i + prev_res) * 98 / total), real_estate_type, domain)
+                # print(flats[0].domain)
+                # datetime.datetime.date()
+                prev_res += len(results)
+                self.init_flats.emit(real_estates, real_estate_type, domain)
+                page += 1
+            return real_estates
+        except Exception as e:
+            print("DB", self.domain, self.real_estate_type, e)
 
     def real_estate_obj(self, result):
         if result['price_uzs'] == 0:
@@ -132,7 +148,8 @@ class DataFromDB(QThread):
                     square=float(result['square']),
                     floor=f'{result["floor"]}',
                     total_floor=f'{result["total_floor"]}',
-                    address=result["address"],
+                    address=address_is_upper(result["address"]),
+
                     repair=result["repair"],
                     is_new_building=result['is_new_building'],
                     room=result['room'],
@@ -147,7 +164,7 @@ class DataFromDB(QThread):
                 return Commerce(
                     url=result["url"],
                     square=float(result['square']),
-                    address=result["address"],
+                    address=address_is_upper(result["address"]),
                     type_of_commerce=result['type_of_commerce'],
                     modified=result['modified'],
                     price_uye=result['price_uye'],
@@ -160,7 +177,7 @@ class DataFromDB(QThread):
                 return Land(
                     url=result["url"],
                     square=float(result['square']),
-                    address=result["address"],
+                    address=address_is_upper(result["address"]),
                     type_of_land=result['type_of_land'],
                     location_feature=result['location_feature'],
                     modified=result['modified'],

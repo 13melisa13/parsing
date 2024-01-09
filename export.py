@@ -69,24 +69,27 @@ class Exporter(QThread):
         self.type_real_estate = type_real_estate
 
     def run(self):
-        self.block_closing.emit(True)
-
-        self.name = f"{datetime.datetime.now().strftime('%d-%m-%Y-%H-%M-%S')}_{self.type_real_estate}_{self.name}"
-        book = read_excel_template(self.throw_exception, self.type_real_estate)
-        sheet = book[book.sheetnames[0]]
-        sheet.title = f"{datetime.datetime.now().strftime('%d.%m.%y_%H.%M')}"
-
-        if len(self.results) == 0:
-            self.throw_info.emit(f"Не найдены данные по запросу для {self.name}")
-            return
-        for i in range(0, len(self.results)):
-            sheet.append(self.results[i].prepare_to_list())
-        self.path += f'{self.name}.xlsm'
         try:
-            if os.path.exists(self.path):
-                os.remove(self.path)
+            self.block_closing.emit(True)
+
+            self.name = f"{datetime.datetime.now().strftime('%d-%m-%Y-%H-%M-%S')}_{self.type_real_estate}_{self.name}"
+            book = read_excel_template(self.throw_exception, self.type_real_estate)
+            sheet = book[book.sheetnames[0]]
+            sheet.title = f"{datetime.datetime.now().strftime('%d.%m.%y_%H.%M')}"
+
+            if len(self.results) == 0:
+                self.throw_info.emit(f"Не найдены данные по запросу для {self.name}")
+                return
+            for i in range(0, len(self.results)):
+                sheet.append(self.results[i].prepare_to_list())
+            self.path += f'{self.name}.xlsm'
+            try:
+                if os.path.exists(self.path):
+                    os.remove(self.path)
+            except Exception as e:
+                print(e)
+            book.save(self.path)
+            self.block_closing.emit(False)
         except Exception as e:
-            print(e)
-        book.save(self.path)
-        self.block_closing.emit(False)
+            print("Export", self.name, e)
 

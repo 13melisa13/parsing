@@ -831,26 +831,26 @@ class UiParser(QtWidgets.QMainWindow):
 
     def block_close_uybor_flat(self, block_closing):
         # print(can_be_closed)
-        self.block_post(block_closing, False, 0)
+        # self.block_post(block_closing, False, 0)
         self.can_be_closed[0] = not block_closing
     def block_close_uybor_commerce(self, block_closing):
         # print(can_be_closed)
-        self.block_post(block_closing, False, 1)
+        # self.block_post(block_closing, False, 1)
         self.can_be_closed[1] = not block_closing
     def block_close_uybor_land(self, block_closing):
         # print(can_be_closed)
-        self.block_post(block_closing, False, 2)
+        # self.block_post(block_closing, False, 2)
         self.can_be_closed[2] = not block_closing
     def block_close_olx_flat(self, block_closing):
-        self.block_post(block_closing, True, 0)
+        # self.block_post(block_closing, True, 0)
         self.can_be_closed[3] = not block_closing
     
     def block_close_olx_commerce(self, block_closing):
-        self.block_post(block_closing, True, 1)
+        # self.block_post(block_closing, True, 1)
         self.can_be_closed[4] = not block_closing
         
     def block_close_olx_land(self, block_closing):
-        self.block_post(block_closing, True, 2)
+        # self.block_post(block_closing, True, 2)
         self.can_be_closed[5] = not block_closing
 
     def block_post(self, block_closing, is_olx, type_):
@@ -1823,27 +1823,27 @@ class UiParser(QtWidgets.QMainWindow):
 
     def upload_uybor_finished_flat(self):
         self.upload_uybor_flat.deleteLater()
-        self.update_uybor_clicked()
+        # self.update_uybor_clicked()
 
     def upload_uybor_finished_commerce(self):
         self.upload_uybor_commerce.deleteLater()
-        self.update_uybor_clicked()
+        # self.update_uybor_clicked()
 
     def upload_uybor_finished_land(self):
         self.upload_uybor_land.deleteLater()
-        self.update_uybor_clicked()
+        # self.update_uybor_clicked()
 
     def upload_olx_finished_flat(self):
         self.upload_olx_flat.deleteLater()
-        self.update_olx_clicked()
+        # self.update_olx_clicked()
 
     def upload_olx_finished_commerce(self):
         self.upload_olx_commerce.deleteLater()
-        self.update_olx_clicked()
+        # self.update_olx_clicked()
 
     def upload_olx_finished_land(self):
         self.upload_olx_land.deleteLater()
-        self.update_olx_clicked()
+        # self.update_olx_clicked()
 
 
     # def answer_to_init_update(self):
@@ -1860,13 +1860,14 @@ class UiParser(QtWidgets.QMainWindow):
 
 if not os.path.exists("_internal/output"):
     os.mkdir("_internal/output")
-log_out = open(f'_internal/output/{datetime.datetime.now().day}-{datetime.datetime.now().month}.txt', 'a', encoding="utf-8")
+log_out = open(f'_internal/output/{datetime.datetime.now().strftime("%d-%m-%Y")}.txt', 'a', encoding="utf-8")
 # log_err = open('_internal/output/log_err.txt', 'a', encoding="utf-8")
 
 if __name__ == "__main__":
-    sys.stdout = log_out   # todo подумать над логами .каждый день новый файл
+    # sys.stdout = log_out   # todo подумать над логами .каждый день новый файл
     sys.stderr = log_out
     app = QtWidgets.QApplication(sys.argv)
+    print("version 09.01.2024")
     if not os.path.exists("output"):
         os.mkdir("output")
     if os.path.exists("_internal/input/dumps/dump.json"):

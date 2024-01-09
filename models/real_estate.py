@@ -59,6 +59,7 @@ class RealEstate:
             self.price_per_meter_uye.__str__(),
             self.price_uzs,
             self.price_per_meter_uzs.__str__(),
+            self.description
         ]
 
     def prepare_to_dict(self):

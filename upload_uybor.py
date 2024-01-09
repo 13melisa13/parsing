@@ -10,7 +10,7 @@ from config import BASE_API, headers
 from models.land import Land
 
 
-def json_uybor(page=0, limit=100, cat=7):
+def json_uybor(page=0, limit=5, cat=7):
     url = "https://api.uybor.uz/api/v1/listings"
     params = {
         "limit": limit,
@@ -31,15 +31,15 @@ class UploadUybor(QThread): #TODO
     enable_to_post = True
     # finished = pyqtSignal(str)
 
-
-    def awake_(self):
-        self.enable_to_post = True
-        print("wake up upload uybor")
-
-    def sleep_(self):
-        # asyncio.sleep(10)
-        self.enable_to_post = False
-        print("sleeeeep upload uybor")
+    #
+    # def awake_(self):
+    #     self.enable_to_post = True
+    #     print("wake up upload uybor")
+    #
+    # def sleep_(self):
+    #     # asyncio.sleep(10)
+    #     self.enable_to_post = False
+    #     print("sleeeeep upload uybor")
 
     def __init__(self, db_res, real_estate_type):
         super().__init__()
@@ -63,47 +63,42 @@ class UploadUybor(QThread): #TODO
                 return 'post_lands'
 
     def run(self):
-        time.sleep(120)
-        # try:
-        #     is_act = requests.get("http://prodamgaraj.ru:8000/is_active?wrong_type_of_market=True")
-        #     print("is active", datetime.datetime.now(), is_act.status_code)
-        # except Exception:
-        #     print("try to is active", datetime.datetime.now())
-        delay = random.randint(100, 1000)
-        print("start post uybor")
-        page = 0
-        prev_res = 0
-        total = 1000000
-        limit = 100
-        flats_to_post = []
-        while prev_res < total:
+        try:
+            delay = random.randint(1, 1000)
+            # time.sleep(delay)
+            print(f"start {self.switch_url()}")
+            page = 0
+            prev_res = 0
+            total = 1000000
+            limit = 5
+            flats_to_post = []
+            while prev_res < total:
+                delay = random.randint(1, 10)
+                # time.sleep(delay)
+                try:
+                    if limit > (total - prev_res):
+                        limit = total - prev_res
+                        # print(limit)
+                    match self.real_estate_type:
+                        case 'flat':
+                            results, total = json_uybor(page, limit, 7)
+                        case 'commerce':
+                            results, total = json_uybor(page, limit, 10)
+                        case 'land':
+                            results, total = json_uybor(page, limit, 11)
 
-            try:
-                if limit > (total - prev_res):
-                    limit = total - prev_res
-                    # print(limit)
-                match self.real_estate_type:
-                    case 'flat':
-                        results, total = json_uybor(page, limit, 7)
-                    case 'commerce':
-                        results, total = json_uybor(page, limit, 10)
-                    case 'land':
-                        results, total = json_uybor(page, limit, 11)
-
-                print(prev_res, total, "upload uybor with limit",limit, "on page", page )
-            except Exception as err:
-                print(err)
-                # time.sleep(1)
-                time.sleep(1)
-
-                continue
-
-            for i in range(len(results)):
-                flats_to_post.append(self.handle(results[i]))
-            prev_res += len(results)
-            page += 1
-            # print(len(results))
-            if len(flats_to_post) >= 500 or (total - prev_res < 500):
+                    # print(prev_res, total, "upload uybor with limit",limit, "on page", page )
+                except Exception as err:
+                    print(err)
+                    # time.sleep(1)
+                    time.sleep(10)
+                    continue
+                for i in range(len(results)):
+                    flats_to_post.append(self.handle(results[i]))
+                prev_res += len(results)
+                page += 1
+                # print(len(results))
+                # if len(flats_to_post) >= 5 or (total - prev_res < 5):
                 while True:
                     try:
                         url = BASE_API + self.switch_url()
@@ -111,12 +106,12 @@ class UploadUybor(QThread): #TODO
                             time.sleep(10)
                             print("Sleeep on 10 in upload uybor")
                             continue
-                        rut =    [  flat  for flat in flats_to_post
-                                              if flats_to_post.count(flat)<2]
+                        # rut =[flat for flat in flats_to_post
+                        #                       if flats_to_post.count(flat)<2]
                         flats_to_post_dict = [flat.prepare_to_dict()
                                               for flat in flats_to_post
                                               if flat not in self.db_res]
-                        print("for post", self.real_estate_type, "uybor", len(rut))
+                        # print("for post", self.real_estate_type, "uybor", len(flats_to_post_dict))
 
                         post_r = requests.post(url=url, json=flats_to_post_dict, headers=headers)
 
@@ -126,6 +121,8 @@ class UploadUybor(QThread): #TODO
                             if post_r.status_code == 504:
                                 continue
                             print(post_r.text)
+                            print(flats_to_post_dict)
+                            flats_to_post = []
                             break
                         flats_to_post = []
                         break
@@ -133,7 +130,9 @@ class UploadUybor(QThread): #TODO
                         print(err)
                         time.sleep(1)
                         continue
-        # self.finished.emit(self.real_estate_type)
+        except Exception as e:
+            print("Upload uybor", self.real_estate_type, e)
+        print(f"finished  {self.switch_url()}")
 
     def handle(self, result):
         address = ''
@@ -151,6 +150,10 @@ class UploadUybor(QThread): #TODO
             address += ' ' + result['residentialComplex']['name']['ru']
         if result['address'] is not None:
             address += ' ' + result['address']
+        if result['description'] is None:
+            descr = 'Нет описания'
+        else:
+            descr = result['description']
         match self.real_estate_type:
 
             case 'flat':
@@ -181,7 +184,7 @@ class UploadUybor(QThread): #TODO
                     modified=result['updatedAt'],
                     price_uye=result['prices']['usd'],
                     price_uzs=result['prices']['uzs'],
-                    description=result['description'],
+                    description=descr,
                     id=result['id'],
                     domain="uybor"
                 )
@@ -195,7 +198,7 @@ class UploadUybor(QThread): #TODO
                     modified=result['updatedAt'],
                     price_uye=result['prices']['usd'],
                     price_uzs=result['prices']['uzs'],
-                    description=result['description'],
+                    description=descr,
                     id=result['id'],
                     domain="uybor"
                 )
@@ -220,9 +223,11 @@ class UploadUybor(QThread): #TODO
                     modified=result['updatedAt'],
                     price_uye=result['prices']['usd'],
                     price_uzs=result['prices']['uzs'],
-                    description=result['description'],
+                    description=descr,
                     id=result['id'],
                     domain="uybor"
                 )
+
+
 
 

@@ -76,7 +76,7 @@ def create_param_combos(type_of_real_estate):
                         params['filter_float_land_area:to'] = float(random.randint(1, 1001))
 
             if 'limit' not in params.keys():
-                params['limit'] = 50
+                params['limit'] = 1
             if 'offset' not in params.keys():
                 params['offset'] = 0
             params['sort_by'] = sort
@@ -273,11 +273,13 @@ class UploadOlx(QThread):
 
 
     def run(self):
-
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(self.start_olx_polling())
-        loop.close()
+        try:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(self.start_olx_polling())
+            loop.close()
+        except Exception as e:
+            print("Upload olx", self.type_of_real_estate, e)
 
     def awake_(self):
         self.enable_to_post = True
@@ -307,11 +309,11 @@ class UploadOlx(QThread):
 
     async def start_olx_polling(self):
         total_elements = []
-        await asyncio.sleep(120)
+        # await asyncio.sleep(100000)
         while True:
             # await asyncio.sleep(random.randint(50, 60))
             # await asyncio.sleep(120)
-            print("upload olx start", datetime.now())
+            print(f"start upload {self.switch_url_post()} {datetime.now()}")
             db_res = self.db_res
             start_main = datetime.now()
             combo = create_param_combos(self.type_of_real_estate)
@@ -340,10 +342,10 @@ class UploadOlx(QThread):
             while True:
                 try:
                     url = BASE_API + self.switch_url_post()
-                    if not self.enable_to_post:
-                        await asyncio.sleep(10)
-                        print("Sleeep on 10 in upload olx")
-                        continue
+                    # if not self.enable_to_post:
+                    #     await asyncio.sleep(10)
+                    #     print("Sleeep on 10 in upload olx")
+                    #     continue
                     if len(new_offers) == 0:
                         break
                     flats_to_post_dict = [flat.prepare_to_dict()
@@ -355,10 +357,10 @@ class UploadOlx(QThread):
                     delay = random.randint(5, 15)
                     # print("Delay: ", delay)
                     await asyncio.sleep(delay)
-                    print(len(flats_to_post_dict))
+                    # print(len(flats_to_post_dict))
                     post_r = requests.post(url=url, json=flats_to_post_dict, headers=headers)
-                    print(post_r.status_code, "olx upload", len(flats_to_post_dict), len(new_offers),
-                          self.type_of_real_estate)
+                    # print(post_r.status_code, "olx upload", len(flats_to_post_dict), len(new_offers),
+                    #       self.type_of_real_estate)
                     self.init_update_db.emit()
                     # print()
                     if post_r.status_code != 200:
@@ -389,11 +391,11 @@ class UploadOlx(QThread):
                               if one_offers not in db_res]
                 next_page = resp1.get('links', {}).get('next', {}).get('href')
                 try:
-                    # todo post to database
-                    if not self.enable_to_post:
-                        await asyncio.sleep(10)
-                        print("Sleeep on 10 in upload olx")
-                        continue
+                    # #
+                    # if not self.enable_to_post:
+                    #     await asyncio.sleep(10)
+                    #     print("Sleeep on 10 in upload olx")
+                    #     continue
                     url = BASE_API + self.switch_url_post()
                     flats_to_post_dict = [flat.prepare_to_dict()
                                           for flat in new_offers
@@ -405,16 +407,14 @@ class UploadOlx(QThread):
                     # print(len(flats_to_post_dict))
                     await asyncio.sleep(delay)
                     post_r = requests.post(url=url, json=flats_to_post_dict, headers=headers)
-                    print(post_r.status_code, "olx upload", len(flats_to_post_dict), len(new_offers), self.type_of_real_estate)
+                    # print(post_r.status_code, "olx upload", len(flats_to_post_dict), len(new_offers), self.type_of_real_estate)
                     self.init_update_db.emit()
-                    print()
+                    # print()
                 except Exception as err:
-
                     print("upload_err_olx", err)
-
                     await asyncio.sleep(1)
                     continue
-            print()
+            # print()
             print(f'Cycle duration {self.type_of_real_estate}: {(datetime.now() - start).total_seconds() :.3f}s', )
             print('Time from start: ', f'{(datetime.now() - start_main).total_seconds() :.3f}s',
                   f'{len(db_res)}/ {total_elements}')
