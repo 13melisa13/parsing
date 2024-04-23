@@ -1864,7 +1864,7 @@ log_out = open(f'_internal/output/{datetime.datetime.now().strftime("%d-%m-%Y")}
 # log_err = open('_internal/output/log_err.txt', 'a', encoding="utf-8")
 
 if __name__ == "__main__":
-    # sys.stdout = log_out   # todo подумать над логами .каждый день новый файл
+    sys.stdout = log_out   # todo подумать над логами .каждый день новый файл
     sys.stderr = log_out
     app = QtWidgets.QApplication(sys.argv)
     print("version 09.01.2024")
