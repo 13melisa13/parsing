@@ -23,37 +23,30 @@ def fill_table_pyqt(table, header, data, currency, data_start=0, data_finish=100
 
     fill_table_data_pyqt(table, data)
     table.resizeColumnsToContents()
-    # table = QtWidgets.QTableWidget()
-    if currency == 'uye':
+    if currency == 'uzs':
         table.setColumnHidden(price_index, False)
-        table.setColumnHidden(price_index+1, False)
-        table.setColumnHidden(price_index+2, True)
-        table.setColumnHidden(price_index+3, True)
+        table.setColumnHidden(price_index + 1, False)
+        table.setColumnHidden(price_index + 2, True)
+        table.setColumnHidden(price_index + 3, True)
     else:
-        table.setColumnHidden(price_index+3, False)
-        table.setColumnHidden(price_index+2, False)
-        table.setColumnHidden(price_index+1, True)
+        table.setColumnHidden(price_index + 3, False)
+        table.setColumnHidden(price_index + 2, False)
+        table.setColumnHidden(price_index + 1, True)
         table.setColumnHidden(price_index, True)
 
 
 def fill_table_data_pyqt(table, data):
     for one_row in data:
         _one_row = one_row.prepare_to_list()
-        # print(_one_row)
         for i in range(len(_one_row)):
             if _one_row[i] is None:
                 item = QtWidgets.QTableWidgetItem("-")
             else:
-                val = str(_one_row[i])
+                val = str(_one_row[i]) if len(str(_one_row[i])) < 50 else (str(_one_row[i])[:50] + "...")
                 item = QtWidgets.QTableWidgetItem(val)
             # item.setFlags(Qt.ItemFlag.ItemIsEditable)
             table.setItem(data.index(one_row), i, item)
             item.setFlags(Qt.ItemFlag.ItemIsUserCheckable)
-
-
-
-
-
 
 
 class Exporter(QThread):
@@ -61,10 +54,10 @@ class Exporter(QThread):
     throw_info = pyqtSignal(str)
     block_closing = pyqtSignal(bool)
 
-    def __init__(self, name, type_real_estate, path='output/',  results=None):
+    def __init__(self, name, type_real_estate, path='output/', results=None):
         super().__init__()
         self.path = path
-        self.name = name
+        self.name = ''
         self.results = results
         self.type_real_estate = type_real_estate
 
@@ -72,7 +65,7 @@ class Exporter(QThread):
         try:
             self.block_closing.emit(True)
 
-            self.name = f"{datetime.datetime.now().strftime('%d-%m-%Y-%H-%M-%S')}_{self.type_real_estate}_{self.name}"
+            self.name = f"{datetime.datetime.now().strftime('%d-%m-%Y-%H-%M-%S')}_{self.type_real_estate}"
             book = read_excel_template(self.throw_exception, self.type_real_estate)
             sheet = book[book.sheetnames[0]]
             sheet.title = f"{datetime.datetime.now().strftime('%d.%m.%y_%H.%M')}"
@@ -92,4 +85,3 @@ class Exporter(QThread):
             self.block_closing.emit(False)
         except Exception as e:
             print("Export", self.name, e)
-

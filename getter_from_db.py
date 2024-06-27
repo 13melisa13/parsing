@@ -24,7 +24,7 @@ def address_is_upper(name):
     return result
 
 
-def json_db(page=0, limit=5000, domain="uybor", url_=''):
+def json_db(page=0, limit=5000, domain="olx", url_=''):
     # print(limit)
     url = BASE_API + url_
     params = {
@@ -32,12 +32,6 @@ def json_db(page=0, limit=5000, domain="uybor", url_=''):
         "page": page,
         "domain": domain
     }
-    # session = requests.Session()
-    # retry = Retry(total=5, backoff_factor=1, status_forcelist=[ 502, 503, 504 ])
-    # adapter = HTTPAdapter(max_retries=retry)
-    # session.mount('http://', adapter)
-    # session.mount('https://', adapter)
-
     print(f"Request to {url_} {domain} {datetime.datetime.now().time()}")
     response = requests.get(url, params=params, headers=headers, timeout=20)
 
@@ -46,7 +40,7 @@ def json_db(page=0, limit=5000, domain="uybor", url_=''):
     if response.status_code != 200:
         raise Exception(f"TRY AGAIN {response.status_code} {domain}")
     # else:
-    # print(response.text)
+    #     print(response.text)
     return response.json()["data"], response.json()["active_data_len"]
 
 
@@ -74,6 +68,7 @@ class DataFromDB(QThread):
         self.updated.emit(1, type_, d)
         self.label.emit(f"Процесс: Обновление {self.domain}", type_, d)
         self.block_closing.emit(True)
+
         self.date.emit(self.get_db(self.domain, type_), type_, d)
         self.updated.emit(100, type_, d)
         self.label.emit(f"Процесс: Обновление {self.domain} - Завершено", type_, d)
@@ -110,7 +105,7 @@ class DataFromDB(QThread):
                     if not results:
                         break
                     if total == 0:
-                        # self.label.emit(f"Процесс: Обновление {domain} - Завершение с ошибкой")
+                        self.label.emit(f"Процесс: Обновление {domain} - Завершение с ошибкой")
                         return []
                 except Exception as err:
                     self.label.emit(f"Процесс: Обновление {domain} - Переподключение", real_estate_type, domain)
@@ -132,6 +127,7 @@ class DataFromDB(QThread):
                 prev_res += len(results)
                 self.init_flats.emit(real_estates, real_estate_type, domain)
                 page += 1
+
             return real_estates
         except Exception as e:
             print("DB", self.domain, self.real_estate_type, e)
@@ -141,9 +137,23 @@ class DataFromDB(QThread):
             price_uzs = self.rate * result['price_uye']
         else:
             price_uzs = result['price_uzs']
+        category = result['category_type']
+        match category:
+            case 'sale':
+                category = 'Продажа'
+            case 'long_term_rent':
+                category = 'Долгосрочная аренда'
+            case 'short_term_rent':
+                category = 'Посуточная аренда'
+            case 'exchange':
+                category = 'Обмен'
+            case _:
+                category = ''
+
         match self.real_estate_type:
             case 'flat':
                 return Flat(
+                    category=category,
                     url=result["url"],
                     square=float(result['square']),
                     floor=f'{result["floor"]}',
@@ -162,6 +172,7 @@ class DataFromDB(QThread):
                     is_active=result["is_active"])
             case 'commerce':
                 return Commerce(
+                    category=category,
                     url=result["url"],
                     square=float(result['square']),
                     address=address_is_upper(result["address"]),
@@ -175,6 +186,7 @@ class DataFromDB(QThread):
                     is_active=result["is_active"])
             case 'land':
                 return Land(
+                    category=category,
                     url=result["url"],
                     square=float(result['square']),
                     address=address_is_upper(result["address"]),

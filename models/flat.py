@@ -25,6 +25,8 @@ header_flat = [
     "Цена за метр, $",
     "Цена, сумм",
     "Цена за метр, сумм",
+    "Описание",
+    "Категория"
 ]
 
 
@@ -44,6 +46,7 @@ class Flat(RealEstate):
                  floor='',
                  total_floor='',
                  repair="repair",
+                 category="Продажа",
                  is_new_building=False):
         super().__init__(price_uye=price_uye,
                          price_uzs=price_uzs,
@@ -54,7 +57,8 @@ class Flat(RealEstate):
                          description=description,
                          id=id,
                          domain=domain,
-                         is_active=is_active)
+                         is_active=is_active,
+                         category=category)
         self.floor = floor
         self.room = room
         self.total_floor = total_floor
@@ -75,7 +79,8 @@ class Flat(RealEstate):
             self.price_per_meter_uye.__str__(),
             self.price_uzs,
             self.price_per_meter_uzs.__str__(),
-            self.description
+            self.description.__str__(),
+            self.category.__str__()
         ]
 
     def prepare_to_dict(self):
@@ -94,7 +99,8 @@ class Flat(RealEstate):
             "description": self.description,
             "external_id": self.external_id,
             "domain": self.domain,
-            "is_active": self.is_active
+            "is_active": self.is_active,
+            "category": self.category
         }
 
     def __str__(self):

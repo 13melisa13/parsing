@@ -27,7 +27,7 @@ def create_param_combos(type_of_real_estate):
             match type_of_real_estate:
 
                 case 'flat':
-                    params = {'category_id': 13}
+                    params = {'category_id': random.choice([13, 1566, 1147])}
                     if 'filter_enum_type_of_market' not in params.keys():
                         params['filter_enum_type_of_market'] = random.choice(
                             ['secondary', 'primary', 'secondary,primary'])
@@ -53,7 +53,7 @@ def create_param_combos(type_of_real_estate):
                             [True, False, False]) and 'filter_float_number_of_rooms:to' not in params.keys():
                         params['filter_float_number_of_rooms:to'] = float(random.randint(1, 10))
                 case 'commerce':
-                    params = {'category_id': 14}
+                    params = {'category_id': random.choice([14, 11])}
                     if random.choice(
                             [True, False, False]) and 'filter_float_total_area:from' not in params.keys():
                         params['filter_float_total_area:from'] = float(random.randint(1, 180))
@@ -63,7 +63,7 @@ def create_param_combos(type_of_real_estate):
                     if random.choice([True, False, False]) and 'filter_enum_premise_type' not in params.keys():
                         params['filter_enum_premise_type'] = random.randint(1, 12)
                 case 'land':
-                    params = {'category_id': 10}
+                    params = {'category_id': random.choice([10, 1533])}
                     if random.choice([True, False, False]) and 'filter_enum_location' not in params.keys():
                         params['filter_enum_location'] = random.randint(1, 8)
                     if random.choice([True, False, False]) and 'filter_enum_purpose' not in params.keys():
@@ -97,7 +97,7 @@ async def get_offers(url=None, params=None):
         params = {}
     session_timeout = aiohttp.ClientTimeout(total=None)
     session = aiohttp.ClientSession(headers=headers, timeout=session_timeout)
-
+    response = None
     if url:
         async with session.get(url) as resp:
             if resp.status == 200:
@@ -110,6 +110,24 @@ async def get_offers(url=None, params=None):
     await session.close()
     return response
 
+def cat_definer(cat_id):
+    match cat_id:
+        case 13:
+            return 'sale'
+        case 1513:
+            return 'exchange'
+        case 14:
+            return 'sale'
+        case 11:
+            return 'rent'
+        case 10:
+            return 'sale'
+        case 1147:
+            return 'long_term_rent'
+        case 1533:
+            return 'rent'
+        case 1566:
+            return 'short_term_rent'
 
 def response_page_to_list_flat(response, total_elements, new_offers, type_real_estate):
     meta = response.get('metadata')
@@ -126,6 +144,8 @@ def response_page_to_list_flat(response, total_elements, new_offers, type_real_e
                 price_uzs = 0
                 repair = ''
                 params_get = one.get('params')
+                # category_id = one.get('category').get('id')
+                print(one.get('category'), ",kznm yf[eq")
                 for param in params_get:
                     key = param.get("key")
                     if key == 'total_floors':
@@ -149,6 +169,7 @@ def response_page_to_list_flat(response, total_elements, new_offers, type_real_e
                     elif key == 'repairs':
                         repair = param.get('value').get('label')
                 location = one.get('location')
+
                 address = ''
                 if "city" in location:
                     address += location.get("city").get("name")
@@ -172,7 +193,8 @@ def response_page_to_list_flat(response, total_elements, new_offers, type_real_e
                     price_uzs=price_uzs,
                     address=address,
                     repair=repair,
-                    domain="olx")
+                    domain="olx",
+                    category=cat_definer(one.get('category').get('id')))
                 new_offers.append(flat)
             return new_offers
         case 'land':
@@ -183,6 +205,7 @@ def response_page_to_list_flat(response, total_elements, new_offers, type_real_e
                 price_uzs = 0
                 purpose = ''
                 params_get = one.get('params')
+                category_id = one.get('category').get('id')
                 for param in params_get:
                     key = param.get("key")
                     if key == 'land_area':
@@ -208,6 +231,7 @@ def response_page_to_list_flat(response, total_elements, new_offers, type_real_e
                 land = Land(
                     id=one.get('id'),
                     url=one.get('url'),
+                    category=cat_definer(category_id),
                     # url=f'https://www.olx.uz/api/v1/offers/{one.get("id")}',
                     square=float(land_area),
                     description=one.get('description') + one.get('title'),
@@ -223,6 +247,7 @@ def response_page_to_list_flat(response, total_elements, new_offers, type_real_e
 
         case 'commerce':
             for one in response.get('data'):
+                category_id = one.get('category').get('id')
                 total_area = 0
                 price_uye = 0
                 price_uzs = 0
@@ -251,6 +276,7 @@ def response_page_to_list_flat(response, total_elements, new_offers, type_real_e
                 commerce = Commerce(
                     id=one.get('id'),
                     url=one.get('url'),
+                    category=cat_definer(category_id),
                     # url=f'https://www.olx.uz/api/v1/offers/{one.get("id")}',
                     square=float(total_area),
                     description=one.get('description') + one.get('title'),

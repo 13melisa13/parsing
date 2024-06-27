@@ -18,6 +18,8 @@ def filtration_commerces(filters, results): #todo test
 def filtration(filters, results, type_of_re):
     print(f"filters: {filters}")
     # print(len(results))
+    if 'category' in filters and filters['category'] != "Не выбрано":
+        results = [result for result in results if filters['category'] in result.category]
     if 'price_min' in filters:
         if 'uzs' in filters:
             results = [result for result in results if float(result.price_uzs) >= filters['price_min']]

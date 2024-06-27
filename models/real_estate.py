@@ -1,7 +1,11 @@
 from datetime import datetime
 
-CURRENCY_CHOISES = [
+CURRENCY_CHOICES = [
     "СУММ.", "У.Е."
+]
+CATEGORY_CHOICES = [
+    # "sale", "long_term_rent", "short_term_rent", "exchange"
+    "Продажа", "Долгосрочная аренда", "Краткосрочная аренда", "Обмен", "Не выбрано", "Аренда"
 ]
 
 
@@ -16,6 +20,7 @@ class RealEstate:
                  description="",
                  id=0,
                  domain="",
+                 category="Продажа",
                  is_active=True):
         try:
             self.price_uye = float(price_uye)
@@ -44,12 +49,13 @@ class RealEstate:
         self.external_id = id
         self.domain = domain
         self.is_active = is_active
+        self.category = category
 
     def prepare_to_list(self):
         return [
             self.url.__str__(),
             self.square.__str__(),
-            # f'{self.floor}/{self.total_floor}',
+
             self.address.__str__(),
             # self.repair.__str__(),
             # self.is_new_building.__str__(),
@@ -59,7 +65,8 @@ class RealEstate:
             self.price_per_meter_uye.__str__(),
             self.price_uzs,
             self.price_per_meter_uzs.__str__(),
-            self.description
+            self.description,
+            self.category
         ]
 
     def prepare_to_dict(self):
@@ -78,7 +85,8 @@ class RealEstate:
             "description": self.description,
             "external_id": self.external_id,
             "domain": self.domain,
-            "is_active": self.is_active
+            "is_active": self.is_active,
+            "category": self.category
         }
 
     def __str__(self):

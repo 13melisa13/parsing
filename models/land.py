@@ -11,17 +11,18 @@ header_land = [
     "Цена, $",
     "Цена за метр, $",
     "Цена, сумм",
-    "Цена за метр, сумм"
+    "Цена за метр, сумм",
+    "Описание",
+    "Категория"
 ]
 
-
 LAND_TYPE_CHOICES = [
-"Назначение",
-     "Земля под строительство",
-     "Земля под сад/огород",
-     "Земля с/х назначения",
-     "Земля промышленного назначения",
-     "Другое",
+    "Назначение",
+    "Земля под строительство",
+    "Земля под сад/огород",
+    "Земля с/х назначения",
+    "Земля промышленного назначения",
+    "Другое",
 
 ]
 
@@ -52,7 +53,8 @@ class Land(RealEstate):
                  domain="",
                  is_active=True,
                  location_feature='',
-                 type_of_land=''
+                 type_of_land='',
+                 category="Продажа",
                  ):
         super().__init__(price_uye=price_uye,
                          price_uzs=price_uzs,
@@ -63,7 +65,9 @@ class Land(RealEstate):
                          description=description,
                          id=id,
                          domain=domain,
-                         is_active=is_active)
+                         is_active=is_active,
+                         category=category
+                         )
         self.location_feature = location_feature
         self.type_of_land = type_of_land
 
@@ -79,7 +83,9 @@ class Land(RealEstate):
             self.price_per_meter_uye.__str__(),
             self.price_uzs,
             self.price_per_meter_uzs.__str__(),
-            self.description
+            self.description,
+            self.category.__str__(),
+
         ]
 
     def prepare_to_dict(self):
@@ -95,7 +101,8 @@ class Land(RealEstate):
             "description": self.description,
             "external_id": self.external_id,
             "domain": self.domain,
-            "is_active": self.is_active
+            "is_active": self.is_active,
+            "category": self.category.__str__(),
         }
 
     def __str__(self):
