@@ -318,8 +318,10 @@ class UploadOlx(QThread):
     init_update_db = pyqtSignal()
 
     def run(self):
+
         while True:
             try:
+                # asyncio.sleep(100000)
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
                 loop.run_until_complete(self.start_olx_polling())
