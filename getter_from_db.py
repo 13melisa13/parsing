@@ -138,6 +138,7 @@ class DataFromDB(QThread):
         else:
             price_uzs = result['price_uzs']
         category = result['category_type']
+
         match category:
             case 'sale':
                 category = 'Продажа'

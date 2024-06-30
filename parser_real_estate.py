@@ -669,6 +669,8 @@ class UiParser(QtWidgets.QMainWindow):
 
     def show_message_info(self, text):
         self.message.setText(text)
+        if "сохранен" in text:
+            self.message.setIcon(QMessageBox.Icon.Information)
         self.message.setIcon(QMessageBox.Icon.Critical)
         self.message.show()
 
@@ -748,6 +750,12 @@ class UiParser(QtWidgets.QMainWindow):
 
     def time_update(self):
         print(f"datatime updating start {datetime.datetime.now(tz).time()}")
+        self.data_view.setCurrentIndex(0)
+        self.update_olx_clicked()
+        self.data_view.setCurrentIndex(1)
+        self.update_olx_clicked()
+        self.data_view.setCurrentIndex(2)
+        self.update_olx_clicked()
         self.timer.setInterval(24 * 60 * 60 * 1000)
 
     def update_olx_clicked(self):
@@ -816,7 +824,8 @@ class UiParser(QtWidgets.QMainWindow):
                                                        f"{len(self.results_olx_flat)}")
                 fill_table_pyqt(self.table_widget_olx_flat, header_flat, self.results_olx_flat_filtered,
                                 cur, self.s_, self.f_, )
-                self.export_button_olx_flat.setEnabled(len(self.results_olx_flat_filtered) > 0)
+                self.export_button_olx_flat.setEnabled(len(self.results_olx_flat_filtered) > 0
+                                                       and self.update_olx_flat.isEnabled())
                 # self.show_message_info(f"{len(self.results_uybor_f)} + {len(self.results_olx_f)}")
             case 1:
 
@@ -828,7 +837,8 @@ class UiParser(QtWidgets.QMainWindow):
                 fill_table_pyqt(self.table_widget_olx_commerce, header_commerce, self.results_olx_commerce_filtered,
                                 cur,
                                 self.s_, self.f_, 5)
-                self.export_button_olx_commerce.setEnabled(len(self.results_olx_commerce_filtered) > 0)
+                self.export_button_olx_commerce.setEnabled(len(self.results_olx_commerce_filtered) > 0
+                                                           and self.update_olx_commerce.isEnabled())
                 # self.show_message_info(f"{len(self.results_uybor_f)} + {len(self.results_olx_f)}")
 
             case 2:
@@ -839,12 +849,10 @@ class UiParser(QtWidgets.QMainWindow):
                                                        f"{len(self.results_olx_land)}")
                 fill_table_pyqt(self.table_widget_olx_land, header_land, self.results_olx_land_filtered, cur, self.s_,
                                 self.f_, 5)
-                self.export_button_olx_land.setEnabled(len(self.results_olx_land_filtered) > 0)
+                self.export_button_olx_land.setEnabled(len(self.results_olx_land_filtered) > 0
+                                                       and self.update_olx_land.isEnabled())
 
     def export_button_clicked_olx(self):
-        # self.export_button_olx_flat.setCheckable(False)
-
-        # self.export_button_all_data.setCheckable(False)
 
         match self.data_view.currentIndex():
             case 0:
@@ -878,22 +886,18 @@ class UiParser(QtWidgets.QMainWindow):
                 self.thread_export_olx_land.block_closing.connect(self.block_close_olx_export_land)
                 self.thread_export_olx_land.start()
             case _:
-                real_estate = ''
-                results = []
+                return
 
     def finised_export_olx_land(self):
         self.thread_export_olx_land.deleteLater()
-        self.export_button_olx_land.setCheckable(not False)
-        self.export_button_olx_land.setDisabled(not True)
+        self.export_button_olx_land.setDisabled(False)
 
     def finised_export_olx_flat(self):
         self.thread_export_olx_flat.deleteLater()
-        self.export_button_olx_flat.setCheckable(not False)
-        self.export_button_olx_flat.setDisabled(not True)
+        self.export_button_olx_flat.setDisabled(False)
 
     def finised_export_olx_commerce(self):
         self.thread_export_olx_commerce.deleteLater()
-        self.export_button_olx_commerce.setCheckable(not False)
         self.export_button_olx_commerce.setDisabled(not True)
 
     def export_button_clicked(self):
@@ -956,10 +960,6 @@ class UiParser(QtWidgets.QMainWindow):
                     self.table_widget_olx_land.setColumnHidden(8, True)
                     if "uzs" in self.filters[2]:
                         self.filters[2].pop("uzs")
-
-
-
-
 
     def room_chosen(self):
         self.filter_button_flat.setEnabled(True)
@@ -1091,7 +1091,7 @@ class UiParser(QtWidgets.QMainWindow):
         if self.floor_min_flat.text() != "":
             self.filters[0].update({"floor_min": int(self.floor_min_flat.text())})
         else:
-            if "floor_min" in self.filters:
+            if "floor_min" in self.filters[0]:
                 self.filters[0].pop("floor_min")
 
     def floor_max_changed(self):
@@ -1099,7 +1099,7 @@ class UiParser(QtWidgets.QMainWindow):
         if self.floor_max_flat.text() != "":
             self.filters[0].update({"floor_max": int(self.floor_max_flat.text())})
         else:
-            if "floor_max" in self.filters:
+            if "floor_max" in self.filters[0]:
                 self.filters[0].pop("floor_max")
 
     def square_min_changed(self):
@@ -1109,21 +1109,20 @@ class UiParser(QtWidgets.QMainWindow):
                 if self.square_min_flat.text() != "":
                     self.filters[0].update({"square_min": int(self.square_min_flat.text())})
                 else:
-                    if "square_min" in self.filters:
+                    if "square_min" in self.filters[0]:
                         self.filters[0].pop("square_min")
             case 1:
                 if self.square_min_commerce.text() != "":
                     self.filters[1].update({"square_min": int(self.square_min_commerce.text())})
                 else:
-                    if "square_min" in self.filters:
+                    if "square_min" in self.filters[1]:
                         self.filters[1].pop("square_min")
             case 2:
                 if self.square_min_land.text() != "":
                     self.filters[2].update({"square_min": int(self.square_min_land.text())})
                 else:
-                    if "square_min" in self.filters:
+                    if "square_min" in self.filters[2]:
                         self.filters[2].pop("square_min")
-
 
     def category_changed(self):
         self.filter_button_flat.setEnabled(True)
@@ -1133,21 +1132,21 @@ class UiParser(QtWidgets.QMainWindow):
                 if self.category_flat.currentText() != "Не выбрано":
                     self.filters[0].update({"category": self.category_flat.currentText()})
                 else:
-                    if "category" in self.filters:
+                    if "category" in self.filters[0]:
                         self.filters[0].pop("category")
 
             case 1:
                 if self.category_commerce.currentText() != "Не выбрано":
                     self.filters[1].update({"category": self.category_commerce.currentText()})
                 else:
-                    if "category" in self.filters:
+                    if "category" in self.filters[1]:
                         self.filters[1].pop("category")
             case 2:
                 if self.category_land.currentText() != "Не выбрано":
                     self.filters[2].update({"category": self.category_land.currentText()})
                 else:
-                    if "category" in self.filters:
-                        self.filters[3].pop("category")
+                    if "category" in self.filters[2]:
+                        self.filters[2].pop("category")
 
     def square_max_changed(self):
         self.filter_button_flat.setEnabled(True)
@@ -1155,9 +1154,8 @@ class UiParser(QtWidgets.QMainWindow):
         if self.square_max_flat.text() != "":
             self.filters[self.data_view.currentIndex()].update({"square_max": int(self.square_max_flat.text())})
         else:
-            if "square_max" in self.filters:
+            if "square_max" in self.filters[self.data_view.currentIndex()]:
                 self.filters[self.data_view.currentIndex()].pop("square_max")
-
 
     def total_floor_min_changed(self):
         self.filter_button_flat.setEnabled(True)
@@ -1165,7 +1163,7 @@ class UiParser(QtWidgets.QMainWindow):
         if self.total_floor_min_flat.text() != "":
             self.filters[0].update({"total_floor_min": int(self.total_floor_min_flat.text())})
         else:
-            if "total_floor_min" in self.filters:
+            if "total_floor_min" in self.filters[0]:
                 self.filters[0].pop("total_floor_min")
 
     def total_floor_max_changed(self):
@@ -1174,24 +1172,22 @@ class UiParser(QtWidgets.QMainWindow):
         if self.total_floor_max_flat.text() != "":
             self.filters[0].update({"total_floor_max": int(self.total_floor_max_flat.text())})
         else:
-            if "total_floor_max" in self.filters:
+            if "total_floor_max" in self.filters[0]:
                 self.filters[0].pop("total_floor_max")
-
-
 
     def start_upload(self):
         self.upload_olx_flat = UploadOlx(self.results_olx_flat, 'flat')
         self.upload_olx_flat.finished.connect(self.upload_olx_finished_flat)
         # self.upload_olx_flat.init_update_db.connect(self.answer_to_init_update)
-        # self.upload_olx_flat.start()
+        self.upload_olx_flat.start()
         self.upload_olx_land = UploadOlx(self.results_olx_land, 'land')
         self.upload_olx_land.finished.connect(self.upload_olx_finished_land)
         # self.upload_olx_land.init_update_db.connect(self.answer_to_init_update)
-        # self.upload_olx_land.start()
+        self.upload_olx_land.start()
         self.upload_olx_commerce = UploadOlx(self.results_olx_commerce, 'commerce')
         self.upload_olx_commerce.finished.connect(self.upload_olx_finished_commerce)
         # self.upload_olx_commerce.init_update_db.connect(self.answer_to_init_update)
-        # self.upload_olx_commerce.start()
+        self.upload_olx_commerce.start()
 
     def handler(self):
         self.start_upload()

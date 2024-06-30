@@ -44,6 +44,7 @@ def fill_table_data_pyqt(table, data):
             else:
                 val = str(_one_row[i]) if len(str(_one_row[i])) < 50 else (str(_one_row[i])[:50] + "...")
                 item = QtWidgets.QTableWidgetItem(val)
+
             # item.setFlags(Qt.ItemFlag.ItemIsEditable)
             table.setItem(data.index(one_row), i, item)
             item.setFlags(Qt.ItemFlag.ItemIsUserCheckable)
@@ -57,15 +58,15 @@ class Exporter(QThread):
     def __init__(self, name, type_real_estate, path='output/', results=None):
         super().__init__()
         self.path = path
-        self.name = ''
+        self.name = name
         self.results = results
         self.type_real_estate = type_real_estate
 
     def run(self):
         try:
             self.block_closing.emit(True)
-
             self.name = f"{datetime.datetime.now().strftime('%d-%m-%Y-%H-%M-%S')}_{self.type_real_estate}"
+            print("Export", self.name)
             book = read_excel_template(self.throw_exception, self.type_real_estate)
             sheet = book[book.sheetnames[0]]
             sheet.title = f"{datetime.datetime.now().strftime('%d.%m.%y_%H.%M')}"
@@ -82,6 +83,7 @@ class Exporter(QThread):
             except Exception as e:
                 print(e)
             book.save(self.path)
+            self.throw_info.emit(f"Файл {self.name} успешно сохранен")
             self.block_closing.emit(False)
         except Exception as e:
             print("Export", self.name, e)

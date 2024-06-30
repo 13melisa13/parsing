@@ -1,7 +1,5 @@
 import asyncio
 import random
-import sys
-import time
 import aiohttp
 import requests
 from PyQt6.QtCore import QThread, pyqtSignal
@@ -28,66 +26,69 @@ def create_param_combos(type_of_real_estate):
 
                 case 'flat':
                     params = {'category_id': random.choice([13, 1566, 1147])}
-                    if 'filter_enum_type_of_market' not in params.keys():
-                        params['filter_enum_type_of_market'] = random.choice(
-                            ['secondary', 'primary', 'secondary,primary'])
+                    if random.choice([False, False, False, True]):
+                        if 'filter_enum_type_of_market' not in params.keys():
+                            params['filter_enum_type_of_market'] = random.choice(
+                                ['secondary', 'primary', 'secondary,primary'])
 
-                    if 'filter_enum_furnished' not in params.keys():
-                        params['filter_enum_furnished'] = random.choice(['yes', 'no', 'yes,no'])
-                    if random.choice([True, False, False]) and 'filter_enum_repairs' not in params.keys():
-                        params['filter_enum_repairs'] = random.randint(1, 6)
-                    if random.choice([True, False, False]) and 'filter_float_floor:from' not in params.keys():
-                        params['filter_float_floor:from'] = float(random.randint(1, 20))
-                    if random.choice([True, False, False]) and 'filter_float_floor:to' not in params.keys():
-                        params['filter_float_floor:to'] = float(random.randint(1, 100))
-                    if random.choice(
-                            [True, False, False]) and 'filter_float_total_area:from' not in params.keys():
-                        params['filter_float_total_area:from'] = float(random.randint(1, 100))
-                    elif random.choice(
-                            [True, False, False]) and 'filter_float_total_area:to' not in params.keys():
-                        params['filter_float_total_area:to'] = float(random.randint(1, 10000))
-                    if random.choice(
-                            [True, False, False]) and 'filter_float_number_of_rooms:from' not in params.keys():
-                        params['filter_float_number_of_rooms:from'] = float(random.randint(1, 6))
-                    elif random.choice(
-                            [True, False, False]) and 'filter_float_number_of_rooms:to' not in params.keys():
-                        params['filter_float_number_of_rooms:to'] = float(random.randint(1, 10))
+                        if 'filter_enum_furnished' not in params.keys():
+                            params['filter_enum_furnished'] = random.choice(['yes', 'no', 'yes,no'])
+                        if random.choice([True, False, False]) and 'filter_enum_repairs' not in params.keys():
+                            params['filter_enum_repairs'] = random.randint(1, 6)
+                        if random.choice([True, False, False]) and 'filter_float_floor:from' not in params.keys():
+                            params['filter_float_floor:from'] = float(random.randint(1, 20))
+                        if random.choice([True, False, False]) and 'filter_float_floor:to' not in params.keys():
+                            params['filter_float_floor:to'] = float(random.randint(1, 100))
+                        if random.choice(
+                                [True, False, False]) and 'filter_float_total_area:from' not in params.keys():
+                            params['filter_float_total_area:from'] = float(random.randint(1, 100))
+                        elif random.choice(
+                                [True, False, False]) and 'filter_float_total_area:to' not in params.keys():
+                            params['filter_float_total_area:to'] = float(random.randint(1, 10000))
+                        if random.choice(
+                                [True, False, False]) and 'filter_float_number_of_rooms:from' not in params.keys():
+                            params['filter_float_number_of_rooms:from'] = float(random.randint(1, 6))
+                        elif random.choice(
+                                [True, False, False]) and 'filter_float_number_of_rooms:to' not in params.keys():
+                            params['filter_float_number_of_rooms:to'] = float(random.randint(1, 10))
                 case 'commerce':
                     params = {'category_id': random.choice([14, 11])}
-                    if random.choice(
-                            [True, False, False]) and 'filter_float_total_area:from' not in params.keys():
-                        params['filter_float_total_area:from'] = float(random.randint(1, 180))
-                    elif random.choice(
-                            [True, False, False]) and 'filter_float_total_area:to' not in params.keys():
-                        params['filter_float_total_area:to'] = float(random.randint(1, 180))
-                    if random.choice([True, False, False]) and 'filter_enum_premise_type' not in params.keys():
-                        params['filter_enum_premise_type'] = random.randint(1, 12)
+                    if random.choice([False, False, False, True]):
+                        if random.choice(
+                                [True, False, False]) and 'filter_float_total_area:from' not in params.keys():
+                            params['filter_float_total_area:from'] = float(random.randint(1, 180))
+                        elif random.choice(
+                                [True, False, False]) and 'filter_float_total_area:to' not in params.keys():
+                            params['filter_float_total_area:to'] = float(random.randint(1, 180))
+                        if random.choice([True, False, False]) and 'filter_enum_premise_type' not in params.keys():
+                            params['filter_enum_premise_type'] = random.randint(1, 12)
                 case 'land':
                     params = {'category_id': random.choice([10, 1533])}
-                    if random.choice([True, False, False]) and 'filter_enum_location' not in params.keys():
-                        params['filter_enum_location'] = random.randint(1, 8)
-                    if random.choice([True, False, False]) and 'filter_enum_purpose' not in params.keys():
-                        params['filter_enum_purpose'] = random.randint(1, 5)
-                    if random.choice(
-                            [True, False, False]) and 'filter_float_land_area:from' not in params.keys():
-                        params['filter_float_land_area:from'] = float(random.randint(1, 1000))
-                    elif random.choice(
-                            [True, False, False]) and 'filter_float_land_area:to' not in params.keys():
-                        params['filter_float_land_area:to'] = float(random.randint(1, 1001))
-
+                    if random.choice([False, False, False, True]):
+                        if random.choice([True, False, False]) and 'filter_enum_location' not in params.keys():
+                            params['filter_enum_location'] = random.randint(1, 8)
+                        if random.choice([True, False, False]) and 'filter_enum_purpose' not in params.keys():
+                            params['filter_enum_purpose'] = random.randint(1, 5)
+                        if random.choice(
+                                [True, False, False]) and 'filter_float_land_area:from' not in params.keys():
+                            params['filter_float_land_area:from'] = float(random.randint(1, 1000))
+                        elif random.choice(
+                                [True, False, False]) and 'filter_float_land_area:to' not in params.keys():
+                            params['filter_float_land_area:to'] = float(random.randint(1, 1001))
+                        if 'currency' not in params.keys():
+                            params['currency'] = random.choice(['UZS', 'UYE'])
+                        if random.choice([True, False, False]) and 'filter_float_price:from' not in params.keys():
+                            params['filter_float_price:from'] = random.randint(0, 10000000)
+                        elif random.choice([True, False, False]) and 'filter_float_price:to' not in params.keys():
+                            params['filter_float_price:to'] = random.randint(0, 10000000)
+                        if 'filter_enum_comission' not in params.keys():
+                            params['filter_enum_comission'] = random.choice(['yes', 'no', 'yes,no'])
             if 'limit' not in params.keys():
                 params['limit'] = 1
             if 'offset' not in params.keys():
                 params['offset'] = 0
             params['sort_by'] = sort
-            if 'currency' not in params.keys():
-                params['currency'] = random.choice(['UZS', 'UYE'])
-            if random.choice([True, False, False]) and 'filter_float_price:from' not in params.keys():
-                params['filter_float_price:from'] = random.randint(0, 10000000)
-            elif random.choice([True, False, False]) and 'filter_float_price:to' not in params.keys():
-                params['filter_float_price:to'] = random.randint(0, 10000000)
-            if 'filter_enum_comission' not in params.keys():
-                params['filter_enum_comission'] = random.choice(['yes', 'no', 'yes,no'])
+
             list_combo_params.append(params)
     return list_combo_params
 
@@ -110,7 +111,9 @@ async def get_offers(url=None, params=None):
     await session.close()
     return response
 
+
 def cat_definer(cat_id):
+    print("Upload olx cat id ", cat_id)
     match cat_id:
         case 13:
             return 'sale'
@@ -128,6 +131,9 @@ def cat_definer(cat_id):
             return 'rent'
         case 1566:
             return 'short_term_rent'
+        case _:
+            return 'sale'
+
 
 def response_page_to_list_flat(response, total_elements, new_offers, type_real_estate):
     meta = response.get('metadata')
@@ -135,17 +141,20 @@ def response_page_to_list_flat(response, total_elements, new_offers, type_real_e
     match type_real_estate:
         case 'flat':
             for one in response.get('data'):
-                total_floors = 0
-                total_area = 0
-                floor = 0
+                total_floors = ''
+                total_area = 1
+                floor = ''
                 number_of_rooms = ''
                 type_of_market = ''
                 price_uye = 0
                 price_uzs = 0
                 repair = ''
                 params_get = one.get('params')
-                # category_id = one.get('category').get('id')
-                print(one.get('category'), ",kznm yf[eq")
+                if 'category' in one.keys():
+                    category_id = one.get('category').get('id')
+                else:
+                    category_id = 13
+
                 for param in params_get:
                     key = param.get("key")
                     if key == 'total_floors':
@@ -177,7 +186,7 @@ def response_page_to_list_flat(response, total_elements, new_offers, type_real_e
                     address += location.get("district").get("name")
                 if "region" in location:
                     address += location.get("region").get("name")
-                # print(price_uzs, "БЛЯДСКИЙ НАХУЙ ПРАЙС УБЕКОВСКИЙ")
+
                 flat = Flat(
                     id=one.get('id'),
                     url=one.get('url'),
@@ -185,8 +194,8 @@ def response_page_to_list_flat(response, total_elements, new_offers, type_real_e
                     square=float(total_area),
                     description=one.get('description') + one.get('title'),
                     modified=one.get('last_refresh_time'),
-                    floor=floor,
-                    total_floor=total_floors,
+                    floor=floor.__str__(),
+                    total_floor=total_floors.__str__(),
                     room=number_of_rooms,
                     is_new_building=type_of_market,
                     price_uye=price_uye,
@@ -194,7 +203,8 @@ def response_page_to_list_flat(response, total_elements, new_offers, type_real_e
                     address=address,
                     repair=repair,
                     domain="olx",
-                    category=cat_definer(one.get('category').get('id')))
+                    category=cat_definer(category_id)
+                )
                 new_offers.append(flat)
             return new_offers
         case 'land':
@@ -205,7 +215,10 @@ def response_page_to_list_flat(response, total_elements, new_offers, type_real_e
                 price_uzs = 0
                 purpose = ''
                 params_get = one.get('params')
-                category_id = one.get('category').get('id')
+                if 'category' in one.keys():
+                    category_id = one.get('category').get('id')
+                else:
+                    category_id = 10
                 for param in params_get:
                     key = param.get("key")
                     if key == 'land_area':
@@ -226,7 +239,6 @@ def response_page_to_list_flat(response, total_elements, new_offers, type_real_e
                     address += location.get("district").get("name")
                 if "region" in location:
                     address += location.get("region").get("name")
-                # print(price_uzs, "БЛЯДСКИЙ НАХУЙ ПРАЙС УБЕКОВСКИЙ")
 
                 land = Land(
                     id=one.get('id'),
@@ -247,7 +259,10 @@ def response_page_to_list_flat(response, total_elements, new_offers, type_real_e
 
         case 'commerce':
             for one in response.get('data'):
-                category_id = one.get('category').get('id')
+                if 'category' in one.keys():
+                    category_id = one.get('category').get('id')
+                else:
+                    category_id = 14
                 total_area = 0
                 price_uye = 0
                 price_uzs = 0
@@ -271,7 +286,6 @@ def response_page_to_list_flat(response, total_elements, new_offers, type_real_e
                     address += location.get("district").get("name")
                 if "region" in location:
                     address += location.get("region").get("name")
-                # print(price_uzs, "БЛЯДСКИЙ НАХУЙ ПРАЙС УБЕКОВСКИЙ")
 
                 commerce = Commerce(
                     id=one.get('id'),
@@ -286,17 +300,16 @@ def response_page_to_list_flat(response, total_elements, new_offers, type_real_e
                     price_uzs=price_uzs,
                     address=address,
                     domain="olx")
+
                 new_offers.append(commerce)
             return new_offers
         case _:
             return None
 
 
-
 class UploadOlx(QThread):
     db_res = []
     init_update_db = pyqtSignal()
-
 
     def run(self):
         try:
@@ -305,23 +318,14 @@ class UploadOlx(QThread):
             loop.run_until_complete(self.start_olx_polling())
             loop.close()
         except Exception as e:
-            print("Upload olx", self.type_of_real_estate, e)
-
-    def awake_(self):
-        self.enable_to_post = True
-        print("wake up upload olx", self.type_of_real_estate)
-
-    def sleep_(self):
-        # asyncio.sleep(10)
-        self.enable_to_post = False
-        print("sleeeeep upload olx", self.type_of_real_estate)
+            print("Upload olx ERR", self.type_of_real_estate, e)
 
     def __init__(self, db_res, type_of_real_estate):
         super().__init__()
-
         self.enable_to_post = True
         self.update_db(db_res)
         self.type_of_real_estate = type_of_real_estate
+
     def switch_url_post(self):
         match self.type_of_real_estate:
             case 'flat':
@@ -330,48 +334,36 @@ class UploadOlx(QThread):
                 return 'post_commerces'
             case 'land':
                 return 'post_lands'
+
     def update_db(self, db_res):
         self.db_res = db_res
 
     async def start_olx_polling(self):
         total_elements = []
-        # await asyncio.sleep(100000)
         while True:
-            # await asyncio.sleep(random.randint(50, 60))
-            # await asyncio.sleep(120)
             print(f"start upload {self.switch_url_post()} {datetime.now()}")
             db_res = self.db_res
             start_main = datetime.now()
             combo = create_param_combos(self.type_of_real_estate)
-            # print(, )
-            # for params in combo:
             params = random.choice(combo)
             print("upload olx start", combo.index(params), "parameters", len(combo), params)
             start = datetime.now()
-
             new_offers = []
+            next_page = None
             while True:
                 try:
                     resp = await get_offers(params=params)
-                    # print(resp)
-                    break
                 except (ClientOSError, ClientPayloadError) as er:
                     await asyncio.sleep(1)
-                    print(er)
+                    print("olx", len(combo), er)
+                    resp = []
                     continue
                 new_offers = response_page_to_list_flat(resp, total_elements, new_offers, self.type_of_real_estate)
-                new_offers = [one_offers
-                              for one_offers in new_offers
-                              if one_offers not in db_res
-                              or one_offers.modified != db_res[db_res.index(one_offers)].modified]
-
+                break
             while True:
                 try:
                     url = BASE_API + self.switch_url_post()
-                    # if not self.enable_to_post:
-                    #     await asyncio.sleep(10)
-                    #     print("Sleeep on 10 in upload olx")
-                    #     continue
+                    next_page = None
                     if len(new_offers) == 0:
                         break
                     flats_to_post_dict = [flat.prepare_to_dict()
@@ -380,7 +372,7 @@ class UploadOlx(QThread):
                                           or flat.modified != db_res[db_res.index(flat)].modified]
 
                     # print(len(flats_to_post_dict))
-                    delay = random.randint(5, 15)
+                    delay = random.randint(1, 1)
                     # print("Delay: ", delay)
                     await asyncio.sleep(delay)
                     # print(len(flats_to_post_dict))
@@ -388,19 +380,21 @@ class UploadOlx(QThread):
                     # print(post_r.status_code, "olx upload", len(flats_to_post_dict), len(new_offers),
                     #       self.type_of_real_estate)
                     self.init_update_db.emit()
+                    if 'links' in resp.keys() and 'next' in resp.get('links') and 'href' in resp.get('links').get(
+                            'next'):
+                        next_page = resp.get('links', {}).get('next', {}).get('href')
+                    break
                     # print()
                     if post_r.status_code != 200:
                         await asyncio.sleep(1)
                         print(post_r.status_code)
                         continue
-                    flats_to_post = []
-                    break
                 except Exception as err:
                     print("upload_err_olx1", err)
                     await asyncio.sleep(1)
                     continue
 
-            next_page = resp.get('links', {}).get('next', {}).get('href')
+
             while next_page:
                 try:
                     resp1 = await get_offers(next_page)
@@ -415,7 +409,11 @@ class UploadOlx(QThread):
                 new_offers = [one_offers
                               for one_offers in new_offers
                               if one_offers not in db_res]
-                next_page = resp1.get('links', {}).get('next', {}).get('href')
+                if 'links' in resp1.keys() and 'next' in resp1.get('links') and 'href' in resp1.get('links').get(
+                        'next'):
+                    next_page = resp1.get('links', {}).get('next', {}).get('href')
+                else:
+                    break
                 try:
                     # #
                     # if not self.enable_to_post:
