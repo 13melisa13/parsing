@@ -8,8 +8,13 @@ from datetime import datetime
 
 from models.commerce import Commerce
 from models.flat import Flat
-from config import BASE_API, headers
 from models.land import Land
+
+
+headers = {
+    "user-agent": "Mozilla/5.0",
+    "accept": "*/*"
+}
 
 
 def create_param_combos(type_of_real_estate):
@@ -331,8 +336,9 @@ class UploadOlx(QThread):
                 print("Upload olx ERR", self.type_of_real_estate, e)
                 continue
 
-    def __init__(self, db_res, type_of_real_estate):
+    def __init__(self, db_res, type_of_real_estate, BASE_API):
         super().__init__()
+        self.BASE_API = BASE_API
         self.enable_to_post = True
         self.update_db(db_res)
         self.type_of_real_estate = type_of_real_estate
@@ -373,7 +379,7 @@ class UploadOlx(QThread):
                 break
             while True:
                 try:
-                    url = BASE_API + self.switch_url_post()
+                    url = self.BASE_API + self.switch_url_post()
                     next_page = None
                     if len(new_offers) == 0:
                         break
@@ -388,8 +394,7 @@ class UploadOlx(QThread):
                     await asyncio.sleep(delay)
                     # print(len(flats_to_post_dict))
                     post_r = requests.post(url=url, json=flats_to_post_dict, headers=headers)
-                    # print(post_r.status_code, "olx upload", len(flats_to_post_dict), len(new_offers),
-                    #       self.type_of_real_estate)
+
                     self.init_update_db.emit()
                     if 'links' in resp.keys() and 'next' in resp.get('links') and 'href' in resp.get('links').get(
                             'next'):
@@ -431,7 +436,7 @@ class UploadOlx(QThread):
                     #     await asyncio.sleep(10)
                     #     print("Sleeep on 10 in upload olx")
                     #     continue
-                    url = BASE_API + self.switch_url_post()
+                    url = self.BASE_API + self.switch_url_post()
                     flats_to_post_dict = [flat.prepare_to_dict()
                                           for flat in new_offers
                                           if flat not in db_res

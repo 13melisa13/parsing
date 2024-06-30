@@ -16,7 +16,7 @@ from export import Exporter, fill_table_pyqt
 from models.commerce import COMMERCE_CHOICES, header_commerce
 from models.flat import header_flat, REPAIR_CHOICES_UYBOR
 from models.land import LAND_LOCATION_CHOICES, LAND_TYPE_CHOICES, header_land
-from models.real_estate import CURRENCY_CHOICES, CATEGORY_CHOICES
+from models.real_estate import CURRENCY_CHOICES
 from getter_from_db import DataFromDB
 from filtration import filtration
 import pytz
@@ -65,10 +65,14 @@ class UiParser(QtWidgets.QMainWindow):
         self.set_time_label = QtWidgets.QLabel("Время обновления: ")
         self.set_time_button = QtWidgets.QPushButton("Настроить время обновления")
         self.set_time_label_time = QtWidgets.QLabel("Не выбрано")
-
+        if json_data and json_data['BASE_API']:
+            self.BASE_API = json_data['BASE_API']
+        else:
+            self.BASE_API = 'http://37.77.106.193:8000/'
         # получение данных из дампа о времени обновления
         # если данных нет, то устанавливаем пустое время
         if json_data is None or json_data["time_fixed"]["h"] == -1:
+
             self.time_fixed = QTime()
             self.set_time_input = QtWidgets.QTimeEdit()
         else:
@@ -766,7 +770,7 @@ class UiParser(QtWidgets.QMainWindow):
                 self.export_button_olx_flat.setDisabled(True)
                 self.update_olx_flat.setDisabled(True)
                 self.filter_button_flat.setEnabled(True)
-                self.thread_olx_flat = DataFromDB("olx", self.rate, real_estate)
+                self.thread_olx_flat = DataFromDB("olx", self.rate, real_estate, self.BASE_API)
                 self.thread_olx_flat.updated.connect(self.update_progress_bar)
                 self.thread_olx_flat.throw_exception.connect(self.show_message_with_exit)
                 self.thread_olx_flat.block_closing.connect(self.block_close_olx_flat)
@@ -781,7 +785,7 @@ class UiParser(QtWidgets.QMainWindow):
                 self.export_button_olx_commerce.setDisabled(True)
                 self.update_olx_commerce.setDisabled(True)
                 self.filter_button_commerce.setEnabled(True)
-                self.thread_olx_commerce = DataFromDB("olx", self.rate, real_estate)
+                self.thread_olx_commerce = DataFromDB("olx", self.rate, real_estate, self.BASE_API)
                 self.thread_olx_commerce.updated.connect(self.update_progress_bar)
                 self.thread_olx_commerce.throw_exception.connect(self.show_message_with_exit)
                 self.thread_olx_commerce.block_closing.connect(self.block_close_olx_commerce)
@@ -796,7 +800,7 @@ class UiParser(QtWidgets.QMainWindow):
                 self.export_button_olx_land.setDisabled(True)
                 self.update_olx_land.setDisabled(True)
                 self.filter_button_land.setEnabled(True)
-                self.thread_olx_land = DataFromDB("olx", self.rate, real_estate)
+                self.thread_olx_land = DataFromDB("olx", self.rate, real_estate, self.BASE_API)
                 self.thread_olx_land.updated.connect(self.update_progress_bar)
                 self.thread_olx_land.throw_exception.connect(self.show_message_with_exit)
                 self.thread_olx_land.block_closing.connect(self.block_close_olx_land)
@@ -1177,15 +1181,15 @@ class UiParser(QtWidgets.QMainWindow):
                 self.filters[0].pop("total_floor_max")
 
     def start_upload(self):
-        self.upload_olx_flat = UploadOlx(self.results_olx_flat, 'flat')
+        self.upload_olx_flat = UploadOlx(self.results_olx_flat, 'flat', self.BASE_API)
         self.upload_olx_flat.finished.connect(self.upload_olx_finished_flat)
         # self.upload_olx_flat.init_update_db.connect(self.answer_to_init_update)
         self.upload_olx_flat.start()
-        self.upload_olx_land = UploadOlx(self.results_olx_land, 'land')
+        self.upload_olx_land = UploadOlx(self.results_olx_land, 'land', self.BASE_API)
         self.upload_olx_land.finished.connect(self.upload_olx_finished_land)
         # self.upload_olx_land.init_update_db.connect(self.answer_to_init_update)
         self.upload_olx_land.start()
-        self.upload_olx_commerce = UploadOlx(self.results_olx_commerce, 'commerce')
+        self.upload_olx_commerce = UploadOlx(self.results_olx_commerce, 'commerce', self.BASE_API)
         self.upload_olx_commerce.finished.connect(self.upload_olx_finished_commerce)
         # self.upload_olx_commerce.init_update_db.connect(self.answer_to_init_update)
         self.upload_olx_commerce.start()
@@ -1270,8 +1274,9 @@ log_out = open(f'_internal/output/{datetime.datetime.now().strftime("%d-%m-%Y")}
 # log_err = open('_internal/output/log_err.txt', 'a', encoding="utf-8")
 
 if __name__ == "__main__":
-    sys.stdout = log_out
+    # sys.stdout = log_out
     sys.stderr = log_out
+
     app = QtWidgets.QApplication(sys.argv)
     print("version 30.06.2024")
     if not os.path.exists("output"):

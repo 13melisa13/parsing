@@ -6,10 +6,15 @@ import pytz
 import requests
 from PyQt6.QtCore import pyqtSignal, QThread
 
-from config import BASE_API, headers
+
 from models.commerce import Commerce
 from models.flat import Flat
 from models.land import Land
+
+headers = {
+    "user-agent": "Mozilla/5.0",
+    "accept": "*/*"
+}
 
 
 def address_is_upper(name):
@@ -24,7 +29,7 @@ def address_is_upper(name):
     return result
 
 
-def json_db(page=0, limit=5000, domain="olx", url_=''):
+def json_db(page=0, limit=5000, domain="olx", url_='', BASE_API=''):
     # print(limit)
     url = BASE_API + url_
     params = {
@@ -55,8 +60,9 @@ class DataFromDB(QThread):
 
     # finished = pyqtSignal(str, str)
 
-    def __init__(self, domain, rate=1.0, real_estate_type='flat'):
+    def __init__(self, domain, rate=1.0, real_estate_type='flat', BASE_API=''):
         super().__init__()
+        self.BASE_API = BASE_API
         self.domain = domain
         self.rate = rate
         self.real_estate_type = real_estate_type
@@ -99,7 +105,7 @@ class DataFromDB(QThread):
                     self.label.emit(f"Процесс: Обновление {self.domain}", real_estate_type, domain)
                     if limit > (total - prev_res):
                         limit = total - prev_res
-                    results, total = json_db(page, limit, domain, self.switch_url())
+                    results, total = json_db(page, limit, domain, self.switch_url(), self.BASE_API)
                     print(f"{datetime.datetime.now(tz=tz)} db_{real_estate_type} {domain} with limit", limit, "page",
                           page)
                     if not results:
@@ -148,6 +154,8 @@ class DataFromDB(QThread):
                 category = 'Посуточная аренда'
             case 'exchange':
                 category = 'Обмен'
+            case 'rent':
+                category = 'Аренда'
             case _:
                 category = ''
 

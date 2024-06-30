@@ -1,6 +1,5 @@
 import datetime
 import os
-import sys
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import QThread, Qt, pyqtSignal
 from openpyxl.reader.excel import load_workbook
