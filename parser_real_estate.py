@@ -53,7 +53,7 @@ class UiParser(QtWidgets.QMainWindow):
 
     def __init__(self, json_data=None):
         super().__init__()
-        # разрешение на закрытие окна todo проверить
+
         self.can_be_closed = [True for i in range(12)]
         self.rate = get_rate()
         self.s_ = 0
@@ -148,7 +148,7 @@ class UiParser(QtWidgets.QMainWindow):
         self.update_layout_flat = QtWidgets.QHBoxLayout()
         self.update_olx_flat = QtWidgets.QPushButton("Обновить квартиры")
         self.export_button_olx_flat = QtWidgets.QPushButton("Экспорт в excel")
-
+        self.export_button_olx_flat.setDisabled(True)
         self.update_layout_flat.addWidget(self.update_olx_flat)
         self.export_layout_flat = QtWidgets.QHBoxLayout()
         self.export_layout_flat.addWidget(self.export_button_olx_flat)
@@ -315,7 +315,7 @@ class UiParser(QtWidgets.QMainWindow):
         self.update_olx_land = QtWidgets.QPushButton("Обновить участки")
 
         self.export_button_olx_land = QtWidgets.QPushButton("Экспорт в excel")
-
+        self.export_button_olx_land.setDisabled(True)
         self.update_layout_land.addWidget(self.update_olx_land)
 
         self.export_layout_land = QtWidgets.QHBoxLayout()
@@ -432,7 +432,7 @@ class UiParser(QtWidgets.QMainWindow):
         self.update_olx_commerce = QtWidgets.QPushButton("Обновить коммерцию")
 
         self.export_button_olx_commerce = QtWidgets.QPushButton("Экспорт в excel")
-
+        self.export_button_olx_commerce.setDisabled(True)
         self.update_layout_commerce.addWidget(self.update_olx_commerce)
 
         self.export_layout_commerce = QtWidgets.QHBoxLayout()

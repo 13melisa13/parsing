@@ -1,4 +1,4 @@
-def filtration_lands(filters, results): #todo test
+def filtration_lands(filters, results):
     if 'purpose_type_land' in filters and filters['purpose_type_land'] != "Не выбрано":
         results = [result for result in results if filters['purpose_type_land'] in result.type_of_land]
     # print(len(results))
@@ -8,7 +8,7 @@ def filtration_lands(filters, results): #todo test
     return results
 
 
-def filtration_commerces(filters, results): #todo test
+def filtration_commerces(filters, results):
     if 'type_commerce' in filters and filters['type_commerce'] != "Не выбрано":
         results = [result for result in results if filters['type_commerce'] in result.type_of_commerce]
     # print(len(results))
