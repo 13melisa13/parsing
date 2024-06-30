@@ -102,7 +102,7 @@ class Land(RealEstate):
             "external_id": self.external_id,
             "domain": self.domain,
             "is_active": self.is_active,
-            "category": self.category.__str__(),
+            "category_type": self.category.__str__(),
         }
 
     def __str__(self):

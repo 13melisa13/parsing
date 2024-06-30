@@ -671,7 +671,8 @@ class UiParser(QtWidgets.QMainWindow):
         self.message.setText(text)
         if "сохранен" in text:
             self.message.setIcon(QMessageBox.Icon.Information)
-        self.message.setIcon(QMessageBox.Icon.Critical)
+        else:
+            self.message.setIcon(QMessageBox.Icon.Critical)
         self.message.show()
 
     def update_progress_bar(self, value, real_estate_type, domain):
@@ -745,8 +746,8 @@ class UiParser(QtWidgets.QMainWindow):
         else:
             msec = 1000 * 60 * ((now.hour * 60 + now.minute) -
                                 self.time_temp.hour() * 60 - self.time_temp.minute()) * (-1)
-        # print(msec / 1000 / 60 / 60)
-        self.timer.start(msec)
+
+        # self.timer.start(msec)
 
     def time_update(self):
         print(f"datatime updating start {datetime.datetime.now(tz).time()}")
