@@ -99,14 +99,15 @@ async def get_offers(url=None, params=None):
     session_timeout = aiohttp.ClientTimeout(total=None)
     session = aiohttp.ClientSession(headers=headers, timeout=session_timeout)
     response = None
-    if url:
+    if url and session:
         async with session.get(url) as resp:
             if resp.status == 200:
                 response = await resp.json()
     else:
-        async with session.get('https://www.olx.uz/api/v1/offers/', params=params) as resp:
-            if resp.status == 200:
-                response = await resp.json()
+        if session:
+            async with session.get('https://www.olx.uz/api/v1/offers/', params=params) as resp:
+                if resp.status == 200:
+                    response = await resp.json()
 
     await session.close()
     return response
@@ -136,8 +137,13 @@ def cat_definer(cat_id):
 
 
 def response_page_to_list_flat(response, total_elements, new_offers, type_real_estate):
+    if not response:
+        return []
     meta = response.get('metadata')
+    if not meta or not response.get('data'):
+        return []
     total_elements.append(meta.get('visible_total_count'))
+
     match type_real_estate:
         case 'flat':
             for one in response.get('data'):
@@ -312,13 +318,16 @@ class UploadOlx(QThread):
     init_update_db = pyqtSignal()
 
     def run(self):
-        try:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(self.start_olx_polling())
-            loop.close()
-        except Exception as e:
-            print("Upload olx ERR", self.type_of_real_estate, e)
+        while True:
+            try:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                loop.run_until_complete(self.start_olx_polling())
+                loop.close()
+                break
+            except Exception as e:
+                print("Upload olx ERR", self.type_of_real_estate, e)
+                continue
 
     def __init__(self, db_res, type_of_real_estate):
         super().__init__()

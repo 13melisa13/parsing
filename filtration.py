@@ -44,8 +44,9 @@ def filtration(filters, results, type_of_re):
     if 'keywords' in filters:
         old = results
         results = []
+        keywords = filters['keywords'].split(';')
         for result in old:
-            for keyword in filters['keywords']:
+            for keyword in keywords:
                 if keyword in (result.description.lower() + result.address.lower()) and result not in results:
                     results.append(result)
                     # print(result.url)
