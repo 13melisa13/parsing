@@ -569,6 +569,7 @@ class UiParser(QtWidgets.QMainWindow):
 
         with open('_internal/input/dumps/dump.json', 'w') as file:
             json.dump({
+                "BASE_API": self.BASE_API,
                 "time_fixed": time_fixed,
                 "time_last_olx_land": time_last_olx_land,
                 "time_last_olx_commerce": time_last_olx_commerce,
@@ -593,7 +594,6 @@ class UiParser(QtWidgets.QMainWindow):
                 self.seria()
                 log_out.close()
                 event.accept()
-
             else:
                 event.ignore()
         else:
