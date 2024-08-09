@@ -1274,11 +1274,11 @@ log_out = open(f'_internal/output/{datetime.datetime.now().strftime("%d-%m-%Y")}
 # log_err = open('_internal/output/log_err.txt', 'a', encoding="utf-8")
 
 if __name__ == "__main__":
-    # sys.stdout = log_out
+    sys.stdout = log_out
     sys.stderr = log_out
 
     app = QtWidgets.QApplication(sys.argv)
-    print("version 30.06.2024")
+    print("version 09.08.2024")
     if not os.path.exists("output"):
         os.mkdir("output")
     if os.path.exists("_internal/input/dumps/dump.json"):
