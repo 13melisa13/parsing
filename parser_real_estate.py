@@ -27,14 +27,13 @@ tz = pytz.timezone('Asia/Tashkent')
 
 
 def get_rate():
-    url = 'https://ofb.uz/uz/'
-    while True:
+    url = ""
+    while True:    
         try:
-            page = urlopen(url)
-            html = page.read().decode('utf-8')
-            soup = BeautifulSoup(html, "html.parser")
-            curs = soup.find_all(name="div", attrs={"class": "currency"})
-            return float(re.search(r"(\d+)\.(\d+)", curs[0].get_text())[0])
+            response = urlopen.get(url)
+            response.raise_for_status()
+            data = response.json()
+            # todo проверить, что данные получены корректно
         except Exception as arr:
             print(arr, url, "rate")
             time.sleep(1)
@@ -1278,7 +1277,7 @@ if __name__ == "__main__":
     sys.stderr = log_out
 
     app = QtWidgets.QApplication(sys.argv)
-    print("version 09.08.2024")
+    print("version 06.08.2025")
     if not os.path.exists("output"):
         os.mkdir("output")
     if os.path.exists("_internal/input/dumps/dump.json"):

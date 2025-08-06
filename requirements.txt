@@ -5,3 +5,5 @@ PyQt6~=6.5.3
 pytz~=2023.3.post1
 aiohttp~=3.8.6
 urllib3~=2.0.6
+
+auto-py-to-exe
